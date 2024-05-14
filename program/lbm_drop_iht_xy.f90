@@ -42,10 +42,10 @@ module globals
 
     !支配パラメータ
     real(8),parameter:: pi = acos(-1.0d0) !円周率
-    real(8),parameter:: D = 70.0d0 !設置する液滴直径
+    real(8),parameter:: D = 40.0d0 !設置する液滴直径
     real(8),parameter:: nu1 = 0.001d0 !連続相の粘性係数
     real(8),parameter:: nu2 = eta*nu1 !分散相の粘性係数
-    real(8),parameter:: sigma = 1.43d-3 !界面張力
+    real(8),parameter:: sigma = 5.63d-4 !界面張力
     real(8),parameter:: kappaf = 0.01d0*ds**2 !界面厚さを決めるパラメータ
     ! real(8),parameter:: phi1 = 2.211d0 !連続相のオーダーパラメータ
     ! real(8),parameter:: phi2 = 4.895d0 !分散相のオーダーパラメータ

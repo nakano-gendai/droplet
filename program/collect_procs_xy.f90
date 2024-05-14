@@ -15,8 +15,8 @@ use globals
     integer,parameter:: xmax = 255 !ｘ方向格子数
     integer,parameter:: ymax = 255 !ｙ方向格子数
     integer,parameter:: zmax = 255 !ｚ方向格子数
-    integer,parameter:: Nx = 8 !ｘ方向の並列数
-    integer,parameter:: Ny = 16 !ｚ方向の並列数
+    integer,parameter:: Nx = 32 !ｘ方向の並列数
+    integer,parameter:: Ny = 32 !ｚ方向の並列数
     integer,parameter:: x_procs = (xmax+1) / Nx
     integer,parameter:: y_procs = (ymax+1) / Ny
     integer,parameter:: new_procs = Nx * Ny
@@ -25,9 +25,9 @@ use globals
     character :: filename*200
     character(8) file_num, file_num2
     !ティレクトリー読み込み
-    character(*),parameter :: datadir = "/data/sht/nakanog/DNS_turbulence_256_re80000_xy/case74/"
+    character(*),parameter :: datadir = "/data/sht/nakanog/DNS_turbulence_256_IHT/case1/"
     !ディレクトリ作成
-    character(*),parameter :: datadir2 = "/data/sht/nakanog/DNS_turbulence_256_re80000_xy/case74/collect/"
+    character(*),parameter :: datadir2 = "/data/sht/nakanog/DNS_turbulence_256_IHT/case1/collect/"
     real(8) phi(0:xmax,0:ymax,0:zmax)
     real(8) u1(0:xmax,0:ymax,0:zmax)
     real(8) u2(0:xmax,0:ymax,0:zmax)
@@ -73,7 +73,7 @@ use globals
             do zi = 1, zmax+1
                 do yi = 1, y_procs
                     do xi = 1, x_procs
-                        read(set) phiout(xi,yi,zi,i), u1out(xi,yi,zi,i), u2out(xi,yi,zi,i), u3out(xi,yi,zi,i), d
+                        read(set) phiout(xi,yi,zi,i), a, b, c, d
                         ! read(set) u1out(xi,yi,zi,i), u2out(xi,yi,zi,i), u3out(xi,yi,zi,i), a
                     enddo
                 enddo

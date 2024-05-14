@@ -25,8 +25,8 @@ module globals
     !時間に関するパラメータ
     integer,parameter:: step = 10000000 !計算時間step
     !出力ディレクトリ
-    character(*),parameter :: datadir = "/data/sht/nakanog/DNS_turbulence_256_IHT_3/"
-    character(*),parameter :: datadir2 = "/data/sht/nakanog/DNS_turbulence_256_IHT_3/fg/"
+    character(*),parameter :: datadir = "/data/sht/nakanog/DNS_turbulence_256_IHT_7/"
+    character(*),parameter :: datadir2 = "/data/sht/nakanog/DNS_turbulence_256_IHT_7/fg/"
     integer,parameter:: step_output = 4000
     integer,parameter:: step_putput_fg = 100000
 
@@ -46,11 +46,13 @@ module globals
     !カットオフ波数（IHT）
     integer,parameter:: kc = 3
     !動粘性係数（IHT）
-    real(8),parameter:: nu = 0.007d0
+    real(8),parameter:: nu = 0.001d0
     !緩和時間（IHT）
     real(8),parameter:: taug = 3.0d0*nu/ds + 0.5d0
+    !Kolmogorovスケール (IHT)
+    real(8),parameter:: Kolmogorov_scale = 1.5d0 * ds
     !エネルギー散逸率（IHT）
-    real(8),parameter:: epsilon = (nu*nu*nu) / (ds*ds*ds*ds)
+    real(8),parameter:: epsilon = (nu**3.0d0) / (Kolmogorov_scale**4.0d0)
 
     !粒子速度（整数）
     integer,parameter:: cx(15) = (/0, 1, 0,  0, -1,  0,  0,  1, -1,  1,  1, -1,  1, -1, -1/)
