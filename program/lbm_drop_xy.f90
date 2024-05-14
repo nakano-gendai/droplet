@@ -17,16 +17,16 @@ module globals
     integer,parameter:: xall = (xmax + 1) * Nxall !全体のx方向格子数
     integer,parameter:: yall = (ymax + 1) * Nyall !全体のz方向格子数
     !時間に関するパラメータ
-    integer,parameter:: step = 1000000 !計算時間step
+    integer,parameter:: step = 10000000 !計算時間step
     integer,parameter:: step_input = 5000 !速度場入力時間step
-    integer,parameter:: step_input_file_num = 1000000 !入力する乱流場のstep
+    integer,parameter:: step_input_file_num = 11000000 !入力する乱流場のstep
     !入力ディレクトリ
-    character(*),parameter :: datadir_input = "/data/sht/nakanog/DNS_turbulence_256_IHT/fg/"
+    character(*),parameter :: datadir_input = "/data/lng/nakanog/taylor_512_re100000_large_xy/fg/"
     !出力ディレクトリ
-    character(*),parameter :: datadir_output = "/data/sht/nakanog/DNS_turbulence_256_IHT/case1/"
-    character(*),parameter :: datadir_output_fg = "/data/sht/nakanog/DNS_turbulence_256_IHT/case1/fg/"
-    integer,parameter:: step_output = 1000
-    integer,parameter:: step_putput_fg = 100000
+    character(*),parameter :: datadir_output = "/data/sht/nakanog/taylor_512_drop_movie/"
+    character(*),parameter :: datadir_output_fg = "/data/sht/nakanog/taylor_512_drop_movie/fg/"
+    integer,parameter:: step_output = 5000
+    integer,parameter:: step_putput_fg = 200000
 
     !無次元数
     real(8),parameter:: Re = 160000.0d0 !粒子レイノルズ数
@@ -43,7 +43,7 @@ module globals
     real(8),parameter:: umax = 0.1d0 !最大流速
     real(8),parameter:: nu1 = umax*D_vortex/Re !連続相の粘性係数
     real(8),parameter:: nu2 = eta*nu1 !分散相の粘性係数
-    real(8),parameter:: sigma = 1.18d-5 !界面張力
+    real(8),parameter:: sigma = 9.0d-6 !界面張力
     real(8),parameter:: kappag = (sigma/1.7039d0)**(1.0d0/0.9991d0)  !界面張力を決めるパラメータ
     real(8),parameter:: kappaf = 0.01d0*ds**2 !界面厚さを決めるパラメータ
     real(8),parameter:: phi1 = 2.211d0 !連続相のオーダーパラメータ
