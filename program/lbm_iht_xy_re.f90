@@ -28,8 +28,8 @@ module globals
     !入力ディレクトリ
     character(*),parameter :: datadir_input = "/data/sht/nakanog/DNS_turbulence_256_IHT/fg/"
     !出力ディレクトリ
-    character(*),parameter :: datadir = "/data/sht/nakanog/DNS_turbulence_256_IHT_6/"
-    character(*),parameter :: datadir2 = "/data/sht/nakanog/DNS_turbulence_256_IHT_6/fg/"
+    character(*),parameter :: datadir = "/data/sht/nakanog/DNS_turbulence_256_IHT_8/"
+    character(*),parameter :: datadir2 = "/data/sht/nakanog/DNS_turbulence_256_IHT_8/fg/"
     integer,parameter:: step_output = 4000
     integer,parameter:: step_putput_fg = 100000
 
@@ -49,11 +49,11 @@ module globals
     !カットオフ波数（IHT）
     integer,parameter:: kc = 3
     !動粘性係数（IHT）
-    real(8),parameter:: nu = 0.005d0
+    real(8),parameter:: nu = 0.0005d0
     !緩和時間（IHT）
     real(8),parameter:: taug = 3.0d0*nu/ds + 0.5d0
     !Kolmogorovスケール (IHT)
-    real(8),parameter:: Kolmogorov_scale = 2.5d0 * ds
+    real(8),parameter:: Kolmogorov_scale = 1.5d0 * ds
     !エネルギー散逸率（IHT）
     real(8),parameter:: epsilon = (nu**3.0d0) / (Kolmogorov_scale**4.0d0)
 

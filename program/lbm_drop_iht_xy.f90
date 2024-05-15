@@ -13,24 +13,24 @@ module globals
     include 'fftw3.f'
     !計算領域
     real(8),parameter:: ds = 1.0d0 !格子間隔（lattice unit）
-    integer,parameter:: xmax = 255 !ｘ方向格子数（０から数える）
-    integer,parameter:: ymax = 255 !ｙ方向格子数（０から数える）
-    integer,parameter:: zmax = 255 !ｚ方向格子数（０から数える）
+    integer,parameter:: xmax = 63 !ｘ方向格子数（０から数える）
+    integer,parameter:: ymax = 63 !ｙ方向格子数（０から数える）
+    integer,parameter:: zmax = 63 !ｚ方向格子数（０から数える）
     !並行して計算する数
     integer,parameter:: Nxall = 1 !x方向の分割数（Nxall*Nzall=全体の計算数）
     integer,parameter:: Nyall = 1 !z方向の分割数（Nxall*Nzall=全体の計算数）
     integer,parameter:: xall = (xmax + 1) * Nxall !全体のx方向格子数
     integer,parameter:: yall = (ymax + 1) * Nyall !全体のz方向格子数
     !時間に関するパラメータ
-    integer,parameter:: step = 1000000 !計算時間step
+    integer,parameter:: step = 3000 !計算時間step
     integer,parameter:: step_input = 5000 !速度場入力時間step
     integer,parameter:: step_input_file_num = 400000 !入力する乱流場のstep
     !入力ディレクトリ
     character(*),parameter :: datadir_input = "/data/sht/nakanog/DNS_turbulence_256_IHT/fg/"
     !出力ディレクトリ
-    character(*),parameter :: datadir_output = "/data/sht/nakanog/DNS_turbulence_256_IHT/case1/"
-    character(*),parameter :: datadir_output_fg = "/data/sht/nakanog/DNS_turbulence_256_IHT/case1/fg/"
-    integer,parameter:: step_output = 1000
+    character(*),parameter :: datadir_output = "/data/sht/nakanog/droplet_test/"
+    character(*),parameter :: datadir_output_fg = "/data/sht/nakanog/droplet_test/fg/"
+    integer,parameter:: step_output = 100
     integer,parameter:: step_putput_fg = 100000
 
     !無次元数
@@ -45,8 +45,8 @@ module globals
     real(8),parameter:: D = 40.0d0 !設置する液滴直径
     real(8),parameter:: nu1 = 0.001d0 !連続相の粘性係数
     real(8),parameter:: nu2 = eta*nu1 !分散相の粘性係数
-    real(8),parameter:: sigma = 5.63d-4 !界面張力
-    real(8),parameter:: kappaf = 0.01d0*ds**2 !界面厚さを決めるパラメータ
+    real(8),parameter:: sigma = 4.02d-4 !界面張力
+    real(8),parameter:: kappaf = 0.06d0*ds**2 !界面厚さを決めるパラメータ
     ! real(8),parameter:: phi1 = 2.211d0 !連続相のオーダーパラメータ
     ! real(8),parameter:: phi2 = 4.895d0 !分散相のオーダーパラメータ
     ! real(8),parameter:: a = 9.0d0/49.0d0
@@ -146,7 +146,7 @@ contains
 
     !========================並列数・コミュニケータ分割・通信先設定========================
         !配列のallocate(xi:0とx_procs+1がのりしろ)(yi:0とymax+2がのりしろ)(zi:0とz_procs+1がのりしろ)
-        Nx = 32 !x方向の並列数（ただし，Nx/=comm_procs）
+        Nx = 8 !x方向の並列数（ただし，Nx/=comm_procs）
         Ny = comm_procs / (Nx * Nxall * Nyall) !z方向の並列数
         x_procs = (xmax+1) / Nx
         y_procs = (ymax+1) / Ny

@@ -24,10 +24,12 @@ use globals
     real(8) x, y, z, dummy
     character :: filename*200
     character(8) file_num, file_num2
-    !ティレクトリー読み込み
-    character(*),parameter :: datadir = "/data/sht/nakanog/DNS_turbulence_256_IHT/case1/"
-    !ディレクトリ作成
-    character(*),parameter :: datadir2 = "/data/sht/nakanog/DNS_turbulence_256_IHT/case1/collect/"
+    ! !ティレクトリー読み込み
+    ! character(*),parameter :: datadir = "/data/sht/nakanog/droplet_test/"
+    ! !ディレクトリ作成
+    ! character(*),parameter :: datadir2 = "/data/sht/nakanog/droplet_test/gnu/"
+    character(*),parameter :: datadir = "/data/sht/nakanog/DNS_turbulence_256_IHT/case2/"
+    character(*),parameter :: datadir2 = "/data/sht/nakanog/DNS_turbulence_256_IHT/case2/gnu/"
     real(8) phi(0:xmax,0:ymax,0:zmax)
     real(8) u1(0:xmax,0:ymax,0:zmax)
     real(8) u2(0:xmax,0:ymax,0:zmax)
@@ -45,7 +47,8 @@ use globals
     call mk_dirs(datadir2)
 
 !============phiをまとめて出力するプログラム=============================================
-    do step=3000, 100000, 1000
+    ! do step=100, 200, 100
+    step = 3000
         if((step > 99) .and. (step < 1000)) then
             write(file_num2, "(i3)") step
         elseif((step > 999) .and. (step < 10000)) then
@@ -97,17 +100,30 @@ use globals
             enddo
         enddo
         
+        ! write(filename,*) step !i->filename 変換
+        ! filename=datadir2//trim(adjustl(filename))//'.bin' !adjustlで左寄せにしてからtrimで末尾の空白除去，拡張子等をくっつける
+        ! print *, filename !表示してみる
+        ! open(11, file=filename, form="unformatted", status='replace') 
+        ! do zi=0,zmax
+        !     do yi=0,ymax
+        !         do xi=0,xmax
+        !             write(11) phi(xi,yi,zi)
+        !         enddo
+        !     enddo
+        ! enddo
+        ! close(11)
+
         write(filename,*) step !i->filename 変換
-        filename=datadir2//trim(adjustl(filename))//'.bin' !adjustlで左寄せにしてからtrimで末尾の空白除去，拡張子等をくっつける
+        filename=datadir2//trim(adjustl(filename))//'.d' !adjustlで左寄せにしてからtrimで末尾の空白除去，拡張子等をくっつける
         print *, filename !表示してみる
-        open(11, file=filename, form="unformatted", status='replace') 
+        open(11, file=filename, form="formatted", status='replace') 
         do zi=0,zmax
-            do yi=0,ymax
-                do xi=0,xmax
-                    write(11) phi(xi,yi,zi)
-                enddo
+            do xi=0,xmax
+                yi = (ymax+1)/2
+                write(11,*) phi(xi,yi,zi)
             enddo
+            write(11,*)
         enddo
         close(11)
-    enddo
+    ! enddo
 end program main

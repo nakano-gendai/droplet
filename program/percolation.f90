@@ -3,8 +3,8 @@ program main
     integer,parameter:: xmax = 255 !ｘ方向格子数（０から数える）
     integer,parameter:: ymax = 255 !ｙ方向格子数（０から数える）
     integer,parameter:: zmax = 255 !ｚ方向格子数（０から数える）
-    real(8),parameter:: phi1 = 2.211d0
-    real(8),parameter:: phi2 = 4.895d0
+    real(8),parameter:: phi1 = 2.638d-1 !連続相のオーダーパラメータ
+    real(8),parameter:: phi2 = 4.031d-1 !分散相のオーダーパラメータ
 
     real(8) phi(-1:xmax+1,-1:ymax+1,-1:zmax+1)
     integer label(0:xmax,0:ymax,0:zmax)
@@ -15,8 +15,8 @@ program main
     real(8) Vlabel(1:1000), radius(1:1000)
     real(8) Vall
 
-    character(*),parameter :: datadir = "/data/sht/nakanog/DNS_turbulence_256_re80000_xy/case74/collect/"
-    character(*),parameter :: datadir2 = "/data/sht/nakanog/DNS_turbulence_256_re80000_xy/case74/radius/"
+    character(*),parameter :: datadir = "/data/sht/nakanog/DNS_turbulence_256_IHT/case1/collect/"
+    character(*),parameter :: datadir2 = "/data/sht/nakanog/DNS_turbulence_256_IHT/case1/collect/radius/"
     integer step, dropnum
     character(8) file_num
     real(8) time1, time2

@@ -1,15 +1,15 @@
 module globals
-    integer,parameter :: nx = 512
-    integer,parameter :: ny = 512
-    integer,parameter :: nz = 512
+    integer,parameter :: nx = 255
+    integer,parameter :: ny = 255
+    integer,parameter :: nz = 255
     real(8),parameter :: dx = 1.0d0
     real(8),parameter :: dy = 1.0d0
     real(8),parameter :: dz = 1.0d0
     !読み込みディレクトリー
-    character(*),parameter :: dir = "/data/lng/nakanog/taylor_512_re100000_large_xy/eddy/collect/"
+    character(*),parameter :: dir = "/data/sht/nakanog/DNS_turbulence_256_IHT/case1/collect/"
     ! character(*),parameter :: dir = "./"
     !出力ディレクトリー
-    character(*),parameter :: datadir = "/data/lng/nakanog/taylor_512_re100000_large_xy/eddy/collect/vtk/"
+    character(*),parameter :: datadir = "/data/sht/nakanog/DNS_turbulence_256_IHT/case1/collect/vtk/"
     ! character(*),parameter :: datadir = "./"
     ! !読み込みディレクトリー
     ! character(*),parameter :: dir = "/data/sht/nakanog/taylor_re12000_ran/ens2/collect/"
@@ -42,8 +42,8 @@ contains
         elseif((step > 999999) .and. (step < 10000000)) then
             write(file_num,"(i7)") step
         endif
-        open(20, file=dir//"10004000_m.bin", form='unformatted')
-        ! open(20, file=dir//trim(file_num)//".bin", form='unformatted')
+        ! open(20, file=dir//"10004000_m.bin", form='unformatted')
+        open(20, file=dir//trim(file_num)//".bin", form='unformatted')
         do k = 1, nz
             do j = 1, ny
                 do i = 1, nx
@@ -121,10 +121,9 @@ use globals
     integer step, stepnum
     call mk_dirs(datadir)
     stepnum = 1
-    ! DO step = 3000, 100000, 1000
-    step = 10004000
+    DO step = 3000, 150000, 1000
         call read_files(scalar, step)
         call output_scalar(scalar, stepnum)
         stepnum = stepnum + 1
-    ! ENDDO
+    ENDDO
 end program main
