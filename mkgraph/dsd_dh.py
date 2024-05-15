@@ -146,20 +146,20 @@ def plot_y1y2(): # y1, y2プロット用
             alpha = 0.8,     # 透明度
             clip_on = False, # プロット枠外にもプロットする
             zorder = 15,      # zorderが大きいほど前面に表示される
-            label = r'Probability density function (dsd1)') 
+            label = r'Probability density function ($\mathrm{We}=22.6$)') 
     # ax1.plot(x1, y1, lw = lw1*1.0, ls = 'solid',  color = 'gray', alpha = 0.6, clip_on = True, zorder = 13)
     
     ax1.plot(x2, y2, lw = 1, ls = 'none', marker = '^', ms = ms1*2.5, mew = lw1*1.2, mfc = 'none', color = 'gray', 
             alpha = 0.9,     # 透明度
             clip_on = False, # プロット枠外にもプロットする
             zorder = 15,      # zorderが大きいほど前面に表示される
-            label = r'Probability density function (dsd2)') 
+            label = r'Probability density function ($\mathrm{We}=5.7$)') 
     # ax1.plot(x2, y2, lw = lw1*1.0, ls = 'solid',  color = 'gray', alpha = 0.6, clip_on = True, zorder = 13)
 
     # 凡例の設定
     h1, l1 = ax1.get_legend_handles_labels()
     ax1.legend(h1, l1, 
-    bbox_to_anchor = (1.0, 1.0), loc = "upper left", # bbox_to_anchorは凡例のlocの座標
+    bbox_to_anchor = (1.1, 1.0), loc = "upper left", # bbox_to_anchorは凡例のlocの座標
     framealpha = 1.0, fancybox=False, fontsize=8.0,
     edgecolor = "black").get_frame().set_linewidth(alw*0.8)
     ## 保存

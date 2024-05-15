@@ -13,15 +13,15 @@ import matplotlib.ticker
 ### 入出力の設定
 fsize = 0   # 0：小さいサイズ（論文用）　1：大きいサイズ（プレゼン用）
 ext = 'pdf' # 保存ファイルの拡張子　pdf,svg,pngなどp
-plotdir = 'plot2' # 保存用ディレクトリ
+plotdir = 'lbm' # 保存用ディレクトリ
 os.makedirs(plotdir, exist_ok = True) # ディレクトリ作成
 
 # datadir = '/Users/nakanogendai/droplet/'
 # datadir ='/home/nakano/anime/b4/data/data_fig6/'
 datadir ="./"
 plotdir, datadir, ext = plotdir + '/', datadir + '/', '.' + ext
-dfile1   = datadir + 'dsd_test_3.d'
-# dfile2   = datadir + 'taylortest2.d'
+dfile1   = datadir + 'dsd1_kolmogorov.d'
+dfile2   = datadir + 'dsd2_kolmogorov.d'
 # dfile3   = datadir + 're0.2ca0.3.d'
 # dfile4   = datadir + 're0.2ca0.4.d'
 # dfile5   = datadir + 'ini_re0.2ca0.1.d'
@@ -55,7 +55,7 @@ def sns_set(fs, tck_s, alw, ctxt):
 
 ### 読み込み
 x1 = np.loadtxt(dfile1, usecols = 0, dtype = 'float64') # usecolsは列番号　dtypeは実数float64, 整数
-# x2 = np.loadtxt(dfile2, usecols = 0, dtype = 'float64') # usecolsは列番号　dtypeは実数float64, 整数
+x2 = np.loadtxt(dfile2, usecols = 0, dtype = 'float64') # usecolsは列番号　dtypeは実数float64, 整数
 # x3 = np.loadtxt(dfile3, usecols = 0, dtype = 'float64') # usecolsは列番号　dtypeは実数float64, 整数
 # x4 = np.loadtxt(dfile4, usecols = 0, dtype = 'float64') # usecolsは列番号　dtypeは実数float64, 整数
 # x5 = np.loadtxt(dfile5, usecols = 0, dtype = 'float64') # usecolsは列番号　dtypeは実数float64, 整数
@@ -64,7 +64,7 @@ x1 = np.loadtxt(dfile1, usecols = 0, dtype = 'float64') # usecolsは列番号　
 # x8 = np.loadtxt(dfile8, usecols = 0, dtype = 'float64') # usecolsは列番号　dtypeは実数float64, 整数
 
 y1 = np.loadtxt(dfile1, usecols = 1, dtype = 'float64')
-# y2 = np.loadtxt(dfile2, usecols = 1, dtype = 'float64')
+y2 = np.loadtxt(dfile2, usecols = 1, dtype = 'float64')
 # y3 = np.loadtxt(dfile3, usecols = 3, dtype = 'float64')
 # y4 = np.loadtxt(dfile4, usecols = 3, dtype = 'float64')
 # y5 = np.loadtxt(dfile5, usecols = 3, dtype = 'float64')
@@ -76,6 +76,7 @@ y1 = np.loadtxt(dfile1, usecols = 1, dtype = 'float64')
 ### サイズ、ラベルなどの設定
 # lx, ly = r'$step$', r'$\frac{\sum{V_{\mathrm{d}}}}{\sum{V_{\mathrm{d0}}}}$' # r''でTeX文字にできる
 lx, ly = r'$D_{\mathrm{d}}/\eta_{\mathrm{k}}$', r'$P(D_{\mathrm{d}}/\eta_{\mathrm{k}})$' # r''でTeX文字にできる
+# lx, ly = r'$D_{\mathrm{d}}/L$', r'$P(D_{\mathrm{d}}/L)$' # r''でTeX文字にできる
 if fsize == 0:
     fs1, lw1, ms1 = 1., 1., 2.8
     tck_s1, alw = 3, 0.625
@@ -103,7 +104,7 @@ def plot_y1y2(): # y1, y2プロット用
 
     ax1.set_xlabel(lx, labelpad = lpad[0]) # 軸ラベル
     ax1.set_ylabel(ly, labelpad = lpad[1])
-    xm, ym = [3, 250], [0.00001, 0.8]
+    xm, ym = [1, 300], [0.00001, 0.8]
     ax1.set_xlim(xm[0], xm[1]) # 軸の範囲
     ax1.set_ylim(ym[0], ym[1])
     # ax1.set_xticks(np.arange(0.0, xm[1] + 0.001, )) # xmaxまで0.2刻みの目盛り線
@@ -114,26 +115,26 @@ def plot_y1y2(): # y1, y2プロット用
     ax1.get_xaxis().set_major_formatter(matplotlib.ticker.ScalarFormatter())
     pos = [1, 10, 10**2] 
     ticks = ['1', '10', r'$10^2$']
-    # pos = [10, 10**2] 
-    # ticks = ['10', r'$10^2$']
+    # pos = [0.1, 1] 
+    # ticks = [r'$10^{-1}$', r'$1$']
     ax1.set_xticks(pos)
     ax1.set_xticklabels(ticks)
 
     ### 水平線と鉛直線
-    ax1.axvline(25.85, lw = lw1*1.5, ls = 'dashdot', dashes = [1, 2], color = 'red', label = r'Kolmogorov--Hinze length $d_{\mathrm{H}}$') # dashesで破線の間隔などを設定できる
+    # ax1.axvline(25.85, lw = lw1*1.5, ls = 'dashdot', dashes = [1, 2], color = 'red', label = r'Kolmogorov--Hinze length $d_{\mathrm{H}}$') # dashesで破線の間隔などを設定できる
 
-    za=np.arange(1.0, 60, 0.01)
-    ua=1.7*10.0**(1.4)*za**(-3/2)
-    ax1.plot(za, ua, lw = lw1*1.0, ls = 'dashed',  color = 'black', 
-            alpha = 1,     # 透明度
+    za=np.arange(1, 300, 0.0001)
+    ua=1.7*10.0**(1.5)*za**(-3/2)
+    ax1.plot(za, ua, lw = lw1*1.0, ls = 'dashed',  color = 'blue', 
+            alpha = 0.5,     # 透明度
             clip_on = True, # プロット枠外にもプロットする
             zorder = 9,      # zorderが大きいほど前面に表示される
             label = r'$\propto D_{\mathrm{d}}^{-3/2}$') 
     
-    za=np.arange(35, 250, 0.01)
-    ua=8000.0**(1.15)*za**(-10/3)
-    ax1.plot(za, ua, lw = lw1*1.0, ls = 'dotted',  color = 'black', 
-            alpha = 1,     # 透明度
+    za=np.arange(1, 300, 0.0001)
+    ua=8000.0**(1.2)*za**(-10/3)
+    ax1.plot(za, ua, lw = lw1*1.0, ls = 'dotted',  color = 'blue', 
+            alpha = 0.5,     # 透明度
             clip_on = True, # プロット枠外にもプロットする
             zorder = 9,      # zorderが大きいほど前面に表示される
             label = r'$\propto D_{\mathrm{d}}^{-10/3}$') 
@@ -154,21 +155,26 @@ def plot_y1y2(): # y1, y2プロット用
     #         zorder = 9,      # zorderが大きいほど前面に表示される
     #         label = r'$\propto D_{\mathrm{d}}^{-10/3}$') 
     
-    # ax1.plot(x1, y1, lw = 1, ls = 'none', marker = 'o', ms = ms1*2.5, mew = lw1*1.5, mfc = 'none', color = 'blue', 
-    #         alpha = 1,     # 透明度
-    #         clip_on = False, # プロット枠外にもプロットする
-    #         zorder = 1,      # zorderが大きいほど前面に表示される
-    #         label = 'Probability density function') 
-    ax1.plot(x1, y1, lw = lw1*2.5, ls = 'solid',  color = 'gray', alpha = 0.7, clip_on = True, zorder = 13, label = 'Probability density function')
+    ax1.plot(x1, y1, lw = 1, ls = 'none', marker = 'o', ms = ms1*2.5, mew = lw1*1.5, mfc = 'none', color = 'black', 
+            alpha = 1,     # 透明度
+            clip_on = False, # プロット枠外にもプロットする
+            zorder = 1,      # zorderが大きいほど前面に表示される
+            label = r'Probability density function ($\mathrm{We}=22.6$)') 
+    ax1.plot(x2, y2, lw = 1, ls = 'none', marker = '^', ms = ms1*2.5, mew = lw1*1.5, mfc = 'none', color = 'gray', 
+            alpha = 1,     # 透明度
+            clip_on = False, # プロット枠外にもプロットする
+            zorder = 1,      # zorderが大きいほど前面に表示される
+            label = r'Probability density function ($\mathrm{We}=5.7$)') 
+    # ax1.plot(x1, y1, lw = lw1*2.5, ls = 'solid',  color = 'gray', alpha = 0.7, clip_on = True, zorder = 13, label = 'Probability density function')
 
     # 凡例の設定
     h1, l1 = ax1.get_legend_handles_labels()
     ax1.legend(h1, l1, 
-    bbox_to_anchor = (1.0, 1.0), loc = "upper left", # bbox_to_anchorは凡例のlocの座標
+    bbox_to_anchor = (1.1, 1.0), loc = "upper left", # bbox_to_anchorは凡例のlocの座標
     framealpha = 1.0, fancybox=False, fontsize=8.0,
     edgecolor = "black").get_frame().set_linewidth(alw*0.8)
     ## 保存
-    fig.savefig(plotdir + "DSD_test_2_3" + ext, bbox_inches = "tight") # bbox_inches="tight"で余白をなくす
+    fig.savefig(plotdir + "DSD_kolmogorov" + ext, bbox_inches = "tight") # bbox_inches="tight"で余白をなくす
 
 ##=================== main ===================##
 if __name__ == '__main__':

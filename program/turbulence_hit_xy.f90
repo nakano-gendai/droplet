@@ -16,15 +16,15 @@ module globals
     integer,parameter:: xmax = 255 !ｘ方向格子数（０から数える）
     integer,parameter:: ymax = 255 !ｙ方向格子数（０から数える）
     integer,parameter:: zmax = 255 !ｚ方向格子数（０から数える）
-    integer,parameter:: step_start = 704000
-    integer,parameter:: step_end = 1236000
+    integer,parameter:: step_start = 400000
+    integer,parameter:: step_end = 756000
     integer,parameter:: step_bin = 4000
     integer,parameter:: step_num2 = (step_end - step_start) / step_bin + 1 
 
     !読み込みディレクトリ
-    character(*),parameter :: datadir_input = "/data/sht/nakanog/DNS_turbulence_256_IHT/"
+    character(*),parameter :: datadir_input = "/data/sht/nakanog/DNS_turbulence_256_IHT_8/"
     !出力ディレクトリ
-    character(*),parameter :: datadir_output = "/data/sht/nakanog/DNS_turbulence_256_IHT/eddy/"
+    character(*),parameter :: datadir_output = "/data/sht/nakanog/DNS_turbulence_256_IHT_8/eddy/"
 
     !粒子速度（整数）
     integer,parameter:: cx(15) = (/0, 1, 0,  0, -1,  0,  0,  1, -1,  1,  1, -1,  1, -1, -1/)
@@ -36,7 +36,7 @@ module globals
     real(8),parameter:: eta = 1.0d0 !粘度比（nu2/nu1）
 
     real(8),parameter:: D = 127.5d0 !設置する液滴直径
-    real(8),parameter:: nu1 = 0.001d0 !連続相の粘性係数
+    real(8),parameter:: nu1 = 0.0005d0 !連続相の粘性係数
     real(8),parameter:: nu2 = eta*nu1 !分散相の粘性係数
     real(8),parameter:: pi = acos(-1.0d0) !円周率
 
@@ -867,7 +867,7 @@ use glassman
         integral_bottom = 0.0d0
         do i = 2, (xmax+1)/2 + 1
             integral_top = integral_top + enesupe_result(i) / (dble(i) - 1.0d0)
-            integral_bottom = enesupe_result(i)
+            integral_bottom = integral_bottom + enesupe_result(i)
         enddo
         integral_scale = 3.0d0 / 4.0d0 * pi * integral_top / integral_bottom
         open(38,file="./integral_scal.d")

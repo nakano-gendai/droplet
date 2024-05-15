@@ -7,12 +7,12 @@ module globals
     integer,parameter:: x_procs = (xmax+1) / Nx
     integer,parameter:: y_procs = (zmax+1) / Ny
     integer,parameter:: new_procs = Nx * Ny
-    real(8),parameter:: kappag = 1.0d-6
+    real(8),parameter:: kappag = 1.0d-1
     real(8) kappagtmp
     real(8),parameter:: phi1 = 2.638d-1 !連続相のオーダーパラメータ
     real(8),parameter:: phi2 = 4.031d-1 !分散相のオーダーパラメータ
     real(8) phi_kaimen 
-    integer,parameter:: step = 3000
+    integer,parameter:: step = 5000
 contains
 
     subroutine par(cx,cy,cz,cr)
@@ -68,7 +68,7 @@ use globals
 
     real(8),parameter:: pi = acos(-1.0d0)
     !ティレクトリー読み込み
-    character(*),parameter :: datadir = "/data/sht/nakanog/DNS_turbulence_256_IHT_6/case1/"
+    character(*),parameter :: datadir = "/data/sht/nakanog/droplet_test/"
 
     real(8) phi(-1:xmax+1,-1:ymax+1,-1:zmax+1)
     real(8) grad_phi(1:3,-1:xmax+1,-1:ymax+1,-1:zmax+1)
@@ -168,6 +168,6 @@ use globals
     sigma = sigma * kappag
 
     open(10,file="./sigma_kg.d")
-    write(10,*) sigma, kappag, Vol/14137.0d0
+    write(10,*) sigma, kappag, Vol/17157.0d0
     close(10)
 end program main

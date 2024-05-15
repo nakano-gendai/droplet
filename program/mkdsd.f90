@@ -1,7 +1,7 @@
 program main
     implicit none
 
-    real(8), parameter:: bin = 0.2d0 !度数分布の刻み幅
+    real(8), parameter:: bin = 10.0d0 !度数分布の刻み幅
     real(8),parameter :: rhoc = 1.0d0 !連続相の密度
     real(8),parameter :: sigma = 9.0d-6 !液滴の界面張力係数
     real(8),parameter :: energy_dissipation = 2.5d-12 !乱流場のエネルギー散逸率
@@ -12,9 +12,11 @@ program main
     real(8),parameter :: Dk = 0.585d0*(sigma/rhoc)*energy_dissipation**(-2.0d0/3.0d0)*kolmogorov_scale**(-2.0d0/3.0d0)
     real(8),parameter :: Dd = 255.5d0 !液滴の初期直径
 
-    integer,parameter :: flag = 1 !0：Kolmogorovスケールで無次元化　1：Hinzeスケールで無次元化  2:無次元化なし
+    integer,parameter :: flag = 0 !0：Kolmogorovスケールで無次元化　1：Hinzeスケールで無次元化  2:無次元化なし
     integer,parameter :: file_start = 8585000
     integer,parameter :: file_end = 13255000
+    ! integer,parameter :: file_start = 1005000
+    ! integer,parameter :: file_end = 4005000
     integer,parameter :: file_bin = 10000
     integer,parameter :: file_kazu = (file_end - file_start) / file_bin + 1
     integer,parameter :: kazu_max = 300 !全ステップ数における最大液滴数（見積もり）
@@ -62,7 +64,7 @@ ENDDO
         else if(flag == 1) then
             radius(i) = 2.0d0*radius(i) / Dh ! Hinzeスケールで無次元化
         else if(flag == 2) then
-            radius(i) = 2.0d0*radius(i) ! 無次元化なし
+            radius(i) = 2.0d0*radius(i) / integral_scale! 無次元化なし
         endif
     enddo
 
@@ -101,7 +103,7 @@ ENDDO
     enddo
 
 !==================出力==========================
-    open(20,file="./dsd1.d")
+    open(20,file="./dsd1_kolmogorov.d")
     do i = 1, kazu_index
         write(20,"(4es16.8)") bin*dble(i)-0.5d0*bin, frequency(i), dble(kazu(i)), dble(sample_number)
     enddo
