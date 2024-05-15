@@ -12,11 +12,11 @@ end module globals
 program main
 use globals
     implicit none
-    integer,parameter:: xmax = 511 !ｘ方向格子数
-    integer,parameter:: ymax = 511 !ｙ方向格子数
-    integer,parameter:: zmax = 511 !ｚ方向格子数
+    integer,parameter:: xmax = 255 !ｘ方向格子数
+    integer,parameter:: ymax = 255 !ｙ方向格子数
+    integer,parameter:: zmax = 255 !ｚ方向格子数
     integer,parameter:: Nx = 32 !ｘ方向の並列数
-    integer,parameter:: Ny = 64 !ｚ方向の並列数
+    integer,parameter:: Ny = 32 !ｚ方向の並列数
     integer,parameter:: x_procs = (xmax+1) / Nx
     integer,parameter:: y_procs = (ymax+1) / Ny
     integer,parameter:: new_procs = Nx * Ny
@@ -25,9 +25,9 @@ use globals
     character :: filename*200
     character(8) file_num, file_num2
     !ティレクトリー読み込み
-    character(*),parameter :: datadir = "/data/lng/nakanog/taylor_512_re100000_large_xy/eddy/"
+    character(*),parameter :: datadir = "/data/sht/nakanog/DNS_turbulence_256_IHT/eddy/large/"
     !ディレクトリ作成
-    character(*),parameter :: datadir2 = "/data/lng/nakanog/taylor_512_re100000_large_xy/eddy/collect/"
+    character(*),parameter :: datadir2 = "/data/sht/nakanog/DNS_turbulence_256_IHT/eddy/large/collect/"
     real(8) phi(0:xmax,0:ymax,0:zmax)
     real(8) phiout(1:x_procs,1:y_procs,1:zmax+1,0:new_procs-1)
     real(8) s, ave
@@ -40,7 +40,7 @@ use globals
 
 !============phiをまとめて出力するプログラム=============================================
     ! do step=3000, 100000, 1000
-        step = 10004000
+        step = 400000
         if((step > 99) .and. (step < 1000)) then
             write(file_num2, "(i3)") step
         elseif((step > 999) .and. (step < 10000)) then
