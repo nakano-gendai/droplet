@@ -14,9 +14,9 @@ module globals
     include 'fftw3.f'
     !計算領域
     real(8),parameter:: ds = 1.0d0 !格子間隔（lattice unit）
-    integer,parameter:: xmax = 255 !ｘ方向格子数（０から数える）
-    integer,parameter:: ymax = 255 !ｙ方向格子数（０から数える）
-    integer,parameter:: zmax = 255 !ｚ方向格子数（０から数える）
+    integer,parameter:: xmax = 511 !ｘ方向格子数（０から数える）
+    integer,parameter:: ymax = 511 !ｙ方向格子数（０から数える）
+    integer,parameter:: zmax = 511 !ｚ方向格子数（０から数える）
     !並行して計算する数
     integer,parameter:: Nxall = 1 !x方向の分割数（Nxall*Nzall=全体の計算数）
     integer,parameter:: Nyall = 1 !z方向の分割数（Nxall*Nzall=全体の計算数）
@@ -25,8 +25,8 @@ module globals
     !時間に関するパラメータ
     integer,parameter:: step = 10000000 !計算時間step
     !出力ディレクトリ
-    character(*),parameter :: datadir = "/data/sht/nakanog/DNS_turbulence_256_IHT_7/"
-    character(*),parameter :: datadir2 = "/data/sht/nakanog/DNS_turbulence_256_IHT_7/fg/"
+    character(*),parameter :: datadir = "/data/sht/nakanog/DNS_turbulence_512_IHT/"
+    character(*),parameter :: datadir2 = "/data/sht/nakanog/DNS_turbulence_512_IHT/fg/"
     integer,parameter:: step_output = 4000
     integer,parameter:: step_putput_fg = 100000
 
@@ -50,7 +50,7 @@ module globals
     !緩和時間（IHT）
     real(8),parameter:: taug = 3.0d0*nu/ds + 0.5d0
     !Kolmogorovスケール (IHT)
-    real(8),parameter:: Kolmogorov_scale = 1.5d0 * ds
+    real(8),parameter:: Kolmogorov_scale = 1.0d0 * ds
     !エネルギー散逸率（IHT）
     real(8),parameter:: epsilon = (nu**3.0d0) / (Kolmogorov_scale**4.0d0)
 
