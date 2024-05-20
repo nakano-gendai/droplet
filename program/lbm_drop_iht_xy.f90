@@ -28,13 +28,13 @@ module globals
     !入力ディレクトリ
     character(*),parameter :: datadir_input = "/data/sht/nakanog/DNS_turbulence_256_IHT/fg/"
     !出力ディレクトリ
-    character(*),parameter :: datadir_output = "/data/sht/nakanog/DNS_turbulence_256_IHT/case6/"
-    character(*),parameter :: datadir_output_fg = "/data/sht/nakanog/DNS_turbulence_256_IHT/case6/fg/"
+    character(*),parameter :: datadir_output = "/data/sht/nakanog/DNS_turbulence_256_IHT/case25/"
+    character(*),parameter :: datadir_output_fg = "/data/sht/nakanog/DNS_turbulence_256_IHT/case25/fg/"
     integer,parameter:: step_output = 1000
     integer,parameter:: step_putput_fg = 100000
 
     !無次元数
-    real(8),parameter:: We = 1.0d0 !ウェーバー数
+    real(8),parameter:: We = 1.4d0 !ウェーバー数
     real(8),parameter:: eta = 1.0d0 !粘度比（nu2/nu1）
 
     !撹乱（乱数）のオーダー
@@ -42,10 +42,11 @@ module globals
 
     !支配パラメータ
     real(8),parameter:: pi = acos(-1.0d0) !円周率
-    real(8),parameter:: D = 70.0d0 !設置する液滴直径
+    real(8),parameter:: D = 60.0d0 !設置する液滴直径
     real(8),parameter:: nu1 = 0.001d0 !連続相の粘性係数
     real(8),parameter:: nu2 = eta*nu1 !分散相の粘性係数
-    real(8),parameter:: sigma = 1.02d-3 !界面張力
+    ! real(8),parameter:: sigma = 1.02d-3 !界面張力
+    real(8),parameter:: sigma = (1.32d-9)**(2.0d0/3.0d0)*D**(5.0d0/3.0d0)/We !界面張力
     real(8),parameter:: kappaf = 0.06d0*ds**2 !界面厚さを決めるパラメータ
     ! real(8),parameter:: phi1 = 2.211d0 !連続相のオーダーパラメータ
     ! real(8),parameter:: phi2 = 4.895d0 !分散相のオーダーパラメータ
@@ -255,6 +256,12 @@ contains
         call gphi_cal(gphi_procs,grad_phi_procs)
         
         call equilibrium_cal(gphi_procs,phi_procs,p0_procs,lap_phi_procs,grad_phi_procs,grad_u_procs,p_procs,u1_procs,u2_procs,u3_procs,f_procs,g_procs)
+
+        if(comm_rank == 0) then
+            open(121,file="./para.d")
+            write(121,*) D, nu1, nu2, sigma, kappag, We
+            close(121)
+        endif
     end subroutine ini
 
     subroutine ini_op(taug_procs,nu_procs,phi_procs,forcex,forcey,forcez)

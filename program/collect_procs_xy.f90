@@ -28,8 +28,8 @@ use globals
     ! character(*),parameter :: datadir = "/data/sht/nakanog/droplet_test/"
     ! !ディレクトリ作成
     ! character(*),parameter :: datadir2 = "/data/sht/nakanog/droplet_test/gnu/"
-    character(*),parameter :: datadir = "/data/sht/nakanog/DNS_turbulence_256_IHT/70_no_case1/"
-    character(*),parameter :: datadir2 = "/data/sht/nakanog/DNS_turbulence_256_IHT/70_no_case1/collect/"
+    character(*),parameter :: datadir = "/data/sht/nakanog/DNS_turbulence_256_IHT/case25/"
+    character(*),parameter :: datadir2 = "/data/sht/nakanog/DNS_turbulence_256_IHT/case25/collect/"
     real(8) phi(0:xmax,0:ymax,0:zmax)
     real(8) u1(0:xmax,0:ymax,0:zmax)
     real(8) u2(0:xmax,0:ymax,0:zmax)
