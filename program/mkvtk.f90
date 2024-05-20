@@ -6,10 +6,10 @@ module globals
     real(8),parameter :: dy = 1.0d0
     real(8),parameter :: dz = 1.0d0
     !読み込みディレクトリー
-    character(*),parameter :: dir = "/data/sht/nakanog/DNS_turbulence_256_IHT/70_case6/collect/"
+    character(*),parameter :: dir = "/data/sht/nakanog/DNS_turbulence_256_IHT/70_no_case1/collect/"
     ! character(*),parameter :: dir = "./"
     !出力ディレクトリー
-    character(*),parameter :: datadir = "/data/sht/nakanog/DNS_turbulence_256_IHT/70_case6/collect/vtk/"
+    character(*),parameter :: datadir = "/data/sht/nakanog/DNS_turbulence_256_IHT/70_no_case1/collect/vtk/"
     ! character(*),parameter :: datadir = "./"
     ! !読み込みディレクトリー
     ! character(*),parameter :: dir = "/data/sht/nakanog/taylor_re12000_ran/ens2/collect/"
