@@ -22,9 +22,9 @@ module globals
     integer,parameter:: step_num2 = (step_end - step_start) / step_bin + 1 
 
     !読み込みディレクトリ
-    character(*),parameter :: datadir_input = "/data/sht/nakanog/DNS_turbulence_256_re80000_xy/case29/"
+    character(*),parameter :: datadir_input = "/data/sht/nakanog/DNS_turbulence_256_IHT/case1/"
     !出力ディレクトリ
-    character(*),parameter :: datadir_output = "/data/sht/nakanog/DNS_turbulence_256_re80000_xy/case1/large/"
+    character(*),parameter :: datadir_output = "/data/sht/nakanog/DNS_turbulence_256_IHT/case1/large/"
 
     !粒子速度（整数）
     integer,parameter:: cx(15) = (/0, 1, 0,  0, -1,  0,  0,  1, -1,  1,  1, -1,  1, -1, -1/)
@@ -32,22 +32,24 @@ module globals
     integer,parameter:: cz(15) = (/0, 0, 0,  1,  0,  0, -1,  1,  1,  1, -1, -1, -1, -1,  1/)
 
     !無次元数
-    real(8),parameter:: We = 3.0d0 !粒子ウエーバー数
-    real(8),parameter:: Re = 30000.0d0 !粒子レイノルズ数
+    real(8),parameter:: We = 1.4d0 !粒子ウエーバー数
     real(8),parameter:: eta = 1.0d0 !粘度比（nu2/nu1）
 
-    real(8),parameter:: D = 70.0d0 !設置する液滴直径
-    real(8),parameter:: D_vortex = 127.5d0 !渦の大きさ
-    real(8),parameter:: umax = 0.1d0 !最大流速
-    real(8),parameter:: nu1 = umax*D_vortex/Re !連続相の粘性係数
+    real(8),parameter:: epsilon = 1.32d-9 !エネルギー散逸率
+    real(8),parameter:: kolmogorov = 0.93d0 !コルモゴロフ長
+    real(8),parameter:: nu1 = 0.001d0 !連続相の粘性係数
     real(8),parameter:: nu2 = eta*nu1 !分散相の粘性係数
+
+    real(8),parameter:: D = 40.0d0 !設置する液滴直径
+    real(8),parameter:: phi1 = 2.638d-1 !連続相のオーダーパラメータ
+    real(8),parameter:: phi2 = 4.031d-1 !分散相のオーダーパラメータ
+    real(8),parameter:: a = 1.0d0
+    real(8),parameter:: b = 1.0d0
+    real(8),parameter:: T = 2.93d-1
+    real(8),parameter:: sigma = epsilon**(2.0d0/3.0d0)*D**(5.0d0/3.0d0)/We !界面張力
+    real(8),parameter:: kappag = sigma / (2.95d-3) !kappaf=0.06のときの近似式
+
     real(8),parameter:: pi = acos(-1.0d0) !円周率
-
-    real(8),parameter:: epsilon = 7.19d-11
-    real(8),parameter:: kolmogorov = 1.02d0
-
-    real(8),parameter:: tau_l = epsilon**(-1/3)*D_vortex**(2/3)
-    real(8),parameter:: tau_k = epsilon**(-1/3)*kolmogorov**(2/3)
 
     integer,parameter:: k_high = 3
     integer,parameter:: k_low = 1
@@ -94,7 +96,7 @@ contains
 
     !========================並列数・コミュニケータ分割・通信先設定========================
         !配列のallocate(xi:0とx_procs+1がのりしろ)(yi:0とymax+2がのりしろ)(zi:0とz_procs+1がのりしろ)
-        Nx = 8 !x方向の並列数（ただし，Nx/=comm_procs）
+        Nx = 16 !x方向の並列数（ただし，Nx/=comm_procs）
         Ny = comm_procs / (Nx) !z方向の並列数
         x_procs = (xmax+1) / Nx
         y_procs = (ymax+1) / Ny
@@ -153,12 +155,24 @@ contains
         phi_procs(:,:,:) = 0.0d0
     end subroutine ini
 
-    subroutine variable(grad_phi_procs)
+    subroutine variable(grad_phi_procs,chemical_potencial,free_energy,grad_free_energy,lap_phi_procs)
         real(8),allocatable :: grad_phi_procs(:,:,:,:)
+        real(8),allocatable :: chemical_potencial(:,:,:)
+        real(8),allocatable :: free_energy(:,:,:)
+        real(8),allocatable :: grad_free_energy(:,:,:,:)
+        real(8),allocatable :: lap_phi_procs(:,:,:)
 
         allocate(grad_phi_procs(1:3,1:x_procs,1:y_procs,1:zmax+1))
+        allocate(chemical_potencial(1:x_procs,1:y_procs,1:zmax+1))
+        allocate(free_energy(0:x_procs+1,0:y_procs+1,0:zmax+2))
+        allocate(grad_free_energy(1:3,1:x_procs,1:y_procs,1:zmax+1))
+        allocate(lap_phi_procs(1:x_procs,1:y_procs,1:zmax+1))
 
         grad_phi_procs(:,:,:,:) = 0.0d0
+        chemical_potencial(:,:,:) = 0.0d0
+        free_energy(:,:,:) = 0.0d0
+        grad_free_energy(:,:,:,:) = 0.0d0
+        lap_phi_procs(:,:,:) = 0.0d0
     end subroutine variable
 
     subroutine input(u1_procs,u2_procs,u3_procs,p_procs,phi_procs)
@@ -218,26 +232,72 @@ contains
         call MPI_Wait(req2r,sta2r,ierr)
     end subroutine glue
 
-    subroutine various_cal(grad_phi_procs,phi_procs,cr)
-        real(8),intent(out):: grad_phi_procs(1:3,1:x_procs,1:y_procs,1:zmax+1)
-        real(8),intent(in):: phi_procs(0:x_procs+1,0:y_procs+1,0:zmax+2)
+    subroutine grad_cal(varout,var,cr)
+        real(8),intent(out):: varout(1:3,1:x_procs,1:y_procs,1:zmax+1)
+        real(8),intent(in):: var(0:x_procs+1,0:y_procs+1,0:zmax+2)
         real(8),intent(in):: cr(1:3, 1:15)
 
         do zi=1,zmax+1
             do yi=1,y_procs
                 do xi=1,x_procs
                     do alpha=1,3
-                        grad_phi_procs(alpha,xi,yi,zi) = 0.0d0
+                        varout(alpha,xi,yi,zi) = 0.0d0
                         do i = 2,15
-                            grad_phi_procs(alpha,xi,yi,zi) = grad_phi_procs(alpha,xi,yi,zi) &
-                                                    + cr(alpha,i)*phi_procs(xi+cx(i),yi+cy(i),zi+cz(i))
+                            varout(alpha,xi,yi,zi) = varout(alpha,xi,yi,zi) &
+                                                    + cr(alpha,i)*var(xi+cx(i),yi+cy(i),zi+cz(i))
                         enddo
-                        grad_phi_procs(alpha,xi,yi,zi) = grad_phi_procs(alpha,xi,yi,zi) / (10.0d0*ds)
+                        varout(alpha,xi,yi,zi) = varout(alpha,xi,yi,zi) / (10.0d0*ds)
                     enddo
                 enddo
             enddo
         enddo
-    end subroutine various_cal
+    end subroutine grad_cal
+
+    subroutine lap_cal(lap_f,fun)
+        real(8),intent(out):: lap_f(1:x_procs,1:y_procs,1:zmax+1)
+        real(8),intent(in):: fun(0:x_procs+1,0:y_procs+1,0:zmax+2)
+
+        do zi=1,zmax+1
+            do yi=1,y_procs
+                do xi=1,x_procs
+                    lap_f(xi,yi,zi) = -14.0d0*fun(xi,yi,zi)
+                    do i=2,15
+                        lap_f(xi,yi,zi) = lap_f(xi,yi,zi) + fun(xi+cx(i),yi+cy(i),zi+cz(i))
+                    enddo
+                    lap_f(xi,yi,zi) = lap_f(xi,yi,zi) / (5.0d0*ds**2)
+                        enddo
+                    enddo
+                enddo
+            enddo
+        enddo
+    end subroutine lap_cal
+
+    subroutine free_energy_cal(free_energy,phi_procs)
+        real(8),intent(out):: free_energy(0:x_procs+1,0:y_procs+1,0:zmax+2)
+        real(8),intent(in):: phi_procs(0:x_procs+1,0:y_procs+1,0:zmax+2)
+
+        do zi=1,zmax+1
+            do yi=1,y_procs
+                do xi=1,x_procs
+                    free_energy(xi,yi,zi) = phi_procs(xi,yi,zi)*T*log(phi(xi,yi,zi)/(1.0d0-b*phi(xi,yi,zi))) - a*phi(xi,yi,zi)*phi(xi,yi,zi)
+                enddo
+            enddo
+        enddo
+    end subroutine free_energy_cal
+
+    subroutine chemical_potencial_cal(chemical_potencial,grad_free_energy,lap_phi_procs)
+        real(8),intent(inout):: chemical_potencial(1:x_procs,1:y_procs,1:zmax+1)
+        real(8),intent(in):: free_energy(0:x_procs+1,0:y_procs+1,0:zmax+2)
+        real(8),intent(in):: lap_phi_procs(1:x_procs,1:y_procs,1:zmax+1)
+
+        do zi=1,zmax+1
+            do yi=1,y_procs
+                do xi=1,x_procs
+                    chemical_potencial(xi,yi,zi) = grad_free_energy(xi,yi,zi) - kappag*lap_phi_procs(xi,yi,zi)
+                enddo
+            enddo
+        enddo
+    end subroutine chemical_potencial_cal
 
     subroutine At_cal(grad_phi_procs,At_ini)
         real(8),intent(in):: grad_phi_procs(1:3,1:x_procs,1:y_procs,1:zmax+1)
@@ -277,6 +337,9 @@ use globals
     implicit none
     real(8),allocatable :: p_procs(:,:,:), u1_procs(:,:,:), u2_procs(:,:,:), u3_procs(:,:,:), phi_procs(:,:,:)
     real(8),allocatable :: grad_phi_procs(:,:,:,:)
+    real(8),allocatable :: chemical_potencial(:,:,:)
+    real(8),allocatable :: free_energy(:,:,:), grad_free_energy(:,:,:,:)
+    real(8),allocatable :: lap_phi_procs(xi,yi,zi)
     real(8):: cr(1:3, 1:15)  !粒子速度（実数）
     real(8) At_ini
     At_ini = 0.0d0
@@ -290,12 +353,12 @@ use globals
     ! call mk_dirs(datadir_output)
     call par(cr)
     call ini(p_procs,u1_procs,u2_procs,u3_procs,phi_procs)
-    call variable(grad_phi_procs)
+    call variable(grad_phi_procs,chemical_potencial,free_energy,grad_free_energy,lap_phi_procs)
 
 DO n = step_start, step_end, step_bin
     call input(u1_procs,u2_procs,u3_procs,p_procs,phi_procs)
     call glue(phi_procs)
-    call various_cal(grad_phi_procs,phi_procs,cr)
+    call grad_cal(grad_phi_procs,phi_procs,cr)
     call At_cal(grad_phi_procs,At_ini)
 ENDDO
 
