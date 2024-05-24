@@ -6,10 +6,10 @@ module globals
     real(8),parameter :: dy = 1.0d0
     real(8),parameter :: dz = 1.0d0
     !読み込みディレクトリー
-    character(*),parameter :: dir = "/data/sht/nakanog/DNS_turbulence_256_IHT/case25/collect/"
+    character(*),parameter :: dir = "/data/sht/nakanog/vortex/case1/collect/"
     ! character(*),parameter :: dir = "./"
     !出力ディレクトリー
-    character(*),parameter :: datadir = "/data/sht/nakanog/DNS_turbulence_256_IHT/case25/collect/vtk/"
+    character(*),parameter :: datadir = "/data/sht/nakanog/vortex/case1/collect/vtk/"
     ! character(*),parameter :: datadir = "./"
     ! !読み込みディレクトリー
     ! character(*),parameter :: dir = "/data/sht/nakanog/taylor_re12000_ran/ens2/collect/"
@@ -121,7 +121,7 @@ use globals
     integer step, stepnum
     call mk_dirs(datadir)
     stepnum = 1
-    DO step = 3000, 150000, 1000
+    DO step = 5000, 10000000, 5000
         ! step = 51000
         call read_files(scalar, step)
         call output_scalar(scalar, stepnum)
