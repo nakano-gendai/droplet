@@ -15,8 +15,8 @@ use globals
     integer,parameter:: xmax = 255 !ｘ方向格子数
     integer,parameter:: ymax = 255 !ｙ方向格子数
     integer,parameter:: zmax = 255 !ｚ方向格子数
-    integer,parameter:: Nx = 32 !ｘ方向の並列数
-    integer,parameter:: Ny = 32 !ｚ方向の並列数
+    integer,parameter:: Nx = 8 !ｘ方向の並列数
+    integer,parameter:: Ny = 16 !ｚ方向の並列数
     integer,parameter:: x_procs = (xmax+1) / Nx
     integer,parameter:: y_procs = (ymax+1) / Ny
     integer,parameter:: new_procs = Nx * Ny
@@ -28,8 +28,8 @@ use globals
     ! character(*),parameter :: datadir = "/data/sht/nakanog/droplet_test/"
     ! !ディレクトリ作成
     ! character(*),parameter :: datadir2 = "/data/sht/nakanog/droplet_test/gnu/"
-    character(*),parameter :: datadir = "/data/sht/nakanog/DNS_turbulence_256_IHT/case25/"
-    character(*),parameter :: datadir2 = "/data/sht/nakanog/DNS_turbulence_256_IHT/case25/collect/"
+    character(*),parameter :: datadir = "/data/sht/nakanog/vortex/case1/"
+    character(*),parameter :: datadir2 = "/data/sht/nakanog/vortex/case1/collect/"
     real(8) phi(0:xmax,0:ymax,0:zmax)
     real(8) u1(0:xmax,0:ymax,0:zmax)
     real(8) u2(0:xmax,0:ymax,0:zmax)
@@ -47,7 +47,7 @@ use globals
     call mk_dirs(datadir2)
 
 !============phiをまとめて出力するプログラム=============================================
-    do step=3000, 100000, 1000
+    do step=5000, 100000, 5000
         if((step > 99) .and. (step < 1000)) then
             write(file_num2, "(i3)") step
         elseif((step > 999) .and. (step < 10000)) then

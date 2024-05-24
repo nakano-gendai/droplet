@@ -16,15 +16,15 @@ module globals
     integer,parameter:: xmax = 255 !ｘ方向格子数（０から数える）
     integer,parameter:: ymax = 255 !ｙ方向格子数（０から数える）
     integer,parameter:: zmax = 255 !ｚ方向格子数（０から数える）
-    integer,parameter:: step_start = 19000
-    integer,parameter:: step_end = 20000
+    integer,parameter:: step_start = 5000
+    integer,parameter:: step_end = 22000
     integer,parameter:: step_bin = 1000
     integer,parameter:: step_num2 = (step_end - step_start) / step_bin + 1 
 
     !読み込みディレクトリ
-    character(*),parameter :: datadir_input = "/data/sht/nakanog/DNS_turbulence_256_IHT/case4/"
+    character(*),parameter :: datadir_input = "/data/sht/nakanog/DNS_turbulence_256_IHT/case26/"
     !出力ディレクトリ
-    character(*),parameter :: datadir_output = "/data/sht/nakanog/DNS_turbulence_256_IHT/case4/large/"
+    character(*),parameter :: datadir_output = "/data/sht/nakanog/DNS_turbulence_256_IHT/case26/large/"
 
     !粒子速度（整数）
     integer,parameter:: cx(15) = (/0, 1, 0,  0, -1,  0,  0,  1, -1,  1,  1, -1,  1, -1, -1/)
@@ -32,7 +32,7 @@ module globals
     integer,parameter:: cz(15) = (/0, 0, 0,  1,  0,  0, -1,  1,  1,  1, -1, -1, -1, -1,  1/)
 
     !無次元数
-    real(8),parameter:: We = 1.4d0 !粒子ウエーバー数
+    real(8),parameter:: We = 1.8d0 !粒子ウエーバー数
     real(8),parameter:: eta = 1.0d0 !粘度比（nu2/nu1）
 
     real(8),parameter:: epsilon = 1.32d-9 !エネルギー散逸率
@@ -57,7 +57,7 @@ module globals
     !その他変数
     real(8) dummy
     real(8) time1, time2 !計算時間測定用
-    integer i, j, n, xi, yi, zi, alpha, beta
+    integer i, j, k, n, xi, yi, zi, alpha, beta
     character :: filename*200
     character :: filename2*200
     character :: filename3*200
@@ -394,10 +394,10 @@ contains
 
                     if(k3 == 0) then
                         comp_tmp = advection_phi_hat(k1,k2,k3) * conjg(chemical_potencial_hat(k1,k2,k3))
-                        enesupe_phi(k_index) = enesupe_phi(k_index) - 4.0d0 * pi * k_abs**2.0d0 * REAL(comp_tmp)
+                        enesupe_phi(k_index) = enesupe_phi(k_index) - REAL(comp_tmp)
                     else 
                         comp_tmp = advection_phi_hat(k1,k2,k3) * conjg(chemical_potencial_hat(k1,k2,k3))
-                        enesupe_phi(k_index) = enesupe_phi(k_index) - 4.0d0 * pi * k_abs**2.0d0 * REAL(comp_tmp) * 2.0d0
+                        enesupe_phi(k_index) = enesupe_phi(k_index) - 2.0d0 * REAL(comp_tmp) 
                     endif
                 enddo
             enddo
@@ -413,11 +413,16 @@ contains
 
         if(n == step_end) then
             if(comm_rank==0) then
-                open(37,file ="./enesupe_phi.d")
+                ! write(filename2,*) n
+                ! filename=trim(adjustl(filename2))//'.d' 
+                ! print *, filename !表示してみる
+                ! open(102,file=filename, form='formatted',status='replace') 
+                open(37,file ="./enesupe_phi_40case26.d")
                 do i=1,(xmax+1)/2+1
                     enesupe_phi_result(i) = enesupe_phi_result(i) / dble(step_num2)
                     write(37,"(2es16.8)") (dble(i)-1.0d0), enesupe_phi_result(i)
                 enddo
+                ! close(102)
                 close(37)
             endif
         endif

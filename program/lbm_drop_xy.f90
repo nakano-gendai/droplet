@@ -17,33 +17,37 @@ module globals
     integer,parameter:: xall = (xmax + 1) * Nxall !全体のx方向格子数
     integer,parameter:: yall = (ymax + 1) * Nyall !全体のz方向格子数
     !時間に関するパラメータ
-    integer,parameter:: step = 10000000 !計算時間step
+    integer,parameter:: step = 2000000 !計算時間step
     integer,parameter:: step_input = 5000 !速度場入力時間step
     integer,parameter:: step_input_file_num = 11000000 !入力する乱流場のstep
     !入力ディレクトリ
     character(*),parameter :: datadir_input = "/data/lng/nakanog/taylor_512_re100000_large_xy/fg/"
     !出力ディレクトリ
-    character(*),parameter :: datadir_output = "/data/sht/nakanog/taylor_512_drop_movie/"
-    character(*),parameter :: datadir_output_fg = "/data/sht/nakanog/taylor_512_drop_movie/fg/"
-    integer,parameter:: step_output = 5000
-    integer,parameter:: step_putput_fg = 200000
+    character(*),parameter :: datadir_output = "/data/sht/nakanog/vortex/case1/"
+    character(*),parameter :: datadir_output_fg = "/data/sht/nakanog/vortex/case1/fg/"
+    integer,parameter:: step_output = 1000
+    integer,parameter:: step_putput_fg = 100000
 
     !無次元数
     real(8),parameter:: Re = 160000.0d0 !粒子レイノルズ数
     real(8),parameter:: eta = 1.0d0 !粘度比（nu2/nu1）
+    real(8),parameter:: Ca = 10.0d0 !粒子キャピラリー数
 
     !撹乱（乱数）のオーダー
     real(8), parameter :: ran = 1.0d-3
 
     !支配パラメータ
     real(8),parameter:: pi = acos(-1.0d0) !円周率
-    real(8),parameter:: D = 255.5d0 !設置する液滴直径
-    real(8),parameter:: D_vortex = 255.5d0 !渦の大きさ
+    real(8),parameter:: D_vortex = 127.5d0 !渦の大きさ
+    real(8),parameter:: D_ratio = 0.375d0 !液滴径と渦の大きさの比率
+    real(8),parameter:: D = D_ratio * D_vortex !設置する液滴直径
     real(8),parameter:: kw = pi/D_vortex !波数
-    real(8),parameter:: umax = 0.1d0 !最大流速
-    real(8),parameter:: nu1 = umax*D_vortex/Re !連続相の粘性係数
+    real(8),parameter:: umax = 0.0001d0 !最大流速
+    ! real(8),parameter:: nu1 = umax*D_vortex/Re !連続相の粘性係数
+    real(8),parameter:: nu1 = 0.358d0 !連続相の粘性係数
     real(8),parameter:: nu2 = eta*nu1 !分散相の粘性係数
-    real(8),parameter:: sigma = 9.0d-6 !界面張力
+    ! real(8),parameter:: sigma = 9.0d-6 !界面張力
+    real(8),parameter:: sigma = 2.0d0*nu1*umax*D_ratio / Ca !界面張力
     real(8),parameter:: kappag = (sigma/1.7039d0)**(1.0d0/0.9991d0)  !界面張力を決めるパラメータ
     real(8),parameter:: kappaf = 0.01d0*ds**2 !界面厚さを決めるパラメータ
     real(8),parameter:: phi1 = 2.211d0 !連続相のオーダーパラメータ
@@ -55,9 +59,12 @@ module globals
     real(8),parameter:: Anu = 0.0d0 !粘性係数が小さいときに値を入れると良い
 
     !初期液滴中心
-    real(8), parameter:: xc = 0.5d0*dble(xmax)	
+    ! real(8), parameter:: xc = 0.5d0*dble(xmax)	
+    ! real(8), parameter:: yc = 0.5d0*dble(ymax)
+    ! real(8), parameter:: zc = 0.5d0*dble(zmax)
+    real(8), parameter:: xc = 30.0d0
     real(8), parameter:: yc = 0.5d0*dble(ymax)
-    real(8), parameter:: zc = 0.5d0*dble(zmax)
+    real(8), parameter:: zc = 30.0d0
 
     !粒子速度（整数）
     integer,parameter:: cx(15) = (/0, 1, 0,  0, -1,  0,  0,  1, -1,  1,  1, -1,  1, -1, -1/)
@@ -133,7 +140,7 @@ contains
 
     !========================並列数・コミュニケータ分割・通信先設定========================
         !配列のallocate(xi:0とx_procs+1がのりしろ)(yi:0とymax+2がのりしろ)(zi:0とz_procs+1がのりしろ)
-        Nx = 32 !x方向の並列数（ただし，Nx/=comm_procs）
+        Nx = 8 !x方向の並列数（ただし，Nx/=comm_procs）
         Ny = comm_procs / (Nx * Nxall * Nyall) !z方向の並列数
         x_procs = (xmax+1) / Nx
         y_procs = (ymax+1) / Ny
@@ -780,39 +787,39 @@ use globals
 DO n=1,step
 !============================流れの入力（撹乱を添加）=========================================
     if(n == step_input) then
-        write(filename2,*) step_input_file_num
-        write(filename3,*) comm_rank
-        filename=datadir_input//'0_'//trim(adjustl(filename3))//'_'//trim(adjustl(filename2))//'_fg.bin' !adjustlで左寄せにしてからtrimで末尾の空白除去，拡張子等をくっつける
-        print *, filename !表示してみる
-        open(103, file=filename, form="unformatted")
-        do zi=1,zmax+1
-            do yi=1,y_procs
-                do xi=1,x_procs
-                    do i=1,15
-                        read(103) g_procs(i,xi,yi,zi)
-                        ! read(103) dummy, g_procs(i,xi,yi,zi)
-                    enddo
-                enddo
-            enddo
-        enddo
-        close(103)
+        ! write(filename2,*) step_input_file_num
+        ! write(filename3,*) comm_rank
+        ! filename=datadir_input//'0_'//trim(adjustl(filename3))//'_'//trim(adjustl(filename2))//'_fg.bin' !adjustlで左寄せにしてからtrimで末尾の空白除去，拡張子等をくっつける
+        ! print *, filename !表示してみる
+        ! open(103, file=filename, form="unformatted")
+        ! do zi=1,zmax+1
+        !     do yi=1,y_procs
+        !         do xi=1,x_procs
+        !             do i=1,15
+        !                 read(103) g_procs(i,xi,yi,zi)
+        !                 ! read(103) dummy, g_procs(i,xi,yi,zi)
+        !             enddo
+        !         enddo
+        !     enddo
+        ! enddo
+        ! close(103)
 
-        do zi=1,zmax+1
-            do yi=1,y_procs
-                do xi=1,x_procs
-                    p_procs(xi,yi,zi) = 0.0d0
-                    u1_procs(xi,yi,zi) = 0.0d0
-                    u2_procs(xi,yi,zi) = 0.0d0
-                    u3_procs(xi,yi,zi) = 0.0d0
-                    do i=1,15
-                        p_procs(xi,yi,zi) = p_procs(xi,yi,zi) + g_procs(i,xi,yi,zi) / 3.0d0
-                        u1_procs(xi,yi,zi) = u1_procs(xi,yi,zi) + dble(cx(i))*g_procs(i,xi,yi,zi)
-                        u2_procs(xi,yi,zi) = u2_procs(xi,yi,zi) + dble(cy(i))*g_procs(i,xi,yi,zi)
-                        u3_procs(xi,yi,zi) = u3_procs(xi,yi,zi) + dble(cz(i))*g_procs(i,xi,yi,zi)
-                    enddo
-                enddo
-            enddo
-        enddo
+        ! do zi=1,zmax+1
+        !     do yi=1,y_procs
+        !         do xi=1,x_procs
+        !             p_procs(xi,yi,zi) = 0.0d0
+        !             u1_procs(xi,yi,zi) = 0.0d0
+        !             u2_procs(xi,yi,zi) = 0.0d0
+        !             u3_procs(xi,yi,zi) = 0.0d0
+        !             do i=1,15
+        !                 p_procs(xi,yi,zi) = p_procs(xi,yi,zi) + g_procs(i,xi,yi,zi) / 3.0d0
+        !                 u1_procs(xi,yi,zi) = u1_procs(xi,yi,zi) + dble(cx(i))*g_procs(i,xi,yi,zi)
+        !                 u2_procs(xi,yi,zi) = u2_procs(xi,yi,zi) + dble(cy(i))*g_procs(i,xi,yi,zi)
+        !                 u3_procs(xi,yi,zi) = u3_procs(xi,yi,zi) + dble(cz(i))*g_procs(i,xi,yi,zi)
+        !             enddo
+        !         enddo
+        !     enddo
+        ! enddo
 
         call externalforce(forcex,forcey,forcez)
         call glue(forcex)
@@ -843,8 +850,8 @@ DO n=1,step
     call MPI_Barrier(MPI_COMM_WORLD, ierr)
     time2 = MPI_Wtime()
     if(comm_rank == 0) then
-        if(mod(n,1000)==0) then
-            if(n == 1000) then
+        if(mod(n,100)==0) then
+            if(n == 100) then
                 open(10,file="./time.d")
                 write(10,*) n, time2-time1, u1_procs(1,1,1)
                 close(10)
