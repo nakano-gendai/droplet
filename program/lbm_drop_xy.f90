@@ -19,9 +19,9 @@ module globals
     !時間に関するパラメータ
     integer,parameter:: step = 2000000 !計算時間step
     integer,parameter:: step_input = 5000 !速度場入力時間step
-    integer,parameter:: step_input_file_num = 11000000 !入力する乱流場のstep
+    integer,parameter:: step_input_file_num = 50000 !入力する乱流場のstep
     !入力ディレクトリ
-    character(*),parameter :: datadir_input = "/data/lng/nakanog/taylor_512_re100000_large_xy/fg/"
+    character(*),parameter :: datadir_input = "/data/sht/nakanog/vortex/run1/fg/"
     !出力ディレクトリ
     character(*),parameter :: datadir_output = "/data/sht/nakanog/vortex/case1/"
     character(*),parameter :: datadir_output_fg = "/data/sht/nakanog/vortex/case1/fg/"
@@ -29,7 +29,7 @@ module globals
     integer,parameter:: step_putput_fg = 100000
 
     !無次元数
-    real(8),parameter:: Re = 160000.0d0 !粒子レイノルズ数
+    real(8),parameter:: Re = 0.01d0 !粒子レイノルズ数
     real(8),parameter:: eta = 1.0d0 !粘度比（nu2/nu1）
     real(8),parameter:: Ca = 10.0d0 !粒子キャピラリー数
 
@@ -44,10 +44,10 @@ module globals
     real(8),parameter:: kw = pi/D_vortex !波数
     real(8),parameter:: umax = 0.0001d0 !最大流速
     ! real(8),parameter:: nu1 = umax*D_vortex/Re !連続相の粘性係数
-    real(8),parameter:: nu1 = 0.358d0 !連続相の粘性係数
+    real(8),parameter:: nu1 = umax*D_vortex*D_ratio/Re !連続相の粘性係数
     real(8),parameter:: nu2 = eta*nu1 !分散相の粘性係数
     ! real(8),parameter:: sigma = 9.0d-6 !界面張力
-    real(8),parameter:: sigma = 2.0d0*nu1*umax*D_ratio / Ca !界面張力
+    real(8),parameter:: sigma = nu1*umax / Ca !界面張力
     real(8),parameter:: kappag = (sigma/1.7039d0)**(1.0d0/0.9991d0)  !界面張力を決めるパラメータ
     real(8),parameter:: kappaf = 0.01d0*ds**2 !界面厚さを決めるパラメータ
     real(8),parameter:: phi1 = 2.211d0 !連続相のオーダーパラメータ
@@ -62,9 +62,9 @@ module globals
     ! real(8), parameter:: xc = 0.5d0*dble(xmax)	
     ! real(8), parameter:: yc = 0.5d0*dble(ymax)
     ! real(8), parameter:: zc = 0.5d0*dble(zmax)
-    real(8), parameter:: xc = 30.0d0
+    real(8), parameter:: xc = 24.0d0
     real(8), parameter:: yc = 0.5d0*dble(ymax)
-    real(8), parameter:: zc = 30.0d0
+    real(8), parameter:: zc = 24.0d0
 
     !粒子速度（整数）
     integer,parameter:: cx(15) = (/0, 1, 0,  0, -1,  0,  0,  1, -1,  1,  1, -1,  1, -1, -1/)
@@ -787,39 +787,39 @@ use globals
 DO n=1,step
 !============================流れの入力（撹乱を添加）=========================================
     if(n == step_input) then
-        ! write(filename2,*) step_input_file_num
-        ! write(filename3,*) comm_rank
-        ! filename=datadir_input//'0_'//trim(adjustl(filename3))//'_'//trim(adjustl(filename2))//'_fg.bin' !adjustlで左寄せにしてからtrimで末尾の空白除去，拡張子等をくっつける
-        ! print *, filename !表示してみる
-        ! open(103, file=filename, form="unformatted")
-        ! do zi=1,zmax+1
-        !     do yi=1,y_procs
-        !         do xi=1,x_procs
-        !             do i=1,15
-        !                 read(103) g_procs(i,xi,yi,zi)
-        !                 ! read(103) dummy, g_procs(i,xi,yi,zi)
-        !             enddo
-        !         enddo
-        !     enddo
-        ! enddo
-        ! close(103)
+        write(filename2,*) step_input_file_num
+        write(filename3,*) comm_rank
+        filename=datadir_input//'0_'//trim(adjustl(filename3))//'_'//trim(adjustl(filename2))//'_fg.bin' !adjustlで左寄せにしてからtrimで末尾の空白除去，拡張子等をくっつける
+        print *, filename !表示してみる
+        open(103, file=filename, form="unformatted")
+        do zi=1,zmax+1
+            do yi=1,y_procs
+                do xi=1,x_procs
+                    do i=1,15
+                        read(103) g_procs(i,xi,yi,zi)
+                        ! read(103) dummy, g_procs(i,xi,yi,zi)
+                    enddo
+                enddo
+            enddo
+        enddo
+        close(103)
 
-        ! do zi=1,zmax+1
-        !     do yi=1,y_procs
-        !         do xi=1,x_procs
-        !             p_procs(xi,yi,zi) = 0.0d0
-        !             u1_procs(xi,yi,zi) = 0.0d0
-        !             u2_procs(xi,yi,zi) = 0.0d0
-        !             u3_procs(xi,yi,zi) = 0.0d0
-        !             do i=1,15
-        !                 p_procs(xi,yi,zi) = p_procs(xi,yi,zi) + g_procs(i,xi,yi,zi) / 3.0d0
-        !                 u1_procs(xi,yi,zi) = u1_procs(xi,yi,zi) + dble(cx(i))*g_procs(i,xi,yi,zi)
-        !                 u2_procs(xi,yi,zi) = u2_procs(xi,yi,zi) + dble(cy(i))*g_procs(i,xi,yi,zi)
-        !                 u3_procs(xi,yi,zi) = u3_procs(xi,yi,zi) + dble(cz(i))*g_procs(i,xi,yi,zi)
-        !             enddo
-        !         enddo
-        !     enddo
-        ! enddo
+        do zi=1,zmax+1
+            do yi=1,y_procs
+                do xi=1,x_procs
+                    p_procs(xi,yi,zi) = 0.0d0
+                    u1_procs(xi,yi,zi) = 0.0d0
+                    u2_procs(xi,yi,zi) = 0.0d0
+                    u3_procs(xi,yi,zi) = 0.0d0
+                    do i=1,15
+                        p_procs(xi,yi,zi) = p_procs(xi,yi,zi) + g_procs(i,xi,yi,zi) / 3.0d0
+                        u1_procs(xi,yi,zi) = u1_procs(xi,yi,zi) + dble(cx(i))*g_procs(i,xi,yi,zi)
+                        u2_procs(xi,yi,zi) = u2_procs(xi,yi,zi) + dble(cy(i))*g_procs(i,xi,yi,zi)
+                        u3_procs(xi,yi,zi) = u3_procs(xi,yi,zi) + dble(cz(i))*g_procs(i,xi,yi,zi)
+                    enddo
+                enddo
+            enddo
+        enddo
 
         call externalforce(forcex,forcey,forcez)
         call glue(forcex)

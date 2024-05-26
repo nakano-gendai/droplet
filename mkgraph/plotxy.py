@@ -21,9 +21,9 @@ datadir ="./"
 plotdir, datadir, ext = plotdir + '/', datadir + '/', '.' + ext
 dfile1   = datadir + 'enesupe_phi_d40we1.4.d'
 dfile2   = datadir + 'enesupe_phi_d70we1.2.d'
-# dfile3   = datadir + 'D100.d'
-# dfile4   = datadir + 'case21.d'
-# dfile5   = datadir + 'case26.d'
+dfile3   = datadir + 'enesupe_phi_d70we1.4.d'
+# dfile4   = datadir + 'enesupe_phi_d40we1.2.d'
+# dfile5   = datadir + 'enesupe_phi_d40we1.4.d'
 # dfile6   = datadir + 'case1_e.d'
 # dfile7   = datadir + 'case2_e.d'
 # dfile8   = datadir + 'case20_e.d'
@@ -55,7 +55,7 @@ def sns_set(fs, tck_s, alw, ctxt):
 ### 読み込み
 x1 = np.loadtxt(dfile1, usecols = 0, dtype = 'float64') # usecolsは列番号　dtypeは実数float64, 整数
 x2 = np.loadtxt(dfile2, usecols = 0, dtype = 'float64') # usecolsは列番号　dtypeは実数float64, 整数
-# x3 = np.loadtxt(dfile3, usecols = 0, dtype = 'float64') # usecolsは列番号　dtypeは実数float64, 整数
+x3 = np.loadtxt(dfile3, usecols = 0, dtype = 'float64') # usecolsは列番号　dtypeは実数float64, 整数
 # x4 = np.loadtxt(dfile4, usecols = 0, dtype = 'float64') # usecolsは列番号　dtypeは実数float64, 整数
 # x5 = np.loadtxt(dfile5, usecols = 0, dtype = 'float64') # usecolsは列番号　dtypeは実数float64, 整数
 # x6 = np.loadtxt(dfile6, usecols = 0, dtype = 'float64') # usecolsは列番号　dtypeは実数float64, 整数
@@ -66,9 +66,9 @@ x2 = np.loadtxt(dfile2, usecols = 0, dtype = 'float64') # usecolsは列番号　
 
 y1 = np.loadtxt(dfile1, usecols = 1, dtype = 'float64')
 y2 = np.loadtxt(dfile2, usecols = 1, dtype = 'float64')
-# y3 = np.loadtxt(dfile3, usecols = 1, dtype = 'float64')
-# y4 = np.loadtxt(dfile4, usecols = 2, dtype = 'float64')
-# y5 = np.loadtxt(dfile5, usecols = 2, dtype = 'float64')
+y3 = np.loadtxt(dfile3, usecols = 1, dtype = 'float64')
+# y4 = np.loadtxt(dfile4, usecols = 1, dtype = 'float64')
+# y5 = np.loadtxt(dfile5, usecols = 1, dtype = 'float64')
 # y6 = np.loadtxt(dfile6, usecols = 2, dtype = 'float64')
 # y7 = np.loadtxt(dfile7, usecols = 2, dtype = 'float64')
 # y8 = np.loadtxt(dfile8, usecols = 2, dtype = 'float64')
@@ -207,16 +207,17 @@ def plot_y1y2(): # y1, y2プロット用
     #         label = r'case6') 
 
     
-    ax1.plot(x1, y1, lw = lw1*1.5, ls = 'solid',  color = 'black', alpha = 1.0, clip_on = True, zorder = 14, label = r'$D=40, \mathrm{We} = 1.4$')
-    ax1.plot(x2, y2, lw = lw1*1.5, ls = 'solid',  color = 'gray', alpha = 1.0, clip_on = True, zorder = 15, label = r'$D=70, \mathrm{We} = 1.2$')
-    # ax1.plot(x3, y3, lw = lw1*1.5, ls = 'solid',  color = 'black', alpha = 0.3, clip_on = True, zorder = 16)
-    # ax1.plot(x4, y4, lw = lw1*1.5, ls = 'solid',  color = 'blue', alpha = 0.6, clip_on = True, zorder = 17)
-    # ax1.plot(x5, y5, lw = lw1*1.5, ls = 'solid',  color = 'blue', alpha = 0.2, clip_on = True, zorder = 18)
+    ax1.plot(x1, y1, lw = lw1*1.5, ls = 'solid',  color = 'dimgray', alpha = 1.0, clip_on = True, zorder = 14, label = r'$D = 40$')
+    # ax1.plot(x2, y2, lw = lw1*1.5, ls = 'solid',  color = 'dimgray', alpha = 0.5, clip_on = True, zorder = 15, label = r'$D = 70, \mathrm{We} = 1.2$')
+    ax1.plot(x3, y3, lw = lw1*1.5, ls = 'solid',  color = 'dimgray', alpha = 0.5, clip_on = True, zorder = 16, label = r'$D = 70$')
+    # ax1.plot(x4, y4, lw = lw1*1.5, ls = 'solid',  color = 'dimgray', alpha = 0.4, clip_on = True, zorder = 17, label = r'$\mathrm{We} = 1.2$')
+    # ax1.plot(x5, y5, lw = lw1*1.5, ls = 'solid',  color = 'dimgray', alpha = 0.2, clip_on = True, zorder = 18, label = r'$\mathrm{We} = 1.4$')
     # # ax1.plot(x6, y6, lw = lw1*1.5, ls = 'dashed',  color = 'blue', alpha = 1, clip_on = True, zorder = 11, label = 'small (LES)')
     # ax1.plot(x7, y7, lw = lw1*1.5, ls = 'dashed',  color = 'black', alpha = 0.9, clip_on = True, zorder = 11, label = r'case11')
     # ax1.plot(x8, y8, lw = lw1*2.3, ls = 'solid',  color = 'cyan', alpha = 1, clip_on = True, zorder = 11, label = r'$\mathrm{Re}\approx 0.2$, $\mathrm{Ca}\approx 0.4$ (initial data)')
     
-    # ax1.axvline(0.392, lw = lw1*0.8, ls = 'dotted', dashes = [1, 2], color = 'red', label = r'$\pi / \Delta$') # dashesで破線の間隔などを設定できる
+    ax1.axvline(255/40, lw = lw1*0.5, ls = 'dotted', dashes = [1, 2], color = 'royalblue', label = r'$k_{D=40}$') # dashesで破線の間隔などを設定できる
+    ax1.axvline(255/70, lw = lw1*0.5, ls = 'dotted', dashes = [1, 4], color = 'royalblue', label = r'$k_{D=70}$') # dashesで破線の間隔などを設定できる
     # za=np.arange(0.02, 1, 0.0001)
     # ua=0.7*10.0**(-6)*za**(-5/3)
     # ax1.plot(za, ua, lw = lw1*0.8, ls = 'dotted',  color = 'blue', 
@@ -232,7 +233,7 @@ def plot_y1y2(): # y1, y2プロット用
     framealpha = 1.0, fancybox=False, fontsize=8.0,
     edgecolor = "black").get_frame().set_linewidth(alw*0.8)
     # ### 保存
-    fig.savefig(plotdir + "enesupe_phi" + ext, bbox_inches = "tight") # bbox_inches="tight"で余白をなくす
+    fig.savefig(plotdir + "enesupe_phi_we1.4_d40_70" + ext, bbox_inches = "tight") # bbox_inches="tight"で余白をなくす
 
 ##=================== main ===================##
 if __name__ == '__main__':

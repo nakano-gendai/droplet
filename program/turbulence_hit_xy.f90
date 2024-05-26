@@ -16,13 +16,13 @@ module globals
     integer,parameter:: xmax = 255 !ｘ方向格子数（０から数える）
     integer,parameter:: ymax = 255 !ｙ方向格子数（０から数える）
     integer,parameter:: zmax = 255 !ｚ方向格子数（０から数える）
-    integer,parameter:: step_start = 400000
-    integer,parameter:: step_end = 760000
-    integer,parameter:: step_bin = 4000
+    integer,parameter:: step_start = 5000
+    integer,parameter:: step_end = 39000
+    integer,parameter:: step_bin = 1000
     integer,parameter:: step_num2 = (step_end - step_start) / step_bin + 1 
 
     !読み込みディレクトリ
-    character(*),parameter :: datadir_input = "/data/sht/nakanog/DNS_turbulence_256_IHT/"
+    character(*),parameter :: datadir_input = "/data/sht/nakanog/DNS_turbulence_256_IHT/case5/"
     !出力ディレクトリ
     character(*),parameter :: datadir_output = "/data/sht/nakanog/DNS_turbulence_256_IHT/eddy/small/"
 
@@ -35,7 +35,7 @@ module globals
     !無次元数
     real(8),parameter:: eta = 1.0d0 !粘度比（nu2/nu1）
 
-    real(8),parameter:: D = 127.5d0 !設置する液滴直径
+    real(8),parameter:: D = 40.0d0 !設置する液滴直径
     real(8),parameter:: nu1 = 0.001d0 !連続相の粘性係数
     real(8),parameter:: nu2 = eta*nu1 !分散相の粘性係数
     real(8),parameter:: pi = acos(-1.0d0) !円周率
@@ -227,8 +227,8 @@ contains
         do zi=1,zmax+1
             do yi=1,y_procs
                 do xi=1,x_procs
-                    read(10) u1_procs(xi,yi,zi), u2_procs(xi,yi,zi), u3_procs(xi,yi,zi), p_procs(xi,yi,zi)
-                    ! read(10) s, u1_procs(xi,yi,zi), u2_procs(xi,yi,zi), u3_procs(xi,yi,zi), p_procs(xi,yi,zi)
+                    ! read(10) u1_procs(xi,yi,zi), u2_procs(xi,yi,zi), u3_procs(xi,yi,zi), p_procs(xi,yi,zi)
+                    read(10) s, u1_procs(xi,yi,zi), u2_procs(xi,yi,zi), u3_procs(xi,yi,zi), p_procs(xi,yi,zi)
                 enddo
             enddo
         enddo
@@ -811,9 +811,9 @@ use glassman
     !     enddo
     ! enddo
 !================================物理量計算================================
-    ! DO n = step_start, step_end, step_bin
-    !     !入力ファイル読み込み
-    !     call input(u1_procs,u2_procs,u3_procs,p_procs)
+    DO n = step_start, step_end, step_bin
+        !入力ファイル読み込み
+        call input(u1_procs,u2_procs,u3_procs,p_procs)
     !     !変動速度の計算
     !     u1_procs_fluctuation(:,:,:) = 0.0d0
     !     u2_procs_fluctuation(:,:,:) = 0.0d0
@@ -843,23 +843,23 @@ use glassman
     !     call u_grad_cal(u_grad,u_grad_ave,grad_u_procs)
     !     call taylor_re_cal(u_rms_ave,u_rms_ave_sum,u_grad_ave,u_grad_ave_sum,taylor_re,taylor_length,u_rms,u_grad)
 
-    !     !エネルギースペクトル
-    !     call enesupe_cal(u1_procs,u2_procs,u3_procs,u1_procs_re,u2_procs_re,u3_procs_re,u1_hat,u2_hat,u3_hat,enesupe,enesupe_sum)
-    !     if(comm_rank == 0) then
-    !         do i = 1, (xmax+1)/2 + 1
-    !             enesupe_result(i) = enesupe_result(i) + enesupe_sum(i)
-    !         enddo
-    !     endif
-    ! ENDDO
+        !エネルギースペクトル
+        call enesupe_cal(u1_procs,u2_procs,u3_procs,u1_procs_re,u2_procs_re,u3_procs_re,u1_hat,u2_hat,u3_hat,enesupe,enesupe_sum)
+        if(comm_rank == 0) then
+            do i = 1, (xmax+1)/2 + 1
+                enesupe_result(i) = enesupe_result(i) + enesupe_sum(i)
+            enddo
+        endif
+    ENDDO
 
-    ! if(comm_rank==0) then
-    !     open(37,file ="./enesupe_HIT.d")
-    !     do i=1,(xmax+1)/2+1
-    !         enesupe_result(i) = enesupe_result(i) / dble(step_num2)
-    !         write(37,"(2es16.8)") dble(i)-1.0d0, enesupe_result(i)
-    !     enddo
-    !     close(37)
-    ! endif
+    if(comm_rank==0) then
+        open(37,file ="./enesupe_d70we1.2.d")
+        do i=1,(xmax+1)/2+1
+            enesupe_result(i) = enesupe_result(i) / dble(step_num2)
+            write(37,"(2es16.8)") dble(i)-1.0d0, enesupe_result(i)
+        enddo
+        close(37)
+    endif
 
     ! !積分長
     ! if(comm_rank == 0) then
@@ -877,31 +877,31 @@ use glassman
 
     !=======エンストロフィー＝＝＝＝＝＝＝＝＝＝＝＝＝
     ! DO n = step_start, step_end, step_bin
-        n = 400000
-        call input(u1_procs,u2_procs,u3_procs,p_procs)
-        call scale_cal(u1_procs,u2_procs,u3_procs,u1_procs_re,u2_procs_re,u3_procs_re,u1_hat,u2_hat,u3_hat)
-        call glue(u1_procs)
-        call glue(u2_procs)
-        call glue(u3_procs)
-        call grad_u_cal(grad_u_procs, u1_procs, u2_procs, u3_procs)
-        call vorticity_cal(grad_u_procs,vorticity_procs)
-        call enstrophy_cal(vorticity_procs,enstrophy_procs)
-        enstrophy_sum = 0.0d0
-        do zi=1,zmax+1
-            do yi=1,y_procs
-                do xi=1,x_procs
-                    enstrophy_sum = enstrophy_sum + enstrophy_procs(xi,yi,zi)
-                enddo
-            enddo
-        enddo
-        call MPI_Reduce(enstrophy_sum, enstrophy_ave, 1, MPI_REAL8, MPI_SUM, 0, MPI_COMM_WORLD, ierr)
-        if(comm_rank == 0) then
-            enstrophy_ave = enstrophy_ave / (dble(xmax+1)*dble(ymax+1)*dble(zmax+1))
-            open(100,file = "./enstrophy_ave_small.d",action="write",position="append")
-            write(100,*) enstrophy_ave
-            close(100)
-        endif
-        call output(enstrophy_procs)
+        ! n = 400000
+        ! call input(u1_procs,u2_procs,u3_procs,p_procs)
+        ! call scale_cal(u1_procs,u2_procs,u3_procs,u1_procs_re,u2_procs_re,u3_procs_re,u1_hat,u2_hat,u3_hat)
+        ! call glue(u1_procs)
+        ! call glue(u2_procs)
+        ! call glue(u3_procs)
+        ! call grad_u_cal(grad_u_procs, u1_procs, u2_procs, u3_procs)
+        ! call vorticity_cal(grad_u_procs,vorticity_procs)
+        ! call enstrophy_cal(vorticity_procs,enstrophy_procs)
+        ! enstrophy_sum = 0.0d0
+        ! do zi=1,zmax+1
+        !     do yi=1,y_procs
+        !         do xi=1,x_procs
+        !             enstrophy_sum = enstrophy_sum + enstrophy_procs(xi,yi,zi)
+        !         enddo
+        !     enddo
+        ! enddo
+        ! call MPI_Reduce(enstrophy_sum, enstrophy_ave, 1, MPI_REAL8, MPI_SUM, 0, MPI_COMM_WORLD, ierr)
+        ! if(comm_rank == 0) then
+        !     enstrophy_ave = enstrophy_ave / (dble(xmax+1)*dble(ymax+1)*dble(zmax+1))
+        !     open(100,file = "./enstrophy_ave_small.d",action="write",position="append")
+        !     write(100,*) enstrophy_ave
+        !     close(100)
+        ! endif
+        ! call output(enstrophy_procs)
     ! ENDDO
 
     !Q

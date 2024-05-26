@@ -14,9 +14,9 @@ module globals
     include 'fftw3.f'
     !計算領域
     real(8),parameter:: ds = 1.0d0 !格子間隔（lattice unit）
-    integer,parameter:: xmax = 63 !ｘ方向格子数（０から数える）
-    integer,parameter:: ymax = 63 !ｙ方向格子数（０から数える）
-    integer,parameter:: zmax = 63 !ｚ方向格子数（０から数える）
+    integer,parameter:: xmax = 255 !ｘ方向格子数（０から数える）
+    integer,parameter:: ymax = 255 !ｙ方向格子数（０から数える）
+    integer,parameter:: zmax = 255 !ｚ方向格子数（０から数える）
     !並行して計算する数
     integer,parameter:: Nxall = 1 !x方向の分割数（Nxall*Nzall=全体の計算数）
     integer,parameter:: Nyall = 1 !z方向の分割数（Nxall*Nzall=全体の計算数）
@@ -25,13 +25,13 @@ module globals
     !時間に関するパラメータ
     integer,parameter:: step = 10000000 !計算時間step
     !出力ディレクトリ
-    character(*),parameter :: datadir = "/data/sht/nakanog/taylor_64/"
-    character(*),parameter :: datadir2 = "/data/sht/nakanog/taylor_64/fg/"
+    character(*),parameter :: datadir = "/data/sht/nakanog/vortex/run1/"
+    character(*),parameter :: datadir2 = "/data/sht/nakanog/vortex/run1/fg/"
     integer,parameter:: step_output = 4000
     integer,parameter:: step_putput_fg = 50000
 
     !無次元数
-    real(8),parameter:: Re = 2000.0d0 !粒子レイノルズ数
+    real(8),parameter:: Re = 0.01d0 !粒子レイノルズ数
 
     !LESパラメータ
     real(8),parameter:: delta = 0.0d0*ds
@@ -45,10 +45,11 @@ module globals
 
     !支配パラメータ
     real(8),parameter:: pi = acos(-1.0d0) !円周率
-    real(8),parameter:: D_vortex = 31.5d0 !渦の大きさ
+    real(8),parameter:: D_vortex = 127.5d0 !渦の大きさ
+    real(8),parameter:: D_ratio = 0.375d0 !無次元粒子径
     real(8),parameter:: kw = pi/D_vortex !波数
-    real(8),parameter:: umax = 0.1d0 !最大流速
-    real(8),parameter:: nu = umax*D_vortex/Re !動粘性係数
+    real(8),parameter:: umax = 0.0001d0 !最大流速
+    real(8),parameter:: nu = umax*D_vortex*D_ratio/Re !動粘性係数
     real(8),parameter:: taug = 3.0d0*nu/ds + 0.5d0
 
     !粒子速度（整数）
@@ -240,10 +241,17 @@ contains
         do zi=1,zmax+1
             do yi=1,y_procs
                 do xi=1,x_procs
-                    u1_procs(xi,yi,zi) = x_m(xi,yi,zi) * ran
-                    u2_procs(xi,yi,zi) = y_m(xi,yi,zi) * ran
-                    u3_procs(xi,yi,zi) = 0.5d0 * ( x_m(xi,yi,zi) + y_m(xi,yi,zi) ) * ran
-                    p_procs(xi,yi,zi) = 1.0d0 / 3.0d0
+                    grobalx = (xi-1) + comm_rank_x * x_procs
+                    grobaly = (yi-1) + comm_rank_y * y_procs
+                    grobalz = (zi-1)
+                    ! u1_procs(xi,yi,zi) = x_m(xi,yi,zi) * ran
+                    ! u2_procs(xi,yi,zi) = y_m(xi,yi,zi) * ran
+                    ! u3_procs(xi,yi,zi) = 0.5d0 * ( x_m(xi,yi,zi) + y_m(xi,yi,zi) ) * ran
+                    ! p_procs(xi,yi,zi) = 1.0d0 / 3.0d0
+                    u1_procs(xi,yi,zi) = umax*sin(kw*dble(grobalx))*cos(kw*dble(grobalz))
+                    u2_procs(xi,yi,zi) = 0.0d0
+                    u3_procs(xi,yi,zi) = -umax*cos(kw*dble(grobalx))*sin(kw*dble(grobalz))
+                    p_procs(xi,yi,zi) = 1.0d0/3.0d0 + 0.25d0*umax*umax*( cos(2.0d0*kw*dble(grobalx))+cos(2.0d0*kw*dble(grobalz)) )
                 enddo
             enddo
         enddo
