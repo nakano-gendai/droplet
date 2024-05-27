@@ -19,9 +19,9 @@ os.makedirs(plotdir, exist_ok = True) # ディレクトリ作成
 # datadir ='/home/nakano/anime/b4/data/data_fig6/'
 datadir ="./"
 plotdir, datadir, ext = plotdir + '/', datadir + '/', '.' + ext
-dfile1   = datadir + 'enesupe_phi_d40we1.4.d'
-dfile2   = datadir + 'enesupe_phi_d70we1.2.d'
-dfile3   = datadir + 'enesupe_phi_d70we1.4.d'
+dfile1   = datadir + 'enesupe_phi_40we1.4_2.d'
+# dfile2   = datadir + 'enesupe_phi_d70we1.2.d'
+dfile3   = datadir + 'enesupe_phi_70we1.2_2.d'
 # dfile4   = datadir + 'enesupe_phi_d40we1.2.d'
 # dfile5   = datadir + 'enesupe_phi_d40we1.4.d'
 # dfile6   = datadir + 'case1_e.d'
@@ -54,7 +54,7 @@ def sns_set(fs, tck_s, alw, ctxt):
 
 ### 読み込み
 x1 = np.loadtxt(dfile1, usecols = 0, dtype = 'float64') # usecolsは列番号　dtypeは実数float64, 整数
-x2 = np.loadtxt(dfile2, usecols = 0, dtype = 'float64') # usecolsは列番号　dtypeは実数float64, 整数
+# x2 = np.loadtxt(dfile2, usecols = 0, dtype = 'float64') # usecolsは列番号　dtypeは実数float64, 整数
 x3 = np.loadtxt(dfile3, usecols = 0, dtype = 'float64') # usecolsは列番号　dtypeは実数float64, 整数
 # x4 = np.loadtxt(dfile4, usecols = 0, dtype = 'float64') # usecolsは列番号　dtypeは実数float64, 整数
 # x5 = np.loadtxt(dfile5, usecols = 0, dtype = 'float64') # usecolsは列番号　dtypeは実数float64, 整数
@@ -65,7 +65,7 @@ x3 = np.loadtxt(dfile3, usecols = 0, dtype = 'float64') # usecolsは列番号　
 # x10 = np.loadtxt(dfile10, usecols = 0, dtype = 'float64') # usecolsは列番号　dtypeは実数float64, 整数
 
 y1 = np.loadtxt(dfile1, usecols = 1, dtype = 'float64')
-y2 = np.loadtxt(dfile2, usecols = 1, dtype = 'float64')
+# y2 = np.loadtxt(dfile2, usecols = 1, dtype = 'float64')
 y3 = np.loadtxt(dfile3, usecols = 1, dtype = 'float64')
 # y4 = np.loadtxt(dfile4, usecols = 1, dtype = 'float64')
 # y5 = np.loadtxt(dfile5, usecols = 1, dtype = 'float64')
@@ -107,7 +107,7 @@ def plot_y1y2(): # y1, y2プロット用
     ax1.set_xlabel(lx, labelpad = lpad[0]) # 軸ラベル
     ax1.set_ylabel(ly, labelpad = lpad[1])
     
-    xm, ym = [1, 128], [-0.000000000003, 0.000000000003]
+    xm, ym = [1, 128], [-0.0000000000025, 0.0000000000024]
     # xm, ym = [0, 35], [0, 1.5]
     # xm, ym = [0, 35], [0, 25]
     ax1.set_xlim(xm[0], xm[1]) # 軸の範囲
@@ -118,8 +118,8 @@ def plot_y1y2(): # y1, y2プロット用
     # plt.yscale('log')
     plt.xscale('log')
 
-    # pos = [0, 1.0*10**(-8)] 
-    # ticks = [r'$0$', r'$1\times 10^{-8}$']
+    # pos = [0, 0.00000001, 0.00000002] 
+    # ticks = [r'$0$', r'$1\times 10^{-8}$', r'$2\times 10^{-8}$']
     # ax1.set_yticks(pos)
     # ax1.set_yticklabels(ticks)
     
@@ -233,7 +233,7 @@ def plot_y1y2(): # y1, y2プロット用
     framealpha = 1.0, fancybox=False, fontsize=8.0,
     edgecolor = "black").get_frame().set_linewidth(alw*0.8)
     # ### 保存
-    fig.savefig(plotdir + "enesupe_phi_we1.4_d40_70" + ext, bbox_inches = "tight") # bbox_inches="tight"で余白をなくす
+    fig.savefig(plotdir + "enesupe_phi_we1.4_d40_70_new2" + ext, bbox_inches = "tight") # bbox_inches="tight"で余白をなくす
 
 ##=================== main ===================##
 if __name__ == '__main__':

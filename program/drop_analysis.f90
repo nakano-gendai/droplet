@@ -22,9 +22,9 @@ module globals
     integer,parameter:: step_num2 = (step_end - step_start) / step_bin + 1 
 
     !読み込みディレクトリ
-    character(*),parameter :: datadir_input = "/data/sht/nakanog/DNS_turbulence_256_IHT/case26/"
+    character(*),parameter :: datadir_input = "/data/sht/nakanog/DNS_turbulence_256_IHT/case4/"
     !出力ディレクトリ
-    character(*),parameter :: datadir_output = "/data/sht/nakanog/DNS_turbulence_256_IHT/case26/large/"
+    character(*),parameter :: datadir_output = "/data/sht/nakanog/DNS_turbulence_256_IHT/case4/large/"
 
     !粒子速度（整数）
     integer,parameter:: cx(15) = (/0, 1, 0,  0, -1,  0,  0,  1, -1,  1,  1, -1,  1, -1, -1/)
@@ -32,7 +32,7 @@ module globals
     integer,parameter:: cz(15) = (/0, 0, 0,  1,  0,  0, -1,  1,  1,  1, -1, -1, -1, -1,  1/)
 
     !無次元数
-    real(8),parameter:: We = 1.8d0 !粒子ウエーバー数
+    real(8),parameter:: We = 1.4d0 !粒子ウエーバー数
     real(8),parameter:: eta = 1.0d0 !粘度比（nu2/nu1）
 
     real(8),parameter:: epsilon = 1.32d-9 !エネルギー散逸率
@@ -375,6 +375,10 @@ contains
         complex(kind(0d0)) comp_tmp
         integer k1, k2, k3, k(1:3), k_index
         real(8) k_abs
+        integer kk((xmax+1)/2 + 1), kk_sum((xmax+1)/2 + 1)
+
+        kk (:) = 0
+        kk_sum(:) = 0
 
         !フーリエ変換（実数→複素数）
         call fft_r2c(chemical_potencial, chemical_potencial_hat)
@@ -394,10 +398,14 @@ contains
 
                     if(k3 == 0) then
                         comp_tmp = advection_phi_hat(k1,k2,k3) * conjg(chemical_potencial_hat(k1,k2,k3))
-                        enesupe_phi(k_index) = enesupe_phi(k_index) - REAL(comp_tmp)
+                        enesupe_phi(k_index) = enesupe_phi(k_index) + REAL(comp_tmp)
+
+                        kk(k_index) = kk(k_index) + 1
                     else 
                         comp_tmp = advection_phi_hat(k1,k2,k3) * conjg(chemical_potencial_hat(k1,k2,k3))
-                        enesupe_phi(k_index) = enesupe_phi(k_index) - 2.0d0 * REAL(comp_tmp) 
+                        enesupe_phi(k_index) = enesupe_phi(k_index) + 2.0d0 * REAL(comp_tmp) 
+
+                        kk(k_index) = kk(k_index) + 2
                     endif
                 enddo
             enddo
@@ -405,24 +413,23 @@ contains
 
         call MPI_Reduce(enesupe_phi(1), enesupe_phi_sum(1), (xmax+1)/2 + 1, MPI_REAL8, MPI_SUM, 0, MPI_COMM_WORLD, ierr)
 
+        call MPI_Reduce(kk(1), kk_sum(1), (xmax+1)/2 + 1, MPI_INTEGER, MPI_SUM, 0, MPI_COMM_WORLD, ierr)
+
         if(comm_rank == 0) then
             do i = 1, (xmax+1)/2 + 1
-                enesupe_phi_result(i) = enesupe_phi_result(i) + enesupe_phi_sum(i)
+                enesupe_phi_result(i) = enesupe_phi_result(i) + enesupe_phi_sum(i) / dble(kk_sum(i))
+                ! enesupe_phi_result(i) = enesupe_phi_result(i) + enesupe_phi_sum(i)
             enddo
         endif
 
         if(n == step_end) then
             if(comm_rank==0) then
-                ! write(filename2,*) n
-                ! filename=trim(adjustl(filename2))//'.d' 
-                ! print *, filename !表示してみる
-                ! open(102,file=filename, form='formatted',status='replace') 
-                open(37,file ="./enesupe_phi_40case26.d")
+                open(37,file ="./enesupe_phi_40we1.4_2.d")
                 do i=1,(xmax+1)/2+1
                     enesupe_phi_result(i) = enesupe_phi_result(i) / dble(step_num2)
-                    write(37,"(2es16.8)") (dble(i)-1.0d0), enesupe_phi_result(i)
+                    enesupe_phi_result(i) = -4.0d0*pi*(dble(i)-1.0d0)**2 * enesupe_phi_result(i)
+                    write(37,"(4es16.8)") (dble(i)-1.0d0), enesupe_phi_result(i)
                 enddo
-                ! close(102)
                 close(37)
             endif
         endif
