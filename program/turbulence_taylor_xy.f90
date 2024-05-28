@@ -16,15 +16,15 @@ module globals
     integer,parameter:: xmax = 511 !ｘ方向格子数（０から数える）
     integer,parameter:: ymax = 511 !ｙ方向格子数（０から数える）
     integer,parameter:: zmax = 511 !ｚ方向格子数（０から数える）
-    integer,parameter:: step_start = 10004000
-    integer,parameter:: step_end = 11000000
-    integer,parameter:: step_bin = 4000
+    integer,parameter:: step_start = 5000
+    integer,parameter:: step_end = 5000000
+    integer,parameter:: step_bin = 5000
     integer,parameter:: step_num2 = (step_end - step_start) / step_bin + 1 
 
     !読み込みディレクトリ
-    character(*),parameter :: datadir_input = "/data/lng/nakanog/taylor_512_re100000_large_xy/"
+    character(*),parameter :: datadir_input = "/data/sht/nakanog/taylor_512_drop_movie/"
     !出力ディレクトリ
-    character(*),parameter :: datadir_output = "/data/lng/nakanog/taylor_512_re100000_large_xy/eddy/"
+    character(*),parameter :: datadir_output = "/data/sht/nakanog/taylor_512_drop_movie/large/"
 
     !粒子速度（整数）
     integer,parameter:: cx(15) = (/0, 1, 0,  0, -1,  0,  0,  1, -1,  1,  1, -1,  1, -1, -1/)
@@ -44,7 +44,7 @@ module globals
     real(8),parameter:: nu2 = eta*nu1 !分散相の粘性係数
     real(8),parameter:: pi = acos(-1.0d0) !円周率
 
-    integer,parameter:: k_high = 3
+    integer,parameter:: k_high = 2
     integer,parameter:: k_low = 1
 
     !その他変数
@@ -231,8 +231,8 @@ contains
         do zi=1,zmax+1
             do yi=1,y_procs
                 do xi=1,x_procs
-                    read(10) u1_procs(xi,yi,zi), u2_procs(xi,yi,zi), u3_procs(xi,yi,zi), p_procs(xi,yi,zi)
-                    ! read(10) s, u1_procs(xi,yi,zi), u2_procs(xi,yi,zi), u3_procs(xi,yi,zi), p_procs(xi,yi,zi)
+                    ! read(10) u1_procs(xi,yi,zi), u2_procs(xi,yi,zi), u3_procs(xi,yi,zi), p_procs(xi,yi,zi)
+                    read(10) s, u1_procs(xi,yi,zi), u2_procs(xi,yi,zi), u3_procs(xi,yi,zi), p_procs(xi,yi,zi)
                 enddo
             enddo
         enddo
@@ -799,110 +799,110 @@ use glassman
     enesupe_sum(:) = 0.0d0
     enesupe_result(:) = 0.0d0
 !==============時間平均の計算==================
-    step_num = 0
+!     step_num = 0
+!     DO n = step_start, step_end, step_bin
+!         step_num = step_num + 1
+!         call input(u1_procs,u2_procs,u3_procs,p_procs)
+!         call u_sum_step_cal(u1_procs,u2_procs,u3_procs,u1_procs_ave,u2_procs_ave,u3_procs_ave)
+!     ENDDO
+!     do zi = 1, zmax + 1 
+!         do yi = 1, y_procs
+!             do xi = 1, x_procs
+!                 u1_procs_ave(xi,yi,zi) = u1_procs_ave(xi,yi,zi) / (dble(step_num))
+!                 u2_procs_ave(xi,yi,zi) = u2_procs_ave(xi,yi,zi) / (dble(step_num))
+!                 u3_procs_ave(xi,yi,zi) = u3_procs_ave(xi,yi,zi) / (dble(step_num))
+!             enddo
+!         enddo
+!     enddo
+! !================================物理量計算================================
+!     DO n = step_start, step_end, step_bin
+!         !入力ファイル読み込み
+!         call input(u1_procs,u2_procs,u3_procs,p_procs)
+!         !変動速度の計算
+!         u1_procs_fluctuation(:,:,:) = 0.0d0
+!         u2_procs_fluctuation(:,:,:) = 0.0d0
+!         u3_procs_fluctuation(:,:,:) = 0.0d0
+!         do zi = 1, zmax + 1 
+!             do yi = 1, y_procs
+!                 do xi = 1, x_procs
+!                     u1_procs_fluctuation(xi,yi,zi) = u1_procs(xi,yi,zi) - u1_procs_ave(xi,yi,zi)
+!                     u2_procs_fluctuation(xi,yi,zi) = u2_procs(xi,yi,zi) - u2_procs_ave(xi,yi,zi)
+!                     u3_procs_fluctuation(xi,yi,zi) = u3_procs(xi,yi,zi) - u3_procs_ave(xi,yi,zi)
+!                 enddo
+!             enddo
+!         enddo
+!         !コルモゴロフスケールの計算
+!         call glue(u1_procs_fluctuation)
+!         call glue(u2_procs_fluctuation)
+!         call glue(u3_procs_fluctuation)
+!         call grad_u_cal(grad_u_procs,u1_procs_fluctuation,u2_procs_fluctuation,u3_procs_fluctuation)
+!         call strain_cal(grad_u_procs,strain_procs)
+!         call energy_dissipation_cal(strain_procs,energy_dissipation,energy_dissipation_sum,Kolmogorov_scale)
+
+!         !テイラー長レイノルズ数の計算
+!         call u_rms_cal(u_rms,u_rms_ave,u1_procs_fluctuation,u2_procs_fluctuation,u3_procs_fluctuation)
+!         call u_grad_cal(u_grad,u_grad_ave,grad_u_procs)
+!         call taylor_re_cal(u_rms_ave,u_rms_ave_sum,u_grad_ave,u_grad_ave_sum,taylor_re,taylor_length,u_rms,u_grad)
+
+!         !エネルギースペクトル
+!         call enesupe_cal(u1_procs,u2_procs,u3_procs,u1_procs_re,u2_procs_re,u3_procs_re,u1_hat,u2_hat,u3_hat,enesupe,enesupe_sum)
+!         if(comm_rank == 0) then
+!             do i = 1, (xmax+1)/2 + 1
+!                 enesupe_result(i) = enesupe_result(i) + enesupe_sum(i)
+!             enddo
+!         endif
+!     ENDDO
+
+!     if(comm_rank==0) then
+!         open(37,file ="./enesupe_512.d")
+!         do i=1,(xmax+1)/2+1
+!             enesupe_result(i) = enesupe_result(i) / dble(step_num2)
+!             write(37,"(2es16.8)") dble(i)-1.0d0, enesupe_result(i)
+!         enddo
+!         close(37)
+!     endif
+
+!     !積分長
+!     if(comm_rank == 0) then
+!         integral_top = 0.0d0
+!         integral_bottom = 0.0d0
+!         do i = 2, (xmax+1)/2 + 1
+!             integral_top = integral_top + enesupe_result(i) / (dble(i) - 1.0d0)
+!             integral_bottom = integral_bottom + enesupe_result(i)
+!         enddo
+!         integral_scale = 3.0d0 / 4.0d0 * pi * integral_top / integral_bottom
+!         open(38,file="./integral_scal.d")
+!         write(38,*) integral_scale
+!         close(38)
+!     endif
+
+    !=======エンストロフィー＝＝＝＝＝＝＝＝＝＝＝＝＝
     DO n = step_start, step_end, step_bin
-        step_num = step_num + 1
         call input(u1_procs,u2_procs,u3_procs,p_procs)
-        call u_sum_step_cal(u1_procs,u2_procs,u3_procs,u1_procs_ave,u2_procs_ave,u3_procs_ave)
-    ENDDO
-    do zi = 1, zmax + 1 
-        do yi = 1, y_procs
-            do xi = 1, x_procs
-                u1_procs_ave(xi,yi,zi) = u1_procs_ave(xi,yi,zi) / (dble(step_num))
-                u2_procs_ave(xi,yi,zi) = u2_procs_ave(xi,yi,zi) / (dble(step_num))
-                u3_procs_ave(xi,yi,zi) = u3_procs_ave(xi,yi,zi) / (dble(step_num))
-            enddo
-        enddo
-    enddo
-!================================物理量計算================================
-    DO n = step_start, step_end, step_bin
-        !入力ファイル読み込み
-        call input(u1_procs,u2_procs,u3_procs,p_procs)
-        !変動速度の計算
-        u1_procs_fluctuation(:,:,:) = 0.0d0
-        u2_procs_fluctuation(:,:,:) = 0.0d0
-        u3_procs_fluctuation(:,:,:) = 0.0d0
-        do zi = 1, zmax + 1 
-            do yi = 1, y_procs
-                do xi = 1, x_procs
-                    u1_procs_fluctuation(xi,yi,zi) = u1_procs(xi,yi,zi) - u1_procs_ave(xi,yi,zi)
-                    u2_procs_fluctuation(xi,yi,zi) = u2_procs(xi,yi,zi) - u2_procs_ave(xi,yi,zi)
-                    u3_procs_fluctuation(xi,yi,zi) = u3_procs(xi,yi,zi) - u3_procs_ave(xi,yi,zi)
+        call scale_cal(u1_procs,u2_procs,u3_procs,u1_procs_re,u2_procs_re,u3_procs_re,u1_hat,u2_hat,u3_hat)
+        call glue(u1_procs)
+        call glue(u2_procs)
+        call glue(u3_procs)
+        call grad_u_cal(grad_u_procs, u1_procs, u2_procs, u3_procs)
+        call vorticity_cal(grad_u_procs,vorticity_procs)
+        call enstrophy_cal(vorticity_procs,enstrophy_procs)
+        enstrophy_sum = 0.0d0
+        do zi=1,zmax+1
+            do yi=1,y_procs
+                do xi=1,x_procs
+                    enstrophy_sum = enstrophy_sum + enstrophy_procs(xi,yi,zi)
                 enddo
             enddo
         enddo
-        !コルモゴロフスケールの計算
-        call glue(u1_procs_fluctuation)
-        call glue(u2_procs_fluctuation)
-        call glue(u3_procs_fluctuation)
-        call grad_u_cal(grad_u_procs,u1_procs_fluctuation,u2_procs_fluctuation,u3_procs_fluctuation)
-        call strain_cal(grad_u_procs,strain_procs)
-        call energy_dissipation_cal(strain_procs,energy_dissipation,energy_dissipation_sum,Kolmogorov_scale)
-
-        !テイラー長レイノルズ数の計算
-        call u_rms_cal(u_rms,u_rms_ave,u1_procs_fluctuation,u2_procs_fluctuation,u3_procs_fluctuation)
-        call u_grad_cal(u_grad,u_grad_ave,grad_u_procs)
-        call taylor_re_cal(u_rms_ave,u_rms_ave_sum,u_grad_ave,u_grad_ave_sum,taylor_re,taylor_length,u_rms,u_grad)
-
-        !エネルギースペクトル
-        call enesupe_cal(u1_procs,u2_procs,u3_procs,u1_procs_re,u2_procs_re,u3_procs_re,u1_hat,u2_hat,u3_hat,enesupe,enesupe_sum)
+        call MPI_Reduce(enstrophy_sum, enstrophy_ave, 1, MPI_REAL8, MPI_SUM, 0, MPI_COMM_WORLD, ierr)
         if(comm_rank == 0) then
-            do i = 1, (xmax+1)/2 + 1
-                enesupe_result(i) = enesupe_result(i) + enesupe_sum(i)
-            enddo
+            enstrophy_ave = enstrophy_ave / (dble(xmax+1)*dble(ymax+1)*dble(zmax+1))
+            open(100,file = "./enstrophy_ave_large.d",action="write",position="append")
+            write(100,*) enstrophy_ave
+            close(100)
         endif
+        call output(enstrophy_procs)
     ENDDO
-
-    if(comm_rank==0) then
-        open(37,file ="./enesupe_512.d")
-        do i=1,(xmax+1)/2+1
-            enesupe_result(i) = enesupe_result(i) / dble(step_num2)
-            write(37,"(2es16.8)") dble(i)-1.0d0, enesupe_result(i)
-        enddo
-        close(37)
-    endif
-
-    !積分長
-    if(comm_rank == 0) then
-        integral_top = 0.0d0
-        integral_bottom = 0.0d0
-        do i = 2, (xmax+1)/2 + 1
-            integral_top = integral_top + enesupe_result(i) / (dble(i) - 1.0d0)
-            integral_bottom = integral_bottom + enesupe_result(i)
-        enddo
-        integral_scale = 3.0d0 / 4.0d0 * pi * integral_top / integral_bottom
-        open(38,file="./integral_scal.d")
-        write(38,*) integral_scale
-        close(38)
-    endif
-
-    !=======エンストロフィー＝＝＝＝＝＝＝＝＝＝＝＝＝
-    ! DO n = step_start, step_end, step_bin
-    !     call input(u1_procs,u2_procs,u3_procs,p_procs)
-    !     call scale_cal(u1_procs,u2_procs,u3_procs,u1_procs_re,u2_procs_re,u3_procs_re,u1_hat,u2_hat,u3_hat)
-    !     call glue(u1_procs)
-    !     call glue(u2_procs)
-    !     call glue(u3_procs)
-    !     call grad_u_cal(grad_u_procs, u1_procs, u2_procs, u3_procs)
-    !     call vorticity_cal(grad_u_procs,vorticity_procs)
-    !     call enstrophy_cal(vorticity_procs,enstrophy_procs)
-    !     enstrophy_sum = 0.0d0
-    !     do zi=1,zmax+1
-    !         do yi=1,y_procs
-    !             do xi=1,x_procs
-    !                 enstrophy_sum = enstrophy_sum + enstrophy_procs(xi,yi,zi)
-    !             enddo
-    !         enddo
-    !     enddo
-    !     call MPI_Reduce(enstrophy_sum, enstrophy_ave, 1, MPI_REAL8, MPI_SUM, 0, MPI_COMM_WORLD, ierr)
-    !     if(comm_rank == 0) then
-    !         enstrophy_ave = enstrophy_ave / (dble(xmax+1)*dble(ymax+1)*dble(zmax+1))
-    !         open(100,file = "./enstrophy_ave_large.d",action="write",position="append")
-    !         write(100,*) enstrophy_ave
-    !         close(100)
-    !     endif
-    !     call output(enstrophy_procs)
-    ! ENDDO
 
     !Q
     ! DO n = 5000, 100000, 1000
