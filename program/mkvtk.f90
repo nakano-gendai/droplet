@@ -1,15 +1,15 @@
 module globals
-    integer,parameter :: nx = 256
-    integer,parameter :: ny = 256
-    integer,parameter :: nz = 256
+    integer,parameter :: nx = 512
+    integer,parameter :: ny = 512
+    integer,parameter :: nz = 512
     real(8),parameter :: dx = 1.0d0
     real(8),parameter :: dy = 1.0d0
     real(8),parameter :: dz = 1.0d0
     !読み込みディレクトリー
-    character(*),parameter :: dir = "/data/sht/nakanog/vortex/case1/collect/"
+    character(*),parameter :: dir = "/data/sht/nakanog/taylor_512_drop_movie/small/"
     ! character(*),parameter :: dir = "./"
     !出力ディレクトリー
-    character(*),parameter :: datadir = "/data/sht/nakanog/vortex/case1/collect/vtk/"
+    character(*),parameter :: datadir = "/data/sht/nakanog/taylor_512_drop_movie/small/collect/vtk/"
     ! character(*),parameter :: datadir = "./"
     ! !読み込みディレクトリー
     ! character(*),parameter :: dir = "/data/sht/nakanog/taylor_re12000_ran/ens2/collect/"
