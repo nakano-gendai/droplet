@@ -12,11 +12,11 @@ end module globals
 program main
 use globals
     implicit none
-    integer,parameter:: xmax = 255 !ｘ方向格子数
-    integer,parameter:: ymax = 255 !ｙ方向格子数
-    integer,parameter:: zmax = 255 !ｚ方向格子数
+    integer,parameter:: xmax = 511 !ｘ方向格子数
+    integer,parameter:: ymax = 511 !ｙ方向格子数
+    integer,parameter:: zmax = 511 !ｚ方向格子数
     integer,parameter:: Nx = 32 !ｘ方向の並列数
-    integer,parameter:: Ny = 32 !ｚ方向の並列数
+    integer,parameter:: Ny = 64 !ｚ方向の並列数
     integer,parameter:: x_procs = (xmax+1) / Nx
     integer,parameter:: y_procs = (ymax+1) / Ny
     integer,parameter:: new_procs = Nx * Ny
@@ -25,9 +25,9 @@ use globals
     character :: filename*200
     character(8) file_num, file_num2
     !ティレクトリー読み込み
-    character(*),parameter :: datadir = "/data/sht/nakanog/DNS_turbulence_256_IHT/eddy/large/"
+    character(*),parameter :: datadir = "/data/sht/nakanog/taylor_512_drop_movie/large/"
     !ディレクトリ作成
-    character(*),parameter :: datadir2 = "/data/sht/nakanog/DNS_turbulence_256_IHT/eddy/large/collect/"
+    character(*),parameter :: datadir2 = "/data/sht/nakanog/taylor_512_drop_movie/large/collect/"
     real(8) phi(0:xmax,0:ymax,0:zmax)
     real(8) phiout(1:x_procs,1:y_procs,1:zmax+1,0:new_procs-1)
     real(8) s, ave
@@ -39,8 +39,8 @@ use globals
     call mk_dirs(datadir2)
 
 !============phiをまとめて出力するプログラム=============================================
-    ! do step=3000, 100000, 1000
-        step = 400000
+    do step=5000, 1000000, 5000
+        ! step = 400000
         if((step > 99) .and. (step < 1000)) then
             write(file_num2, "(i3)") step
         elseif((step > 999) .and. (step < 10000)) then
@@ -91,7 +91,7 @@ use globals
         enddo
         
         write(filename,*) step !i->filename 変換
-        filename=datadir2//trim(adjustl(filename))//'_m.bin' !adjustlで左寄せにしてからtrimで末尾の空白除去，拡張子等をくっつける
+        filename=datadir2//trim(adjustl(filename))//'.bin' !adjustlで左寄せにしてからtrimで末尾の空白除去，拡張子等をくっつける
         print *, filename !表示してみる
         open(11, file=filename, form="unformatted", status='replace') 
         do zi=0,zmax
@@ -116,5 +116,5 @@ use globals
         ! enddo
         ! close(11)
 
-    ! enddo
+    enddo
 end program main
