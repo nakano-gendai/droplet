@@ -25,9 +25,9 @@ use globals
     character :: filename*200
     character(8) file_num, file_num2
     !ティレクトリー読み込み
-    character(*),parameter :: datadir = "/data/sht/nakanog/taylor_512_drop_movie/large/"
+    character(*),parameter :: datadir = "/data/sht/nakanog/taylor_512_drop_movie/medium/"
     !ディレクトリ作成
-    character(*),parameter :: datadir2 = "/data/sht/nakanog/taylor_512_drop_movie/large/collect/"
+    character(*),parameter :: datadir2 = "/data/sht/nakanog/taylor_512_drop_movie/medium/collect/"
     real(8) phi(0:xmax,0:ymax,0:zmax)
     real(8) phiout(1:x_procs,1:y_procs,1:zmax+1,0:new_procs-1)
     real(8) s, ave

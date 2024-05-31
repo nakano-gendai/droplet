@@ -6,7 +6,7 @@ module globals
     real(8),parameter :: dy = 1.0d0
     real(8),parameter :: dz = 1.0d0
     !読み込みディレクトリー
-    character(*),parameter :: dir = "/data/sht/nakanog/taylor_512_drop_movie/small/"
+    character(*),parameter :: dir = "/data/sht/nakanog/taylor_512_drop_movie/small/collect/"
     ! character(*),parameter :: dir = "./"
     !出力ディレクトリー
     character(*),parameter :: datadir = "/data/sht/nakanog/taylor_512_drop_movie/small/collect/vtk/"
