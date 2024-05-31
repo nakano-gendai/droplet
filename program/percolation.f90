@@ -100,8 +100,6 @@ program main
     ! do yi = 0, ymax
     !     do xi = 0, xmax
     !         if(phi(xi,yi,zi) >= (phi1+phi2)/2.0d0) then
-    !             Vall = Vall + 1.0d0 !全液滴の体積
-
     !             x_up = xi + 1
     !             x_down = xi - 1
     !             y_up = yi + 1
