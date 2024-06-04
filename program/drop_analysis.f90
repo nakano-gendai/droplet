@@ -17,14 +17,14 @@ module globals
     integer,parameter:: ymax = 255 !ｙ方向格子数（０から数える）
     integer,parameter:: zmax = 255 !ｚ方向格子数（０から数える）
     integer,parameter:: step_start = 5000
-    integer,parameter:: step_end = 22000
+    integer,parameter:: step_end = 37000
     integer,parameter:: step_bin = 1000
     integer,parameter:: step_num2 = (step_end - step_start) / step_bin + 1 
 
     !読み込みディレクトリ
-    character(*),parameter :: datadir_input = "/data/sht/nakanog/DNS_turbulence_256_IHT/case4/"
+    character(*),parameter :: datadir_input = "/data/sht/nakanog/DNS_turbulence_256_IHT/case6/"
     !出力ディレクトリ
-    character(*),parameter :: datadir_output = "/data/sht/nakanog/DNS_turbulence_256_IHT/case4/large/"
+    character(*),parameter :: datadir_output = "/data/sht/nakanog/DNS_turbulence_256_IHT/case6/large/"
 
     !粒子速度（整数）
     integer,parameter:: cx(15) = (/0, 1, 0,  0, -1,  0,  0,  1, -1,  1,  1, -1,  1, -1, -1/)
@@ -40,7 +40,7 @@ module globals
     real(8),parameter:: nu1 = 0.001d0 !連続相の粘性係数
     real(8),parameter:: nu2 = eta*nu1 !分散相の粘性係数
 
-    real(8),parameter:: D = 40.0d0 !設置する液滴直径
+    real(8),parameter:: D = 70.0d0 !設置する液滴直径
     real(8),parameter:: phi1 = 2.638d-1 !連続相のオーダーパラメータ
     real(8),parameter:: phi2 = 4.031d-1 !分散相のオーダーパラメータ
     real(8),parameter:: a = 1.0d0
@@ -155,18 +155,33 @@ contains
         phi_procs(:,:,:) = 0.0d0
     end subroutine ini
 
-    subroutine ini_fft(chemical_potencial_hat,advection_phi_hat)
+    subroutine ini_fft(chemical_potencial_hat,advection_phi_hat,grad_phi1_hat,grad_phi2_hat,grad_phi3_hat,grad_phi1_re,grad_phi2_re,grad_phi3_re)
         complex(kind(0d0)), allocatable :: chemical_potencial_hat(:,:,:), advection_phi_hat(:,:,:)
-        
+        complex(kind(0d0)), allocatable :: grad_phi1_hat(:,:,:), grad_phi2_hat(:,:,:), grad_phi3_hat(:,:,:)
+        real(8),allocatable :: grad_phi1_re(:,:,:), grad_phi2_re(:,:,:), grad_phi3_re(:,:,:)
+
         call decomp_2d_init(xmax+1, ymax+1, zmax+1, Nx, Ny)
         call decomp_2d_fft_init(PHYSICAL_IN_Z)
         call decomp_2d_fft_get_size(sta, last, sized)
 
         allocate(chemical_potencial_hat(sta(1)-1:last(1)-1, sta(2)-1:last(2)-1, sta(3)-1:last(3)-1))
         allocate(advection_phi_hat(sta(1)-1:last(1)-1, sta(2)-1:last(2)-1, sta(3)-1:last(3)-1))
+        allocate(grad_phi1_hat(sta(1)-1:last(1)-1, sta(2)-1:last(2)-1, sta(3)-1:last(3)-1))
+        allocate(grad_phi2_hat(sta(1)-1:last(1)-1, sta(2)-1:last(2)-1, sta(3)-1:last(3)-1))
+        allocate(grad_phi3_hat(sta(1)-1:last(1)-1, sta(2)-1:last(2)-1, sta(3)-1:last(3)-1))
+        allocate(grad_phi1_re(0:x_procs-1, 0:y_procs-1, 0:zmax))
+        allocate(grad_phi2_re(0:x_procs-1, 0:y_procs-1, 0:zmax))
+        allocate(grad_phi3_re(0:x_procs-1, 0:y_procs-1, 0:zmax))
 
         chemical_potencial_hat(:,:,:) = (0.0d0, 0.0d0)
         advection_phi_hat(:,:,:) = (0.0d0, 0.0d0)
+        grad_phi1_hat(:,:,:) = (0.0d0, 0.0d0)
+        grad_phi2_hat(:,:,:) = (0.0d0, 0.0d0)
+        grad_phi3_hat(:,:,:) = (0.0d0, 0.0d0)
+
+        grad_phi1_re(:,:,:) = 0.0d0
+        grad_phi2_re(:,:,:) = 0.0d0
+        grad_phi3_re(:,:,:) = 0.0d0
     end subroutine ini_fft
 
     subroutine variable(grad_phi_procs,chemical_potencial,free_energy,grad_free_energy,lap_phi_procs,advection_phi)
@@ -377,6 +392,8 @@ contains
         real(8) k_abs
         integer kk((xmax+1)/2 + 1), kk_sum((xmax+1)/2 + 1)
 
+        real(8) energy_large, energy_medium, energy_small, energy_all
+
         kk (:) = 0
         kk_sum(:) = 0
 
@@ -386,6 +403,7 @@ contains
 
         enesupe_phi(:) = 0.0d0
         enesupe_phi_sum(:) = 0.0d0
+        enesupe_phi_result(:) = 0.0d0
         do k3=sta(3)-1,last(3)-1
             k(3) =( k3 - judge(k3, zmax+1) )
             do k2=sta(2)-1,last(2)-1
@@ -422,18 +440,106 @@ contains
             enddo
         endif
 
-        if(n == step_end) then
-            if(comm_rank==0) then
-                open(37,file ="./enesupe_phi_40we1.4_2.d")
-                do i=1,(xmax+1)/2+1
-                    enesupe_phi_result(i) = enesupe_phi_result(i) / dble(step_num2)
-                    enesupe_phi_result(i) = -4.0d0*pi*(dble(i)-1.0d0)**2 * enesupe_phi_result(i)
-                    write(37,"(4es16.8)") (dble(i)-1.0d0), enesupe_phi_result(i)
-                enddo
-                close(37)
+        energy_all = 0.0d0
+        energy_large = 0.0d0
+        energy_medium = 0.0d0
+        energy_small = 0.0d0
+        if(comm_rank == 0) then
+            do i = 2, 4
+                energy_large = energy_large + enesupe_phi_result(i)
+                energy_all = energy_all + enesupe_phi_result(i)
+            enddo
+
+            do i = 5, 10
+                energy_medium = energy_medium + enesupe_phi_result(i)
+                energy_all = energy_all + enesupe_phi_result(i)
+            enddo
+
+            do i = 11, (xmax+1)/2 + 1
+                energy_small = energy_small + enesupe_phi_result(i)
+                energy_all = energy_all + enesupe_phi_result(i)
+            enddo
+
+            energy_all = energy_all * (-1.0d0)
+            energy_large = energy_large * (-1.0d0)
+            energy_medium = energy_medium * (-1.0d0)
+            energy_small = energy_small * (-1.0d0)
+
+            if(n == step_start) then
+                open(108,file="./energy_time_d70we1.4.d")
+                write(108,*) dble(n), energy_all, energy_large, energy_medium, energy_small
+                close(108)
+            else
+                open(108,file="./energy_time_d70we1.4.d",action="write",position="append")
+                write(108,*) dble(n), energy_all, energy_large, energy_medium, energy_small
+                close(108)
             endif
         endif
+
+        ! if(n == step_end) then
+        !     if(comm_rank==0) then
+        !         open(37,file ="./enesupe_phi_40we1.4_2.d")
+        !         do i=1,(xmax+1)/2+1
+        !             enesupe_phi_result(i) = enesupe_phi_result(i) / dble(step_num2)
+        !             enesupe_phi_result(i) = -4.0d0*pi*(dble(i)-1.0d0)**2 * enesupe_phi_result(i)
+        !             write(37,"(4es16.8)") (dble(i)-1.0d0), enesupe_phi_result(i)
+        !         enddo
+        !         close(37)
+        !     endif
+        ! endif
     endsubroutine contribution
+
+    subroutine phi_supectrum(grad_phi1_hat,grad_phi2_hat,grad_phi3_hat,grad_phi_procs,grad_phi1_re,grad_phi2_re,grad_phi3_re,phisupe,phisupe_sum)
+        complex(kind(0d0)), intent(inout) :: grad_phi1_hat(sta(1)-1:last(1)-1, sta(2)-1:last(2)-1, sta(3)-1:last(3)-1)
+        complex(kind(0d0)), intent(inout) :: grad_phi2_hat(sta(1)-1:last(1)-1, sta(2)-1:last(2)-1, sta(3)-1:last(3)-1)
+        complex(kind(0d0)), intent(inout) :: grad_phi3_hat(sta(1)-1:last(1)-1, sta(2)-1:last(2)-1, sta(3)-1:last(3)-1)
+        real(8),intent(inout):: grad_phi_procs(1:3,1:x_procs,1:y_procs,1:zmax+1)
+        real(8),intent(inout):: grad_phi1_re(0:x_procs-1, 0:y_procs-1, 0:zmax) 
+        real(8),intent(inout):: grad_phi2_re(0:x_procs-1, 0:y_procs-1, 0:zmax) 
+        real(8),intent(inout):: grad_phi3_re(0:x_procs-1, 0:y_procs-1, 0:zmax) 
+
+        real(8),intent(inout):: phisupe((xmax+1)/2 + 1), phisupe_sum((xmax+1)/2 + 1)
+        integer k1, k2, k3, k(1:3), k_index
+        real(8) k_abs
+
+        do zi=1,zmax+1
+            do yi=1,y_procs
+                do xi=1,x_procs
+                    grad_phi1_re(xi-1,yi-1,zi-1) = grad_phi_procs(1,xi,yi,zi)*grad_phi_procs(1,xi,yi,zi)
+                    grad_phi2_re(xi-1,yi-1,zi-1) = grad_phi_procs(2,xi,yi,zi)*grad_phi_procs(2,xi,yi,zi)
+                    grad_phi3_re(xi-1,yi-1,zi-1) = grad_phi_procs(3,xi,yi,zi)*grad_phi_procs(3,xi,yi,zi)
+                enddo
+            enddo
+        enddo
+
+        !フーリエ変換（実数→複素数）
+        call fft_r2c(grad_phi1_re, grad_phi1_hat)
+        call fft_r2c(grad_phi2_re, grad_phi2_hat)
+        call fft_r2c(grad_phi3_re, grad_phi3_hat)
+
+        phisupe(:) = 0.0d0
+        phisupe_sum(:) = 0.0d0
+        do k3=sta(3)-1,last(3)-1
+            k(3) =( k3 - judge(k3, zmax+1) )
+            do k2=sta(2)-1,last(2)-1
+                k(2) = ( k2 - judge(k2, ymax+1) )
+                do k1=sta(1)-1,last(1)-1
+                    k(1) = ( k1 - judge(k1, xmax+1) )
+
+                    k_abs = ( dble(k(1)**2 + k(2)**2 + k(3)**2) )**0.5d0
+                    k_index = int( k_abs ) + 1
+
+                    if(k3 == 0) then
+                        phisupe(k_index) = phisupe(k_index) + ( abs(grad_phi1_hat(k1,k2,k3))+abs(grad_phi2_hat(k1,k2,k3))+abs(grad_phi3_hat(k1,k2,k3)) )
+                    else 
+                        phisupe(k_index) = phisupe(k_index) + ( abs(grad_phi1_hat(k1,k2,k3))+abs(grad_phi2_hat(k1,k2,k3))+abs(grad_phi3_hat(k1,k2,k3)) ) * 2.0d0
+                    endif
+                enddo
+            enddo
+        enddo
+
+        call MPI_Reduce(phisupe(1), phisupe_sum(1), (xmax+1)/2 + 1, MPI_REAL8, MPI_SUM, 0, MPI_COMM_WORLD, ierr)
+    end subroutine phi_supectrum
 
     !フーリエ変換
     subroutine fft_r2c(q, q_hat)
@@ -489,6 +595,10 @@ use glassman
     complex(kind(0d0)), allocatable :: chemical_potencial_hat(:,:,:), advection_phi_hat(:,:,:)
     real(8),allocatable :: enesupe_phi(:), enesupe_phi_sum(:), enesupe_phi_result(:)
 
+    complex(kind(0d0)), allocatable :: grad_phi1_hat(:,:,:), grad_phi2_hat(:,:,:), grad_phi3_hat(:,:,:)
+    real(8),allocatable :: grad_phi1_re(:,:,:), grad_phi2_re(:,:,:), grad_phi3_re(:,:,:)
+    real(8),allocatable :: phisupe(:), phisupe_sum(:), phisupe_result(:)
+
     At_ini = 0.0d0
     cr(:,:) = 0.0d0
     allocate(enesupe_phi((xmax+1)/2 + 1))
@@ -498,6 +608,13 @@ use glassman
     enesupe_phi_sum(:) = 0.0d0
     enesupe_phi_result(:) = 0.0d0
 
+    allocate(phisupe((xmax+1)/2 + 1))
+    allocate(phisupe_sum((xmax+1)/2 + 1))
+    allocate(phisupe_result((xmax+1)/2 + 1))
+    phisupe(:) = 0.0d0
+    phisupe_sum(:) = 0.0d0
+    phisupe_result(:) = 0.0d0
+
 !==================================MPI並列開始===============================================
     call MPI_Init(ierr)
     call MPI_Comm_Size(MPI_COMM_WORLD, comm_procs, ierr)
@@ -506,7 +623,7 @@ use glassman
     ! call mk_dirs(datadir_output)
     call par(cr)
     call ini(p_procs,u1_procs,u2_procs,u3_procs,phi_procs)
-    call ini_fft(chemical_potencial_hat,advection_phi_hat)
+    call ini_fft(chemical_potencial_hat,advection_phi_hat,grad_phi1_hat,grad_phi2_hat,grad_phi3_hat,grad_phi1_re,grad_phi2_re,grad_phi3_re)
     call variable(grad_phi_procs,chemical_potencial,free_energy,grad_free_energy,lap_phi_procs,advection_phi)
 
 DO n = step_start, step_end, step_bin
@@ -523,6 +640,21 @@ DO n = step_start, step_end, step_bin
     call advection_cal(advection_phi,grad_phi_procs,u1_procs,u2_procs,u3_procs)
     !各スケールの界面への寄与
     call contribution(chemical_potencial,advection_phi,chemical_potencial_hat,advection_phi_hat,enesupe_phi,enesupe_phi_sum,enesupe_phi_result)
+    !自由エネルギースペクトル
+    if((n == step_start)) then
+        call phi_supectrum(grad_phi1_hat,grad_phi2_hat,grad_phi3_hat,grad_phi_procs,grad_phi1_re,grad_phi2_re,grad_phi3_re,phisupe,phisupe_sum)
+        if(comm_rank == 0) then
+            do i = 1, (xmax+1)/2 + 1
+                phisupe_result(i) = phisupe_result(i) + phisupe_sum(i)
+            enddo
+
+            open(37,file ="./phisupe_d70we1.4.d")
+            do i=1,(xmax+1)/2+1
+                write(37,"(2es16.8)") dble(i)-1.0d0, phisupe_result(i)
+            enddo
+            close(37)
+        endif
+    endif
 ENDDO
 
     ! if(comm_rank==0) then
