@@ -16,8 +16,8 @@ module globals
     integer,parameter:: xmax = 255 !ｘ方向格子数（０から数える）
     integer,parameter:: ymax = 255 !ｙ方向格子数（０から数える）
     integer,parameter:: zmax = 255 !ｚ方向格子数（０から数える）
-    integer,parameter:: step_start = 5000
-    integer,parameter:: step_end = 37000
+    integer,parameter:: step_start = 4000
+    integer,parameter:: step_end = 4000
     integer,parameter:: step_bin = 1000
     integer,parameter:: step_num2 = (step_end - step_start) / step_bin + 1 
 
@@ -489,7 +489,7 @@ contains
         ! endif
     endsubroutine contribution
 
-    subroutine phi_supectrum(grad_phi1_hat,grad_phi2_hat,grad_phi3_hat,grad_phi_procs,grad_phi1_re,grad_phi2_re,grad_phi3_re,phisupe,phisupe_sum)
+    subroutine phi_supectrum(grad_phi1_hat,grad_phi2_hat,grad_phi3_hat,grad_phi_procs,grad_phi1_re,grad_phi2_re,grad_phi3_re,phisupe,phisupe_sum,free_energy)
         complex(kind(0d0)), intent(inout) :: grad_phi1_hat(sta(1)-1:last(1)-1, sta(2)-1:last(2)-1, sta(3)-1:last(3)-1)
         complex(kind(0d0)), intent(inout) :: grad_phi2_hat(sta(1)-1:last(1)-1, sta(2)-1:last(2)-1, sta(3)-1:last(3)-1)
         complex(kind(0d0)), intent(inout) :: grad_phi3_hat(sta(1)-1:last(1)-1, sta(2)-1:last(2)-1, sta(3)-1:last(3)-1)
@@ -498,6 +498,8 @@ contains
         real(8),intent(inout):: grad_phi2_re(0:x_procs-1, 0:y_procs-1, 0:zmax) 
         real(8),intent(inout):: grad_phi3_re(0:x_procs-1, 0:y_procs-1, 0:zmax) 
 
+        real(8),intent(inout):: free_energy(0:x_procs+1,0:y_procs+1,0:zmax+2)
+
         real(8),intent(inout):: phisupe((xmax+1)/2 + 1), phisupe_sum((xmax+1)/2 + 1)
         integer k1, k2, k3, k(1:3), k_index
         real(8) k_abs
@@ -505,17 +507,17 @@ contains
         do zi=1,zmax+1
             do yi=1,y_procs
                 do xi=1,x_procs
-                    grad_phi1_re(xi-1,yi-1,zi-1) = grad_phi_procs(1,xi,yi,zi)*grad_phi_procs(1,xi,yi,zi)
-                    grad_phi2_re(xi-1,yi-1,zi-1) = grad_phi_procs(2,xi,yi,zi)*grad_phi_procs(2,xi,yi,zi)
-                    grad_phi3_re(xi-1,yi-1,zi-1) = grad_phi_procs(3,xi,yi,zi)*grad_phi_procs(3,xi,yi,zi)
+                    grad_phi1_re(xi-1,yi-1,zi-1) = free_energy(xi,yi,zi) + 0.5d0*kappag*( grad_phi_procs(1,xi,yi,zi)**2 + grad_phi_procs(2,xi,yi,zi)**2 + grad_phi_procs(3,xi,yi,zi)**2 )
+                    ! grad_phi2_re(xi-1,yi-1,zi-1) = grad_phi_procs(2,xi,yi,zi)*grad_phi_procs(2,xi,yi,zi)
+                    ! grad_phi3_re(xi-1,yi-1,zi-1) = grad_phi_procs(3,xi,yi,zi)*grad_phi_procs(3,xi,yi,zi)
                 enddo
             enddo
         enddo
 
         !フーリエ変換（実数→複素数）
         call fft_r2c(grad_phi1_re, grad_phi1_hat)
-        call fft_r2c(grad_phi2_re, grad_phi2_hat)
-        call fft_r2c(grad_phi3_re, grad_phi3_hat)
+        ! call fft_r2c(grad_phi2_re, grad_phi2_hat)
+        ! call fft_r2c(grad_phi3_re, grad_phi3_hat)
 
         phisupe(:) = 0.0d0
         phisupe_sum(:) = 0.0d0
@@ -530,9 +532,11 @@ contains
                     k_index = int( k_abs ) + 1
 
                     if(k3 == 0) then
-                        phisupe(k_index) = phisupe(k_index) + ( abs(grad_phi1_hat(k1,k2,k3))+abs(grad_phi2_hat(k1,k2,k3))+abs(grad_phi3_hat(k1,k2,k3)) )
+                        ! phisupe(k_index) = phisupe(k_index) + ( abs(grad_phi1_hat(k1,k2,k3))+abs(grad_phi2_hat(k1,k2,k3))+abs(grad_phi3_hat(k1,k2,k3)) )
+                        phisupe(k_index) = phisupe(k_index) + abs(grad_phi1_hat(k1,k2,k3))
                     else 
-                        phisupe(k_index) = phisupe(k_index) + ( abs(grad_phi1_hat(k1,k2,k3))+abs(grad_phi2_hat(k1,k2,k3))+abs(grad_phi3_hat(k1,k2,k3)) ) * 2.0d0
+                        ! phisupe(k_index) = phisupe(k_index) + ( abs(grad_phi1_hat(k1,k2,k3))+abs(grad_phi2_hat(k1,k2,k3))+abs(grad_phi3_hat(k1,k2,k3)) ) * 2.0d0
+                        phisupe(k_index) = phisupe(k_index) + abs(grad_phi1_hat(k1,k2,k3)) * 2.0d0
                     endif
                 enddo
             enddo
@@ -639,16 +643,17 @@ DO n = step_start, step_end, step_bin
     call grad_cal(grad_phi_procs,phi_procs,cr)
     call advection_cal(advection_phi,grad_phi_procs,u1_procs,u2_procs,u3_procs)
     !各スケールの界面への寄与
-    call contribution(chemical_potencial,advection_phi,chemical_potencial_hat,advection_phi_hat,enesupe_phi,enesupe_phi_sum,enesupe_phi_result)
+    ! call contribution(chemical_potencial,advection_phi,chemical_potencial_hat,advection_phi_hat,enesupe_phi,enesupe_phi_sum,enesupe_phi_result)
     !自由エネルギースペクトル
     if((n == step_start)) then
-        call phi_supectrum(grad_phi1_hat,grad_phi2_hat,grad_phi3_hat,grad_phi_procs,grad_phi1_re,grad_phi2_re,grad_phi3_re,phisupe,phisupe_sum)
+        call free_energy_cal(free_energy,phi_procs)
+        call phi_supectrum(grad_phi1_hat,grad_phi2_hat,grad_phi3_hat,grad_phi_procs,grad_phi1_re,grad_phi2_re,grad_phi3_re,phisupe,phisupe_sum,free_energy)
         if(comm_rank == 0) then
             do i = 1, (xmax+1)/2 + 1
                 phisupe_result(i) = phisupe_result(i) + phisupe_sum(i)
             enddo
 
-            open(37,file ="./phisupe_d70we1.4.d")
+            open(37,file ="./phisupe_d70we1.4_all.d")
             do i=1,(xmax+1)/2+1
                 write(37,"(2es16.8)") dble(i)-1.0d0, phisupe_result(i)
             enddo
