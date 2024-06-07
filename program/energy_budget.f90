@@ -1272,10 +1272,14 @@ DO n=1,step
     do zi = 1, zmax+1
         do yi = 1, y_procs
             do xi = 1, x_procs
+                ! A_procs(xi,yi,zi) = p_procs(xi,yi,zi) &
+                !                     - kappag/3.0d0 * (grad_phi_procs(1,xi,yi,zi)**2 &
+                !                                     + grad_phi_procs(2,xi,yi,zi)**2 &
+                !                                     + grad_phi_procs(3,xi,yi,zi)**2)
                 A_procs(xi,yi,zi) = p_procs(xi,yi,zi) &
-                                    - kappag/3.0d0 * (grad_phi_procs(1,xi,yi,zi)**2 &
-                                                    + grad_phi_procs(2,xi,yi,zi)**2 &
-                                                    + grad_phi_procs(3,xi,yi,zi)**2)
+                    - kappag * (grad_phi_procs(1,xi,yi,zi)**2 &
+                                    + grad_phi_procs(2,xi,yi,zi)**2 &
+                                    + grad_phi_procs(3,xi,yi,zi)**2)
             enddo
         enddo
     enddo
