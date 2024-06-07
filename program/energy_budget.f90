@@ -1276,10 +1276,7 @@ DO n=1,step
                 !                     - kappag/3.0d0 * (grad_phi_procs(1,xi,yi,zi)**2 &
                 !                                     + grad_phi_procs(2,xi,yi,zi)**2 &
                 !                                     + grad_phi_procs(3,xi,yi,zi)**2)
-                A_procs(xi,yi,zi) = p_procs(xi,yi,zi) &
-                    - kappag * (grad_phi_procs(1,xi,yi,zi)**2 &
-                                    + grad_phi_procs(2,xi,yi,zi)**2 &
-                                    + grad_phi_procs(3,xi,yi,zi)**2)
+                A_procs(xi,yi,zi) = p_procs(xi,yi,zi) 
             enddo
         enddo
     enddo
