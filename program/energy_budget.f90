@@ -147,7 +147,7 @@ contains
 
     !========================並列数・コミュニケータ分割・通信先設定========================
         !配列のallocate(xi:0とx_procs+1がのりしろ)(yi:0とymax+2がのりしろ)(zi:0とz_procs+1がのりしろ)
-        Nx = 32 !x方向の並列数（ただし，Nx/=comm_procs）
+        Nx = 8 !x方向の並列数（ただし，Nx/=comm_procs）
         Ny = comm_procs / (Nx * Nxall * Nyall) !z方向の並列数
         x_procs = (xmax+1) / Nx
         y_procs = (ymax+1) / Ny
@@ -1226,7 +1226,7 @@ DO n=1,step
     do zi = 1, zmax+1
         do yi = 1, y_procs
             do xi = 1, x_procs
-                kinetic_procs(xi,yi,zi) = 0.5d0*(u1_procs(xi,yi,zi)**2 + u2_procs(xi,yi,zi)**2 + u3_procs(xi,yi,zi)**2)
+                kinetic_procs(xi,yi,zi) = 0.5d0*(u1_procs(xi,yi,zi)*u1_procs(xi,yi,zi) + u2_procs(xi,yi,zi)*u2_procs(xi,yi,zi) + u3_procs(xi,yi,zi)*u3_procs(xi,yi,zi))
             enddo
         enddo
     enddo
@@ -1245,14 +1245,17 @@ DO n=1,step
     do zi=1,zmax+1
         do yi=1,y_procs
             do xi=1,x_procs
-                do alpha=1,3
-                    grad_kinetic_procs(alpha,xi,yi,zi) = 0.0d0
-                    do i = 2,15
-                        grad_kinetic_procs(alpha,xi,yi,zi) = grad_kinetic_procs(alpha,xi,yi,zi) &
-                                                        + cr(alpha,i)*kinetic_procs(xi+cx(i),yi+cy(i),zi+cz(i))
-                    enddo
-                    grad_kinetic_procs(alpha,xi,yi,zi) = grad_kinetic_procs(alpha,xi,yi,zi)/(10.0d0*ds)
-                enddo
+                ! do alpha=1,3
+                !     grad_kinetic_procs(alpha,xi,yi,zi) = 0.0d0
+                !     do i = 2,15
+                !         grad_kinetic_procs(alpha,xi,yi,zi) = grad_kinetic_procs(alpha,xi,yi,zi) &
+                !                                         + cr(alpha,i)*kinetic_procs(xi+cx(i),yi+cy(i),zi+cz(i))
+                !     enddo
+                !     grad_kinetic_procs(alpha,xi,yi,zi) = grad_kinetic_procs(alpha,xi,yi,zi)/(10.0d0*ds)
+                ! enddo
+                grad_kinetic_procs(1,xi,yi,zi) = (kinetic_procs(xi+1,yi,zi)-kinetic_procs(xi-1,yi,zi)) / 2.0d0
+                grad_kinetic_procs(2,xi,yi,zi) = (kinetic_procs(xi,yi+1,zi)-kinetic_procs(xi,yi-1,zi)) / 2.0d0
+                grad_kinetic_procs(3,xi,yi,zi) = (kinetic_procs(xi,yi,zi+1)-kinetic_procs(xi,yi,zi-1)) / 2.0d0
             enddo
         enddo
     enddo
@@ -1272,11 +1275,11 @@ DO n=1,step
     do zi = 1, zmax+1
         do yi = 1, y_procs
             do xi = 1, x_procs
-                ! A_procs(xi,yi,zi) = p_procs(xi,yi,zi) &
-                !                     - kappag/3.0d0 * (grad_phi_procs(1,xi,yi,zi)**2 &
-                !                                     + grad_phi_procs(2,xi,yi,zi)**2 &
-                !                                     + grad_phi_procs(3,xi,yi,zi)**2)
-                A_procs(xi,yi,zi) = p_procs(xi,yi,zi) 
+                A_procs(xi,yi,zi) = p_procs(xi,yi,zi) &
+                                    - kappag/3.0d0 * (grad_phi_procs(1,xi,yi,zi)**2 &
+                                                    + grad_phi_procs(2,xi,yi,zi)**2 &
+                                                    + grad_phi_procs(3,xi,yi,zi)**2)
+                ! A_procs(xi,yi,zi) = p_procs(xi,yi,zi) 
             enddo
         enddo
     enddo
