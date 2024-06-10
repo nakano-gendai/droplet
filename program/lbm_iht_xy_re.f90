@@ -23,13 +23,13 @@ module globals
     integer,parameter:: xall = (xmax + 1) * Nxall !全体のx方向格子数
     integer,parameter:: yall = (ymax + 1) * Nyall !全体のz方向格子数
     !時間に関するパラメータ
-    integer,parameter:: step_start = 700000
+    integer,parameter:: step_start = 400000
     integer,parameter:: step = 10000000 !計算時間step
     !入力ディレクトリ
     character(*),parameter :: datadir_input = "/data/sht/nakanog/DNS_turbulence_256_IHT/fg/"
     !出力ディレクトリ
-    character(*),parameter :: datadir = "/data/sht/nakanog/DNS_turbulence_256_IHT_8/"
-    character(*),parameter :: datadir2 = "/data/sht/nakanog/DNS_turbulence_256_IHT_8/fg/"
+    character(*),parameter :: datadir = "/data/sht/nakanog/DNS_turbulence_256_IHT_new/"
+    character(*),parameter :: datadir2 = "/data/sht/nakanog/DNS_turbulence_256_IHT_new/fg/"
     integer,parameter:: step_output = 4000
     integer,parameter:: step_putput_fg = 100000
 
@@ -49,11 +49,11 @@ module globals
     !カットオフ波数（IHT）
     integer,parameter:: kc = 3
     !動粘性係数（IHT）
-    real(8),parameter:: nu = 0.0005d0
+    real(8),parameter:: nu = 0.001d0
     !緩和時間（IHT）
     real(8),parameter:: taug = 3.0d0*nu/ds + 0.5d0
     !Kolmogorovスケール (IHT)
-    real(8),parameter:: Kolmogorov_scale = 1.5d0 * ds
+    real(8),parameter:: Kolmogorov_scale = 1.0d0 * ds
     !エネルギー散逸率（IHT）
     real(8),parameter:: epsilon = (nu**3.0d0) / (Kolmogorov_scale**4.0d0)
 
@@ -678,7 +678,7 @@ subroutine physics(p_procs,u1_procs,u2_procs,u3_procs,g_procs,gnext_procs,strain
                     k_index = int( k_abs ) + 1
 
                     if((k_index > 1) .and. (k_index < kc + 1)) then
-                        energy_procs = energy_procs + 0.5d0 * (abs(u1_hat(k1,k2,k3))**2 + abs(u2_hat(k1,k2,k3))**2 + abs(u3_hat(k1,k2,k3))**2)
+                        energy_procs = energy_procs + 0.5d0 * (abs(u1_hat(k1,k2,k3))**2 + abs(u2_hat(k1,k2,k3))**2 + abs(u3_hat(k1,k2,k3))**2) * min(2.0d0, dble(k3)+1.0d0)
                     endif
                 enddo
             enddo

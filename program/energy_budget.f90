@@ -23,10 +23,10 @@ module globals
     integer,parameter:: yall = (ymax + 1) * Nyall !全体のz方向格子数
     !時間に関するパラメータ
     integer,parameter:: step = 37000 !計算時間step
-    integer,parameter:: step_input = 5000 !速度場入力時間step
-    integer,parameter:: step_input_file_num = 400000 !入力する乱流場のstep
+    integer,parameter:: step_input = 1 !速度場入力時間step
+    integer,parameter:: step_input_file_num = 200000 !入力する乱流場のstep
     !入力ディレクトリ
-    character(*),parameter :: datadir_input = "/data/sht/nakanog/DNS_turbulence_256_IHT/fg/"
+    character(*),parameter :: datadir_input = "/data/sht/nakanog/DNS_turbulence_256_IHT_new/fg/"
     !出力ディレクトリ
     character(*),parameter :: datadir_output = "/data/sht/nakanog/DNS_turbulence_256_IHT/case26/"
     character(*),parameter :: datadir_output_fg = "/data/sht/nakanog/DNS_turbulence_256_IHT/case26/fg/"
@@ -45,8 +45,8 @@ module globals
     real(8),parameter:: D = 70.0d0 !設置する液滴直径
     real(8),parameter:: nu1 = 0.001d0 !連続相の粘性係数
     real(8),parameter:: nu2 = eta*nu1 !分散相の粘性係数
-    ! real(8),parameter:: sigma = 1.02d-3 !界面張力
-    real(8),parameter:: sigma = (1.32d-9)**(2.0d0/3.0d0)*D**(5.0d0/3.0d0)/We !界面張力
+    real(8),parameter:: sigma = 0.0d0 !界面張力
+    ! real(8),parameter:: sigma = (1.32d-9)**(2.0d0/3.0d0)*D**(5.0d0/3.0d0)/We !界面張力
     real(8),parameter:: kappaf = 0.06d0*ds**2 !界面厚さを決めるパラメータ
     ! real(8),parameter:: phi1 = 2.211d0 !連続相のオーダーパラメータ
     ! real(8),parameter:: phi2 = 4.895d0 !分散相のオーダーパラメータ
@@ -55,7 +55,8 @@ module globals
     ! real(8),parameter:: T = 0.55d0
     ! real(8),parameter:: kappag = (sigma/1.7039d0)**(1.0d0/0.9991d0)  !界面張力を決めるパラメータ
     real(8),parameter:: phi1 = 2.638d-1 !連続相のオーダーパラメータ
-    real(8),parameter:: phi2 = 4.031d-1 !分散相のオーダーパラメータ
+    ! real(8),parameter:: phi2 = 4.031d-1 !分散相のオーダーパラメータ
+    real(8),parameter:: phi2 = phi1 !分散相のオーダーパラメータ
     real(8),parameter:: a = 1.0d0
     real(8),parameter:: b = 1.0d0
     real(8),parameter:: T = 2.93d-1
@@ -91,7 +92,7 @@ module globals
                                 1.d0/24.d0, 1.d0/24.d0, 1.d0/24.d0, 1.d0/24.d0 /)
 
     !その他変数
-    real(8) phi_min, phi_max, min, max
+    real(8) phi_min, phi_max, f_min, f_max
     real(8) gtemp, ftemp
     real(8) dif
     integer grobalx, grobaly, grobalz
@@ -147,7 +148,7 @@ contains
 
     !========================並列数・コミュニケータ分割・通信先設定========================
         !配列のallocate(xi:0とx_procs+1がのりしろ)(yi:0とymax+2がのりしろ)(zi:0とz_procs+1がのりしろ)
-        Nx = 8 !x方向の並列数（ただし，Nx/=comm_procs）
+        Nx = 32 !x方向の並列数（ただし，Nx/=comm_procs）
         Ny = comm_procs / (Nx * Nxall * Nyall) !z方向の並列数
         x_procs = (xmax+1) / Nx
         y_procs = (ymax+1) / Ny
@@ -359,8 +360,9 @@ contains
         right5_procs(:,:,:) = 0.0d0
     end subroutine ini_energy
 
-    subroutine ini_energy2(kinetic_procs,grad_kinetic_procs,A_procs,strain_procs,u_strain_procs,korteg_procs,grad_A_procs,kinetic_former_procs)
+    subroutine ini_energy2(kinetic_procs,grad_kinetic_procs,A_procs,strain_procs,u_strain_procs,korteg_procs,grad_A_procs,kinetic_former_procs,chemical_potencial,grad_chemical_potencial,free_energy)
         real(8),allocatable :: kinetic_procs(:,:,:), grad_kinetic_procs(:,:,:,:), A_procs(:,:,:), strain_procs(:,:,:,:,:), u_strain_procs(:,:,:,:,:), korteg_procs(:,:,:,:,:), grad_A_procs(:,:,:,:),kinetic_former_procs(:,:,:)
+        real(8),allocatable :: chemical_potencial(:,:,:), grad_chemical_potencial(:,:,:,:), free_energy(:,:,:)
 
         !以下はのりしろ無しの変数
         allocate(kinetic_procs(0:x_procs+1,0:y_procs+1,0:zmax+2))
@@ -371,6 +373,9 @@ contains
         allocate(korteg_procs(1:3,1:3,1:x_procs,1:y_procs,1:zmax+1))
         allocate(grad_A_procs(1:3,1:x_procs,1:y_procs,1:zmax+1))
         allocate(kinetic_former_procs(0:x_procs+1,0:y_procs+1,0:zmax+2))
+        allocate(chemical_potencial(0:x_procs+1,0:y_procs+1,0:zmax+2))
+        allocate(grad_chemical_potencial(1:3,1:x_procs,1:y_procs,1:zmax+1))
+        allocate(free_energy(0:x_procs+1,0:y_procs+1,0:zmax+2))
 
         kinetic_procs(:,:,:) = 0.0d0
         grad_kinetic_procs(:,:,:,:) = 0.0d0
@@ -380,6 +385,9 @@ contains
         korteg_procs(:,:,:,:,:) = 0.0d0
         grad_A_procs(:,:,:,:) = 0.0d0
         kinetic_former_procs(:,:,:) = 0.0d0
+        chemical_potencial(:,:,:) = 0.0d0
+        grad_chemical_potencial(:,:,:,:) = 0.0d0
+        free_energy(:,:,:) = 0.0d0
     end subroutine ini_energy2
 
     subroutine ini_energy3(tensor11,tensor12,tensor13,tensor21,tensor22,tensor23,tensor31,tensor32,tensor33)
@@ -735,22 +743,22 @@ contains
         !$omp end do
         !$omp end parallel
 
-        min = phi2
-        max = phi1
+        f_min = phi2
+        f_max = phi1
         do zi=1,zmax+1
             do yi=1,y_procs
                 do xi=1,x_procs
                     if(phi_procs(xi,yi,zi) > max) then
-                        max = phi_procs(xi,yi,zi)
+                        f_max = phi_procs(xi,yi,zi)
                     elseif(phi_procs(xi,yi,zi) < min) then
-                        min = phi_procs(xi,yi,zi)
+                        f_min = phi_procs(xi,yi,zi)
                     endif
                 enddo
             enddo
         enddo
 
-        call MPI_Allreduce(max,phi_max,1,MPI_REAL8,MPI_MAX,MPI_COMM_WORLD,ierr)
-        call MPI_Allreduce(min,phi_min,1,MPI_REAL8,MPI_MIN,MPI_COMM_WORLD,ierr)
+        call MPI_Allreduce(f_max,phi_max,1,MPI_REAL8,MPI_MAX,MPI_COMM_WORLD,ierr)
+        call MPI_Allreduce(f_min,phi_min,1,MPI_REAL8,MPI_MIN,MPI_COMM_WORLD,ierr)
 
         !$omp parallel
         !$omp do
@@ -910,7 +918,7 @@ contains
                     k_index = int( k_abs ) + 1
 
                     if((k_index > 1) .and. (k_index < kc + 1)) then
-                        energy_procs = energy_procs + 0.5d0 * (abs(u1_hat(k1,k2,k3))**2 + abs(u2_hat(k1,k2,k3))**2 + abs(u3_hat(k1,k2,k3))**2)
+                        energy_procs = energy_procs + 0.5d0 * (abs(u1_hat(k1,k2,k3))**2 + abs(u2_hat(k1,k2,k3))**2 + abs(u3_hat(k1,k2,k3))**2) * min(2.0d0, dble(k3)+1.0d0)
                     endif
                 enddo
             enddo
@@ -986,6 +994,33 @@ contains
         !$omp end do
         !$omp end parallel
     end subroutine strain_cal
+
+    subroutine chemical_potencial_cal(chemical_potencial,phi_procs,lap_phi_procs)
+        real(8),intent(inout):: chemical_potencial(0:x_procs+1,0:y_procs+1,0:zmax+2)
+        real(8),intent(in):: phi_procs(0:x_procs+1,0:y_procs+1,0:zmax+2)
+        real(8),intent(in):: lap_phi_procs(1:x_procs,1:y_procs,1:zmax+1)
+
+        do zi=1,zmax+1
+            do yi=1,y_procs
+                do xi=1,x_procs
+                    chemical_potencial(xi,yi,zi) = ( T*log( phi_procs(xi,yi,zi)/(1.0d0-b*phi_procs(xi,yi,zi)) ) + T/(1.0d0-b*phi_procs(xi,yi,zi)) - 2.0d0*a*phi_procs(xi,yi,zi) ) - kappag*lap_phi_procs(xi,yi,zi)
+                enddo
+            enddo
+        enddo
+    end subroutine chemical_potencial_cal
+
+    subroutine free_energy_cal(free_energy,phi_procs)
+        real(8),intent(out):: free_energy(0:x_procs+1,0:y_procs+1,0:zmax+2)
+        real(8),intent(in):: phi_procs(0:x_procs+1,0:y_procs+1,0:zmax+2)
+
+        do zi=1,zmax+1
+            do yi=1,y_procs
+                do xi=1,x_procs
+                    free_energy(xi,yi,zi) = phi_procs(xi,yi,zi)*T*log(phi_procs(xi,yi,zi)/(1.0d0-b*phi_procs(xi,yi,zi))) - a*phi_procs(xi,yi,zi)*phi_procs(xi,yi,zi)
+                enddo
+            enddo
+        enddo
+    end subroutine free_energy_cal
 
     subroutine output(phi_procs,u1_procs,u2_procs,u3_procs,p_procs,n)
         real(8),intent(inout):: phi_procs(0:x_procs+1,0:y_procs+1,0:zmax+2)
@@ -1095,6 +1130,8 @@ use glassman
     real(8),allocatable :: right4_procs(:,:,:), right5_procs(:,:,:)
 
     real(8),allocatable :: kinetic_procs(:,:,:), grad_kinetic_procs(:,:,:,:), A_procs(:,:,:), strain_procs(:,:,:,:,:), u_strain_procs(:,:,:,:,:), korteg_procs(:,:,:,:,:), grad_A_procs(:,:,:,:), kinetic_former_procs(:,:,:)
+    real(8),allocatable :: chemical_potencial(:,:,:), grad_chemical_potencial(:,:,:,:)
+    real(8),allocatable :: free_energy(:,:,:)
 
     real(8),allocatable :: tensor11(:,:,:), tensor12(:,:,:), tensor13(:,:,:)
     real(8),allocatable :: tensor21(:,:,:), tensor22(:,:,:), tensor23(:,:,:)
@@ -1110,6 +1147,7 @@ use glassman
 
     real(8) left1_sum, left2_sum, right1_sum, right2_sum, right3_sum, right4_sum, right5_sum
     real(8) left1_all, left2_all, right1_all, right2_all, right3_all, right4_all, right5_all
+    real(8) kinetic_sum, kinetic_former_sum, kinetic_all, kinetic_former_all
 
     !その他変数
     integer n, xi, yi, zi, i
@@ -1137,7 +1175,7 @@ use glassman
 
     !エネルギー
     call ini_energy(left1_procs,left2_procs,right1_procs,right2_procs,right3_procs,right4_procs,right5_procs)
-    call ini_energy2(kinetic_procs,grad_kinetic_procs,A_procs,strain_procs,u_strain_procs,korteg_procs,grad_A_procs,kinetic_former_procs)
+    call ini_energy2(kinetic_procs,grad_kinetic_procs,A_procs,strain_procs,u_strain_procs,korteg_procs,grad_A_procs,kinetic_former_procs,chemical_potencial,grad_chemical_potencial,free_energy)
     call ini_energy3(tensor11,tensor12,tensor13,tensor21,tensor22,tensor23,tensor31,tensor32,tensor33)
     call ini_energy4(s_tensor11,s_tensor12,s_tensor13,s_tensor21,s_tensor22,s_tensor23,s_tensor31,s_tensor32,s_tensor33)
     call ini_energy5(grad_tensor11,grad_tensor12,grad_tensor13,grad_tensor21,grad_tensor22,grad_tensor23,grad_tensor31,grad_tensor32,grad_tensor33)
@@ -1232,30 +1270,42 @@ DO n=1,step
     enddo
 
     !left1
+    kinetic_sum = 0.0d0
+    kinetic_former_sum = 0.0d0
+    kinetic_all = 0.0d0
+    kinetic_former_all = 0.0d0
     do zi=1,zmax+1
         do yi=1,y_procs
             do xi=1,x_procs
-                left1_procs(xi,yi,zi) = (kinetic_procs(xi,yi,zi)-kinetic_former_procs(xi,yi,zi)) / 1.0d0
+                kinetic_sum = kinetic_sum + kinetic_procs(xi,yi,zi)
+                kinetic_former_sum = kinetic_former_sum + kinetic_former_procs(xi,yi,zi)
             enddo
         enddo
     enddo
+    call MPI_Reduce(kinetic_sum, kinetic_all, 1, MPI_REAL8, MPI_SUM, 0, MPI_COMM_WORLD, ierr)
+    call MPI_Reduce(kinetic_former_sum, kinetic_former_all, 1, MPI_REAL8, MPI_SUM, 0, MPI_COMM_WORLD, ierr)
+
+    if(comm_rank == 0) then
+        left1_all = 0.0d0
+        left1_all = (kinetic_all-kinetic_former_all) / 1.0d0 
+    endif
 
     !left2
     call glue(kinetic_procs)
     do zi=1,zmax+1
         do yi=1,y_procs
             do xi=1,x_procs
-                ! do alpha=1,3
-                !     grad_kinetic_procs(alpha,xi,yi,zi) = 0.0d0
-                !     do i = 2,15
-                !         grad_kinetic_procs(alpha,xi,yi,zi) = grad_kinetic_procs(alpha,xi,yi,zi) &
-                !                                         + cr(alpha,i)*kinetic_procs(xi+cx(i),yi+cy(i),zi+cz(i))
-                !     enddo
-                !     grad_kinetic_procs(alpha,xi,yi,zi) = grad_kinetic_procs(alpha,xi,yi,zi)/(10.0d0*ds)
-                ! enddo
-                grad_kinetic_procs(1,xi,yi,zi) = (kinetic_procs(xi+1,yi,zi)-kinetic_procs(xi-1,yi,zi)) / 2.0d0
-                grad_kinetic_procs(2,xi,yi,zi) = (kinetic_procs(xi,yi+1,zi)-kinetic_procs(xi,yi-1,zi)) / 2.0d0
-                grad_kinetic_procs(3,xi,yi,zi) = (kinetic_procs(xi,yi,zi+1)-kinetic_procs(xi,yi,zi-1)) / 2.0d0
+                do alpha=1,3
+                    grad_kinetic_procs(alpha,xi,yi,zi) = 0.0d0
+                    do i = 2,15
+                        grad_kinetic_procs(alpha,xi,yi,zi) = grad_kinetic_procs(alpha,xi,yi,zi) &
+                                                        + cr(alpha,i)*kinetic_procs(xi+cx(i),yi+cy(i),zi+cz(i))
+                    enddo
+                    grad_kinetic_procs(alpha,xi,yi,zi) = grad_kinetic_procs(alpha,xi,yi,zi)/(10.0d0*ds)
+                enddo
+                ! grad_kinetic_procs(1,xi,yi,zi) = (kinetic_procs(xi+1,yi,zi)-kinetic_procs(xi-1,yi,zi)) / 2.0d0
+                ! grad_kinetic_procs(2,xi,yi,zi) = (kinetic_procs(xi,yi+1,zi)-kinetic_procs(xi,yi-1,zi)) / 2.0d0
+                ! grad_kinetic_procs(3,xi,yi,zi) = (kinetic_procs(xi,yi,zi+1)-kinetic_procs(xi,yi,zi-1)) / 2.0d0
             enddo
         enddo
     enddo
@@ -1271,15 +1321,22 @@ DO n=1,step
 
     !=========================右辺==========================================================
     call strain_cal(grad_u_procs,strain_procs)
+    ! call chemical_potencial_cal(chemical_potencial,phi_procs,lap_phi_procs)
+    ! call free_energy_cal(free_energy,phi_procs)
+    ! call glue(chemical_potencial)
     !right1
     do zi = 1, zmax+1
         do yi = 1, y_procs
             do xi = 1, x_procs
-                A_procs(xi,yi,zi) = p_procs(xi,yi,zi) &
-                                    - kappag/3.0d0 * (grad_phi_procs(1,xi,yi,zi)**2 &
-                                                    + grad_phi_procs(2,xi,yi,zi)**2 &
-                                                    + grad_phi_procs(3,xi,yi,zi)**2)
-                ! A_procs(xi,yi,zi) = p_procs(xi,yi,zi) 
+                A_procs(xi,yi,zi) = p_procs(xi,yi,zi)
+
+                ! A_procs(xi,yi,zi) = p_procs(xi,yi,zi) &
+                !                     - 1.0d0/3.0d0*kappag * (grad_phi_procs(1,xi,yi,zi)**2.0d0 &
+                !                                     + grad_phi_procs(2,xi,yi,zi)**2.0d0 &
+                !                                     + grad_phi_procs(3,xi,yi,zi)**2.0d0)
+                ! A_procs(xi,yi,zi) = 1.0d0/3.0d0*kappag * (grad_phi_procs(1,xi,yi,zi)**2.0d0 &
+                !                                     + grad_phi_procs(2,xi,yi,zi)**2.0d0 &
+                !                                     + grad_phi_procs(3,xi,yi,zi)**2.0d0)
             enddo
         enddo
     enddo
@@ -1441,7 +1498,7 @@ DO n=1,step
             do xi = 1, x_procs
                 do beta = 1, 3
                     do alpha = 1, 3
-                        right3_procs(xi,yi,zi) = right3_procs(xi,yi,zi) + strain_procs(alpha,beta,xi,yi,zi)**2
+                        right3_procs(xi,yi,zi) = right3_procs(xi,yi,zi) + strain_procs(alpha,beta,xi,yi,zi)**2.0d0
                     enddo
                 enddo
 
@@ -1451,31 +1508,48 @@ DO n=1,step
     enddo
 
     !right4
-    do zi = 1, zmax + 1
-        do yi = 1, y_procs
-            do xi = 1, x_procs
-                do beta = 1, 3
-                    do alpha = 1, 3
-                        korteg_procs(alpha,beta,xi,yi,zi) = grad_phi_procs(alpha,xi,yi,zi)*grad_phi_procs(beta,xi,yi,zi)
-                    enddo
-                enddo
-            enddo
-        enddo
-    enddo
+    ! do zi = 1, zmax + 1
+    !     do yi = 1, y_procs
+    !         do xi = 1, x_procs
+    !             do beta = 1, 3
+    !                 do alpha = 1, 3
+    !                     korteg_procs(alpha,beta,xi,yi,zi) = grad_phi_procs(alpha,xi,yi,zi)*grad_phi_procs(beta,xi,yi,zi)
+    !                 enddo
+    !             enddo
+    !         enddo
+    !     enddo
+    ! enddo
+    ! do zi = 1, zmax+1
+    !     do yi = 1, y_procs
+    !         do xi = 1, x_procs
+    !             tensor11(xi,yi,zi) = korteg_procs(1,1,xi,yi,zi)
+    !             tensor21(xi,yi,zi) = korteg_procs(2,1,xi,yi,zi)
+    !             tensor31(xi,yi,zi) = korteg_procs(3,1,xi,yi,zi)
+
+    !             tensor12(xi,yi,zi) = korteg_procs(1,2,xi,yi,zi)
+    !             tensor22(xi,yi,zi) = korteg_procs(2,2,xi,yi,zi)
+    !             tensor32(xi,yi,zi) = korteg_procs(3,2,xi,yi,zi)
+
+    !             tensor13(xi,yi,zi) = korteg_procs(1,3,xi,yi,zi)
+    !             tensor23(xi,yi,zi) = korteg_procs(2,3,xi,yi,zi)
+    !             tensor33(xi,yi,zi) = korteg_procs(3,3,xi,yi,zi)
+    !         enddo
+    !     enddo
+    ! enddo
     do zi = 1, zmax+1
         do yi = 1, y_procs
             do xi = 1, x_procs
-                tensor11(xi,yi,zi) = korteg_procs(1,1,xi,yi,zi)
-                tensor21(xi,yi,zi) = korteg_procs(2,1,xi,yi,zi)
-                tensor31(xi,yi,zi) = korteg_procs(3,1,xi,yi,zi)
+                tensor11(xi,yi,zi) = gphi_procs(1,1,xi,yi,zi)
+                tensor21(xi,yi,zi) = gphi_procs(2,1,xi,yi,zi)
+                tensor31(xi,yi,zi) = gphi_procs(3,1,xi,yi,zi)
 
-                tensor12(xi,yi,zi) = korteg_procs(1,2,xi,yi,zi)
-                tensor22(xi,yi,zi) = korteg_procs(2,2,xi,yi,zi)
-                tensor32(xi,yi,zi) = korteg_procs(3,2,xi,yi,zi)
+                tensor12(xi,yi,zi) = gphi_procs(1,2,xi,yi,zi)
+                tensor22(xi,yi,zi) = gphi_procs(2,2,xi,yi,zi)
+                tensor32(xi,yi,zi) = gphi_procs(3,2,xi,yi,zi)
 
-                tensor13(xi,yi,zi) = korteg_procs(1,3,xi,yi,zi)
-                tensor23(xi,yi,zi) = korteg_procs(2,3,xi,yi,zi)
-                tensor33(xi,yi,zi) = korteg_procs(3,3,xi,yi,zi)
+                tensor13(xi,yi,zi) = gphi_procs(1,3,xi,yi,zi)
+                tensor23(xi,yi,zi) = gphi_procs(2,3,xi,yi,zi)
+                tensor33(xi,yi,zi) = gphi_procs(3,3,xi,yi,zi)
             enddo
         enddo
     enddo
@@ -1491,7 +1565,7 @@ DO n=1,step
     call glue(tensor23)
     call glue(tensor33)
 
-    alpha = 1
+    ! alpha = 1
     do zi=1,zmax+1
         do yi=1,y_procs
             do xi=1,x_procs
@@ -1500,11 +1574,11 @@ DO n=1,step
                 grad_tensor31(xi,yi,zi) = 0.0d0
                 do i = 2,15
                     grad_tensor11(xi,yi,zi) = grad_tensor11(xi,yi,zi) &
-                                            + cr(alpha,i)*tensor11(xi+cx(i),yi+cy(i),zi+cz(i))
+                                            + cr(1,i)*tensor11(xi+cx(i),yi+cy(i),zi+cz(i))
                     grad_tensor21(xi,yi,zi) = grad_tensor21(xi,yi,zi) &
-                                            + cr(alpha,i)*tensor21(xi+cx(i),yi+cy(i),zi+cz(i))
+                                            + cr(1,i)*tensor21(xi+cx(i),yi+cy(i),zi+cz(i))
                     grad_tensor31(xi,yi,zi) = grad_tensor31(xi,yi,zi) &
-                                            + cr(alpha,i)*tensor31(xi+cx(i),yi+cy(i),zi+cz(i))
+                                            + cr(1,i)*tensor31(xi+cx(i),yi+cy(i),zi+cz(i))
                 enddo
                 grad_tensor11(xi,yi,zi) = grad_tensor11(xi,yi,zi)/(10.0d0*ds)
                 grad_tensor21(xi,yi,zi) = grad_tensor21(xi,yi,zi)/(10.0d0*ds)
@@ -1513,7 +1587,7 @@ DO n=1,step
         enddo
     enddo
 
-    alpha = 2
+    ! alpha = 2
     do zi=1,zmax+1
         do yi=1,y_procs
             do xi=1,x_procs
@@ -1522,11 +1596,11 @@ DO n=1,step
                 grad_tensor32(xi,yi,zi) = 0.0d0
                 do i = 2,15
                     grad_tensor12(xi,yi,zi) = grad_tensor12(xi,yi,zi) &
-                                            + cr(alpha,i)*tensor12(xi+cx(i),yi+cy(i),zi+cz(i))
+                                            + cr(2,i)*tensor12(xi+cx(i),yi+cy(i),zi+cz(i))
                     grad_tensor22(xi,yi,zi) = grad_tensor22(xi,yi,zi) &
-                                            + cr(alpha,i)*tensor22(xi+cx(i),yi+cy(i),zi+cz(i))
+                                            + cr(2,i)*tensor22(xi+cx(i),yi+cy(i),zi+cz(i))
                     grad_tensor32(xi,yi,zi) = grad_tensor32(xi,yi,zi) &
-                                            + cr(alpha,i)*tensor32(xi+cx(i),yi+cy(i),zi+cz(i))
+                                            + cr(2,i)*tensor32(xi+cx(i),yi+cy(i),zi+cz(i))
                 enddo
                 grad_tensor12(xi,yi,zi) = grad_tensor12(xi,yi,zi)/(10.0d0*ds)
                 grad_tensor22(xi,yi,zi) = grad_tensor22(xi,yi,zi)/(10.0d0*ds)
@@ -1535,7 +1609,7 @@ DO n=1,step
         enddo
     enddo
 
-    alpha = 3
+    ! alpha = 3
     do zi=1,zmax+1
         do yi=1,y_procs
             do xi=1,x_procs
@@ -1544,11 +1618,11 @@ DO n=1,step
                 grad_tensor33(xi,yi,zi) = 0.0d0
                 do i = 2,15
                     grad_tensor13(xi,yi,zi) = grad_tensor13(xi,yi,zi) &
-                                            + cr(alpha,i)*tensor13(xi+cx(i),yi+cy(i),zi+cz(i))
+                                            + cr(3,i)*tensor13(xi+cx(i),yi+cy(i),zi+cz(i))
                     grad_tensor23(xi,yi,zi) = grad_tensor23(xi,yi,zi) &
-                                            + cr(alpha,i)*tensor23(xi+cx(i),yi+cy(i),zi+cz(i))
+                                            + cr(3,i)*tensor23(xi+cx(i),yi+cy(i),zi+cz(i))
                     grad_tensor33(xi,yi,zi) = grad_tensor33(xi,yi,zi) &
-                                            + cr(alpha,i)*tensor33(xi+cx(i),yi+cy(i),zi+cz(i))
+                                            + cr(3,i)*tensor33(xi+cx(i),yi+cy(i),zi+cz(i))
                 enddo
                 grad_tensor13(xi,yi,zi) = grad_tensor13(xi,yi,zi)/(10.0d0*ds)
                 grad_tensor23(xi,yi,zi) = grad_tensor23(xi,yi,zi)/(10.0d0*ds)
@@ -1563,10 +1637,33 @@ DO n=1,step
                                         + u1_procs(xi,yi,zi)*grad_tensor12(xi,yi,zi) + u2_procs(xi,yi,zi)*grad_tensor22(xi,yi,zi) + u3_procs(xi,yi,zi)*grad_tensor32(xi,yi,zi) &
                                         + u1_procs(xi,yi,zi)*grad_tensor13(xi,yi,zi) + u2_procs(xi,yi,zi)*grad_tensor23(xi,yi,zi) + u3_procs(xi,yi,zi)*grad_tensor33(xi,yi,zi)
                 
-                right4_procs(xi,yi,zi) = right4_procs(xi,yi,zi) * (-1.0d0) * kappag
+                right4_procs(xi,yi,zi) = right4_procs(xi,yi,zi) * (-1.0d0) * (2.0d0/9.0d0) * kappag
             enddo
         enddo
     enddo
+
+
+    ! do zi=1,zmax+1
+    !     do yi=1,y_procs
+    !         do xi=1,x_procs
+    !             do alpha=1,3
+    !                 grad_chemical_potencial(alpha,xi,yi,zi) = 0.0d0
+    !                 do i = 2,15
+    !                     grad_chemical_potencial(alpha,xi,yi,zi) = grad_chemical_potencial(alpha,xi,yi,zi) &
+    !                                                     + cr(alpha,i)*chemical_potencial(xi+cx(i),yi+cy(i),zi+cz(i))
+    !                 enddo
+    !                 grad_chemical_potencial(alpha,xi,yi,zi) = grad_chemical_potencial(alpha,xi,yi,zi)/(10.0d0*ds)
+    !             enddo
+    !         enddo
+    !     enddo
+    ! enddo
+    ! do zi=1,zmax+1
+    !     do yi=1,y_procs
+    !         do xi=1,x_procs
+    !             right4_procs(xi,yi,zi) = -1.0d0 * phi_procs(xi,yi,zi) * (u1_procs(xi,yi,zi)*grad_chemical_potencial(1,xi,yi,zi) + u2_procs(xi,yi,zi)*grad_chemical_potencial(2,xi,yi,zi) + u3_procs(xi,yi,zi)*grad_chemical_potencial(3,xi,yi,zi))
+    !         enddo
+    !     enddo
+    ! enddo
 
     !right5
     do zi=1,zmax+1
@@ -1578,7 +1675,7 @@ DO n=1,step
     enddo
 
     !==========================エネルギーをまとめる========================
-    left1_sum = 0.0d0
+    ! left1_sum = 0.0d0
     left2_sum = 0.0d0
     right1_sum = 0.0d0
     right2_sum = 0.0d0
@@ -1588,7 +1685,7 @@ DO n=1,step
     do zi=1,zmax+1
         do yi=1,y_procs
             do xi=1,x_procs
-                left1_sum = left1_sum + left1_procs(xi,yi,zi)
+                ! left1_sum = left1_sum + left1_procs(xi,yi,zi)
                 left2_sum = left2_sum + left2_procs(xi,yi,zi)
                 right1_sum = right1_sum + right1_procs(xi,yi,zi)
                 right2_sum = right2_sum + right2_procs(xi,yi,zi)
@@ -1598,7 +1695,7 @@ DO n=1,step
             enddo
         enddo
     enddo
-    call MPI_Reduce(left1_sum, left1_all, 1, MPI_REAL8, MPI_SUM, 0, MPI_COMM_WORLD, ierr)
+    ! call MPI_Reduce(left1_sum, left1_all, 1, MPI_REAL8, MPI_SUM, 0, MPI_COMM_WORLD, ierr)
     call MPI_Reduce(left2_sum, left2_all, 1, MPI_REAL8, MPI_SUM, 0, MPI_COMM_WORLD, ierr)
     call MPI_Reduce(right1_sum, right1_all, 1, MPI_REAL8, MPI_SUM, 0, MPI_COMM_WORLD, ierr)
     call MPI_Reduce(right2_sum, right2_all, 1, MPI_REAL8, MPI_SUM, 0, MPI_COMM_WORLD, ierr)
@@ -1609,12 +1706,16 @@ DO n=1,step
     if(comm_rank == 0) then
         if(mod(n,100)==0) then
             if(n == 100) then
-                open(18,file="./energy_budget.d")
-                write(18,"(10es16.8)") dble(n), left1_all, left2_all, right1_all, right2_all, right3_all,right4_all, right5_all, left1_all+left2_all, right1_all+right2_all+right3_all+right4_all+right5_all
+                open(18,file="./energy_budget2.d")
+                write(18,"(11es16.8)") dble(n), left1_all, left2_all, right1_all, right2_all, right3_all,right4_all, right5_all, left1_all+left2_all, right1_all+right2_all+right3_all+right4_all+right5_all, (-1.0d0*left2_all+right1_all+right2_all+right3_all+right4_all+right5_all) / left1_all
                 close(18)
+
+                ! open(18,file="./energy_budget.d")
+                ! write(18,"(8es16.8)") dble(n), left1_all, left2_all, right1_all, right3_all, right4_all, right5_all, right1_all+right3_all+right4_all+right5_all
+                ! close(18)
             else
-                open(18,file="./energy_budget.d",action="write",position="append")
-                write(18,"(10es16.8)") dble(n), left1_all, left2_all, right1_all, right2_all, right3_all,right4_all, right5_all, left1_all+left2_all, right1_all+right2_all+right3_all+right4_all+right5_all
+                open(18,file="./energy_budget2.d",action="write",position="append")
+                write(18,"(11es16.8)") dble(n), left1_all, left2_all, right1_all, right2_all, right3_all,right4_all, right5_all, left1_all+left2_all, right1_all+right2_all+right3_all+right4_all+right5_all, (-1.0d0*left2_all+right1_all+right2_all+right3_all+right4_all+right5_all) / left1_all
                 close(18)
             endif
         endif
