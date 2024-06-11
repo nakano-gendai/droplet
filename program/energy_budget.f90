@@ -23,7 +23,7 @@ module globals
     integer,parameter:: yall = (ymax + 1) * Nyall !全体のz方向格子数
     !時間に関するパラメータ
     integer,parameter:: step = 37000 !計算時間step
-    integer,parameter:: step_input = 1 !速度場入力時間step
+    integer,parameter:: step_input = 3000 !速度場入力時間step
     integer,parameter:: step_input_file_num = 200000 !入力する乱流場のstep
     !入力ディレクトリ
     character(*),parameter :: datadir_input = "/data/sht/nakanog/DNS_turbulence_256_IHT_new/fg/"
@@ -45,8 +45,8 @@ module globals
     real(8),parameter:: D = 70.0d0 !設置する液滴直径
     real(8),parameter:: nu1 = 0.001d0 !連続相の粘性係数
     real(8),parameter:: nu2 = eta*nu1 !分散相の粘性係数
-    real(8),parameter:: sigma = 0.0d0 !界面張力
-    ! real(8),parameter:: sigma = (1.32d-9)**(2.0d0/3.0d0)*D**(5.0d0/3.0d0)/We !界面張力
+    ! real(8),parameter:: sigma = 0.0d0 !界面張力
+    real(8),parameter:: sigma = (1.32d-9)**(2.0d0/3.0d0)*D**(5.0d0/3.0d0)/We !界面張力
     real(8),parameter:: kappaf = 0.06d0*ds**2 !界面厚さを決めるパラメータ
     ! real(8),parameter:: phi1 = 2.211d0 !連続相のオーダーパラメータ
     ! real(8),parameter:: phi2 = 4.895d0 !分散相のオーダーパラメータ
@@ -55,8 +55,8 @@ module globals
     ! real(8),parameter:: T = 0.55d0
     ! real(8),parameter:: kappag = (sigma/1.7039d0)**(1.0d0/0.9991d0)  !界面張力を決めるパラメータ
     real(8),parameter:: phi1 = 2.638d-1 !連続相のオーダーパラメータ
-    ! real(8),parameter:: phi2 = 4.031d-1 !分散相のオーダーパラメータ
-    real(8),parameter:: phi2 = phi1 !分散相のオーダーパラメータ
+    real(8),parameter:: phi2 = 4.031d-1 !分散相のオーダーパラメータ
+    ! real(8),parameter:: phi2 = phi1 !分散相のオーダーパラメータ
     real(8),parameter:: a = 1.0d0
     real(8),parameter:: b = 1.0d0
     real(8),parameter:: T = 2.93d-1
@@ -1270,25 +1270,13 @@ DO n=1,step
     enddo
 
     !left1
-    kinetic_sum = 0.0d0
-    kinetic_former_sum = 0.0d0
-    kinetic_all = 0.0d0
-    kinetic_former_all = 0.0d0
     do zi=1,zmax+1
         do yi=1,y_procs
             do xi=1,x_procs
-                kinetic_sum = kinetic_sum + kinetic_procs(xi,yi,zi)
-                kinetic_former_sum = kinetic_former_sum + kinetic_former_procs(xi,yi,zi)
+                left1_procs(xi,yi,zi) = (kinetic_procs(xi,yi,zi)-kinetic_former_procs(xi,yi,zi))
             enddo
         enddo
     enddo
-    call MPI_Reduce(kinetic_sum, kinetic_all, 1, MPI_REAL8, MPI_SUM, 0, MPI_COMM_WORLD, ierr)
-    call MPI_Reduce(kinetic_former_sum, kinetic_former_all, 1, MPI_REAL8, MPI_SUM, 0, MPI_COMM_WORLD, ierr)
-
-    if(comm_rank == 0) then
-        left1_all = 0.0d0
-        left1_all = (kinetic_all-kinetic_former_all) / 1.0d0 
-    endif
 
     !left2
     call glue(kinetic_procs)
@@ -1675,7 +1663,7 @@ DO n=1,step
     enddo
 
     !==========================エネルギーをまとめる========================
-    ! left1_sum = 0.0d0
+    left1_sum = 0.0d0
     left2_sum = 0.0d0
     right1_sum = 0.0d0
     right2_sum = 0.0d0
@@ -1685,7 +1673,7 @@ DO n=1,step
     do zi=1,zmax+1
         do yi=1,y_procs
             do xi=1,x_procs
-                ! left1_sum = left1_sum + left1_procs(xi,yi,zi)
+                left1_sum = left1_sum + left1_procs(xi,yi,zi)
                 left2_sum = left2_sum + left2_procs(xi,yi,zi)
                 right1_sum = right1_sum + right1_procs(xi,yi,zi)
                 right2_sum = right2_sum + right2_procs(xi,yi,zi)
@@ -1695,7 +1683,7 @@ DO n=1,step
             enddo
         enddo
     enddo
-    ! call MPI_Reduce(left1_sum, left1_all, 1, MPI_REAL8, MPI_SUM, 0, MPI_COMM_WORLD, ierr)
+    call MPI_Reduce(left1_sum, left1_all, 1, MPI_REAL8, MPI_SUM, 0, MPI_COMM_WORLD, ierr)
     call MPI_Reduce(left2_sum, left2_all, 1, MPI_REAL8, MPI_SUM, 0, MPI_COMM_WORLD, ierr)
     call MPI_Reduce(right1_sum, right1_all, 1, MPI_REAL8, MPI_SUM, 0, MPI_COMM_WORLD, ierr)
     call MPI_Reduce(right2_sum, right2_all, 1, MPI_REAL8, MPI_SUM, 0, MPI_COMM_WORLD, ierr)
@@ -1706,16 +1694,16 @@ DO n=1,step
     if(comm_rank == 0) then
         if(mod(n,100)==0) then
             if(n == 100) then
-                open(18,file="./energy_budget2.d")
-                write(18,"(11es16.8)") dble(n), left1_all, left2_all, right1_all, right2_all, right3_all,right4_all, right5_all, left1_all+left2_all, right1_all+right2_all+right3_all+right4_all+right5_all, (-1.0d0*left2_all+right1_all+right2_all+right3_all+right4_all+right5_all) / left1_all
+                open(18,file="./energy_budget3.d")
+                write(18,"(11es16.8)") dble(n), left1_all, left2_all, right1_all, right2_all, right3_all,right4_all, right5_all, left1_all+left2_all, right1_all+right2_all+right3_all+right4_all+right5_all, left1_all/(-1.0d0*left2_all+right1_all+right2_all+right3_all+right4_all+right5_all)
                 close(18)
 
                 ! open(18,file="./energy_budget.d")
                 ! write(18,"(8es16.8)") dble(n), left1_all, left2_all, right1_all, right3_all, right4_all, right5_all, right1_all+right3_all+right4_all+right5_all
                 ! close(18)
             else
-                open(18,file="./energy_budget2.d",action="write",position="append")
-                write(18,"(11es16.8)") dble(n), left1_all, left2_all, right1_all, right2_all, right3_all,right4_all, right5_all, left1_all+left2_all, right1_all+right2_all+right3_all+right4_all+right5_all, (-1.0d0*left2_all+right1_all+right2_all+right3_all+right4_all+right5_all) / left1_all
+                open(18,file="./energy_budget3.d",action="write",position="append")
+                write(18,"(11es16.8)") dble(n), left1_all, left2_all, right1_all, right2_all, right3_all,right4_all, right5_all, left1_all+left2_all, right1_all+right2_all+right3_all+right4_all+right5_all, left1_all/(-1.0d0*left2_all+right1_all+right2_all+right3_all+right4_all+right5_all)
                 close(18)
             endif
         endif
