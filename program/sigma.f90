@@ -7,12 +7,15 @@ module globals
     integer,parameter:: x_procs = (xmax+1) / Nx
     integer,parameter:: y_procs = (zmax+1) / Ny
     integer,parameter:: new_procs = Nx * Ny
-    real(8),parameter:: kappag = 1.0d-1
+    ! real(8),parameter:: kappag = (2.156d-4) / (2.59d-3)
+    real(8),parameter:: kappag = (2.156d-4/1.7039d0)**(1.0d0/0.9991d0)  !界面張力を決めるパラメータ
     real(8) kappagtmp
-    real(8),parameter:: phi1 = 2.638d-1 !連続相のオーダーパラメータ
-    real(8),parameter:: phi2 = 4.031d-1 !分散相のオーダーパラメータ
+    ! real(8),parameter:: phi1 = 2.638d-1 !連続相のオーダーパラメータ
+    ! real(8),parameter:: phi2 = 4.031d-1 !分散相のオーダーパラメータ
+    real(8),parameter:: phi1 = 2.211d0 !連続相のオーダーパラメータ
+    real(8),parameter:: phi2 = 4.895d0 !分散相のオーダーパラメータ
     real(8) phi_kaimen 
-    integer,parameter:: step = 5000
+    integer,parameter:: step = 20000
 contains
 
     subroutine par(cx,cy,cz,cr)
@@ -68,13 +71,16 @@ use globals
 
     real(8),parameter:: pi = acos(-1.0d0)
     !ティレクトリー読み込み
-    character(*),parameter :: datadir = "/data/sht/nakanog/droplet_test/"
+    character(*),parameter :: datadir = "/data/sht/nakanog/droplet_test2/"
 
     real(8) phi(-1:xmax+1,-1:ymax+1,-1:zmax+1)
     real(8) grad_phi(1:3,-1:xmax+1,-1:ymax+1,-1:zmax+1)
     real(8) phiout(1:x_procs,1:y_procs,1:zmax+1,0:new_procs-1)
     real(8) dummy1, dummy2, dummy3, dummy4
     real(8) Vol
+    real(8) p(-1:xmax+1,-1:ymax+1,-1:zmax+1)
+    real(8) pout(1:x_procs,1:y_procs,1:zmax+1,0:new_procs-1)
+    real(8) p_true(-1:xmax+1,-1:ymax+1,-1:zmax+1)
 
     call par(cx,cy,cz,cr)
 
@@ -103,7 +109,8 @@ use globals
         do zi = 1, zmax+1
             do yi = 1, y_procs
                 do xi = 1, x_procs
-                    read(9) phiout(xi,yi,zi,i), dummy1, dummy2, dummy3, dummy4
+                    ! read(9) phiout(xi,yi,zi,i), dummy1, dummy2, dummy3, dummy4
+                    read(9) phiout(xi,yi,zi,i), dummy1, dummy2, dummy3, pout(xi,yi,zi,i)
                 enddo
             enddo
         enddo
@@ -116,6 +123,7 @@ use globals
                 do yi=1,y_procs
                     do xi=1,x_procs
                         phi((xi-1)+Nxx*x_procs,(yi-1)+Nyy*y_procs,zi-1) = phiout(xi,yi,zi,k)
+                        p((xi-1)+Nxx*x_procs,(yi-1)+Nyy*y_procs,zi-1) = pout(xi,yi,zi,k)
                     enddo
                 enddo
             enddo
@@ -159,15 +167,50 @@ use globals
         enddo
     enddo
     !表面張力の計算
-    yi = (ymax+1) / 2
-    zi = (zmax+1) / 2
-    sigma = 0.0d0
-    do xi=0,(xmax+1)/2
-        sigma = sigma + grad_phi(1,xi,yi,zi)**2
-    enddo
-    sigma = sigma * kappag
+    ! yi = (ymax+1) / 2
+    ! zi = (zmax+1) / 2
+    ! sigma = 0.0d0
+    ! do xi=0,(xmax+1)/2
+    !     sigma = sigma + grad_phi(1,xi,yi,zi)**2
+    ! enddo
+    ! sigma = sigma * kappag
 
-    open(10,file="./sigma_kg.d")
-    write(10,*) sigma, kappag, Vol/17157.0d0
-    close(10)
+    ! open(10,file="./sigma_kg.d")
+    ! write(10,*) sigma, kappag, Vol/17157.0d0
+    ! close(10)
+
+    do zi=0,zmax
+        do yi=0,ymax
+            do xi=0,xmax
+                p_true(xi,yi,zi) = p(xi,yi,zi) + 2.0d0/3.0d0*kappag*(grad_phi(1,xi,yi,zi)**2+grad_phi(2,xi,yi,zi)**2+grad_phi(3,xi,yi,zi)**2)
+            enddo
+        enddo
+    enddo
+
+    open(11,file="./p_3dmap_2.d")
+    zi = (zmax+1) / 2
+    do yi=0,ymax
+        do xi=0,xmax
+            write(11,*) xi, yi, p(xi,yi,zi), p_true(xi,yi,zi)
+        enddo
+        write(11,*)
+    enddo
+    close(11)
+
+    open(12,file="./p_xmap_2.d")
+    zi = (zmax+1) / 2
+    yi = (ymax+1) / 2
+    do xi=0,xmax
+        write(12,*) xi, p(xi,yi,zi), p_true(xi,yi,zi)
+    enddo
+    close(12)
+
+    open(13,file="./phi_2.d")
+    zi = (zmax+1) / 2
+    yi = (ymax+1) / 2
+    do xi=0,xmax
+        write(13,*) xi, phi(xi,yi,zi)
+    enddo
+    close(13)
+
 end program main

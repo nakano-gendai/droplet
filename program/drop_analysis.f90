@@ -16,8 +16,8 @@ module globals
     integer,parameter:: xmax = 255 !ｘ方向格子数（０から数える）
     integer,parameter:: ymax = 255 !ｙ方向格子数（０から数える）
     integer,parameter:: zmax = 255 !ｚ方向格子数（０から数える）
-    integer,parameter:: step_start = 4000
-    integer,parameter:: step_end = 4000
+    integer,parameter:: step_start = 5000
+    integer,parameter:: step_end = 37000
     integer,parameter:: step_bin = 1000
     integer,parameter:: step_num2 = (step_end - step_start) / step_bin + 1 
 
@@ -51,8 +51,8 @@ module globals
 
     real(8),parameter:: pi = acos(-1.0d0) !円周率
 
-    integer,parameter:: k_high = 3
-    integer,parameter:: k_low = 1
+    integer,parameter:: k_high = 127
+    integer,parameter:: k_low = 9
 
     !その他変数
     real(8) dummy
@@ -155,10 +155,12 @@ contains
         phi_procs(:,:,:) = 0.0d0
     end subroutine ini
 
-    subroutine ini_fft(chemical_potencial_hat,advection_phi_hat,grad_phi1_hat,grad_phi2_hat,grad_phi3_hat,grad_phi1_re,grad_phi2_re,grad_phi3_re)
+    subroutine ini_fft(chemical_potencial_hat,advection_phi_hat,grad_phi1_hat,grad_phi2_hat,grad_phi3_hat,grad_phi1_re,grad_phi2_re,grad_phi3_re,u1_hat,u2_hat,u3_hat,u1_procs_re,u2_procs_re,u3_procs_re)
         complex(kind(0d0)), allocatable :: chemical_potencial_hat(:,:,:), advection_phi_hat(:,:,:)
         complex(kind(0d0)), allocatable :: grad_phi1_hat(:,:,:), grad_phi2_hat(:,:,:), grad_phi3_hat(:,:,:)
         real(8),allocatable :: grad_phi1_re(:,:,:), grad_phi2_re(:,:,:), grad_phi3_re(:,:,:)
+        complex(kind(0d0)), allocatable :: u1_hat(:,:,:), u2_hat(:,:,:), u3_hat(:,:,:)
+        real(8),allocatable :: u1_procs_re(:,:,:), u2_procs_re(:,:,:), u3_procs_re(:,:,:)
 
         call decomp_2d_init(xmax+1, ymax+1, zmax+1, Nx, Ny)
         call decomp_2d_fft_init(PHYSICAL_IN_Z)
@@ -182,15 +184,38 @@ contains
         grad_phi1_re(:,:,:) = 0.0d0
         grad_phi2_re(:,:,:) = 0.0d0
         grad_phi3_re(:,:,:) = 0.0d0
+
+        allocate(u1_procs_re(0:x_procs-1, 0:y_procs-1, 0:zmax))
+        allocate(u2_procs_re(0:x_procs-1, 0:y_procs-1, 0:zmax))
+        allocate(u3_procs_re(0:x_procs-1, 0:y_procs-1, 0:zmax))
+        allocate(u1_hat(sta(1)-1:last(1)-1, sta(2)-1:last(2)-1, sta(3)-1:last(3)-1))
+        allocate(u2_hat(sta(1)-1:last(1)-1, sta(2)-1:last(2)-1, sta(3)-1:last(3)-1))
+        allocate(u3_hat(sta(1)-1:last(1)-1, sta(2)-1:last(2)-1, sta(3)-1:last(3)-1))
+
+        u1_procs_re(:,:,:) = 0.0d0
+        u2_procs_re(:,:,:) = 0.0d0
+        u3_procs_re(:,:,:) = 0.0d0
+        u1_hat(:,:,:) = (0.0d0, 0.0d0)
+        u2_hat(:,:,:) = (0.0d0, 0.0d0)
+        u3_hat(:,:,:) = (0.0d0, 0.0d0)
     end subroutine ini_fft
 
-    subroutine variable(grad_phi_procs,chemical_potencial,free_energy,grad_free_energy,lap_phi_procs,advection_phi)
+    subroutine variable(grad_phi_procs,chemical_potencial,free_energy,grad_free_energy,lap_phi_procs,advection_phi,grad_u_procs,strain_procs,korteweg_procs,interaction_procs)
         real(8),allocatable :: grad_phi_procs(:,:,:,:)
         real(8),allocatable :: chemical_potencial(:,:,:)
         real(8),allocatable :: free_energy(:,:,:)
         real(8),allocatable :: grad_free_energy(:,:,:,:)
         real(8),allocatable :: lap_phi_procs(:,:,:)
         real(8),allocatable :: advection_phi(:,:,:)
+        real(8),allocatable :: grad_u_procs(:,:,:,:,:)
+        real(8),allocatable :: strain_procs(:,:,:,:,:)
+        real(8),allocatable :: korteweg_procs(:,:,:,:,:)
+        real(8),allocatable :: interaction_procs(:,:,:)
+
+        allocate(grad_u_procs(1:3,1:3,1:x_procs,1:y_procs,1:zmax+1))
+        allocate(strain_procs(1:3,1:3,1:x_procs,1:y_procs,1:zmax+1))
+        allocate(korteweg_procs(1:3,1:3,1:x_procs,1:y_procs,1:zmax+1))
+        allocate(interaction_procs(1:x_procs,1:y_procs,1:zmax+1))
 
         allocate(grad_phi_procs(1:3,1:x_procs,1:y_procs,1:zmax+1))
         allocate(chemical_potencial(1:x_procs,1:y_procs,1:zmax+1))
@@ -199,12 +224,15 @@ contains
         allocate(lap_phi_procs(1:x_procs,1:y_procs,1:zmax+1))
         allocate(advection_phi(1:x_procs,1:y_procs,1:zmax+1))
 
+        grad_u_procs(:,:,:,:,:) = 0.0d0
+        strain_procs(:,:,:,:,:) = 0.0d0
         grad_phi_procs(:,:,:,:) = 0.0d0
         chemical_potencial(:,:,:) = 0.0d0
         free_energy(:,:,:) = 0.0d0
         grad_free_energy(:,:,:,:) = 0.0d0
         lap_phi_procs(:,:,:) = 0.0d0
         advection_phi(:,:,:) = 0.0d0
+        korteweg_procs(:,:,:,:,:) = 0.0d0
     end subroutine variable
 
     subroutine input(u1_procs,u2_procs,u3_procs,p_procs,phi_procs)
@@ -545,6 +573,169 @@ contains
         call MPI_Reduce(phisupe(1), phisupe_sum(1), (xmax+1)/2 + 1, MPI_REAL8, MPI_SUM, 0, MPI_COMM_WORLD, ierr)
     end subroutine phi_supectrum
 
+    subroutine scale_cal(u1_procs,u2_procs,u3_procs,u1_procs_re,u2_procs_re,u3_procs_re,u1_hat,u2_hat,u3_hat)
+        real(8),intent(inout):: u1_procs(0:x_procs+1,0:y_procs+1,0:zmax+2)
+        real(8),intent(inout):: u2_procs(0:x_procs+1,0:y_procs+1,0:zmax+2)
+        real(8),intent(inout):: u3_procs(0:x_procs+1,0:y_procs+1,0:zmax+2)
+        real(8),intent(inout):: u1_procs_re(0:x_procs-1, 0:y_procs-1, 0:zmax)
+        real(8),intent(inout):: u2_procs_re(0:x_procs-1, 0:y_procs-1, 0:zmax)
+        real(8),intent(inout):: u3_procs_re(0:x_procs-1, 0:y_procs-1, 0:zmax)
+        complex(kind(0d0)), intent(inout) :: u1_hat(sta(1)-1:last(1)-1, sta(2)-1:last(2)-1, sta(3)-1:last(3)-1)
+        complex(kind(0d0)), intent(inout) :: u2_hat(sta(1)-1:last(1)-1, sta(2)-1:last(2)-1, sta(3)-1:last(3)-1)
+        complex(kind(0d0)), intent(inout) :: u3_hat(sta(1)-1:last(1)-1, sta(2)-1:last(2)-1, sta(3)-1:last(3)-1)
+        integer xi, yi, zi
+        integer k1, k2, k3, k(1:3), k_index
+        real(8) k_abs
+
+        !u_hatの配列数と合わせる
+        do zi=1,zmax+1
+            do yi=1,y_procs
+                do xi=1,x_procs
+                    u1_procs_re(xi-1,yi-1,zi-1) = u1_procs(xi,yi,zi)
+                    u2_procs_re(xi-1,yi-1,zi-1) = u2_procs(xi,yi,zi)
+                    u3_procs_re(xi-1,yi-1,zi-1) = u3_procs(xi,yi,zi)
+                enddo
+            enddo
+        enddo
+
+        !フーリエ変換（実数→複素数）
+        call fft_r2c(u1_procs_re, u1_hat)
+        call fft_r2c(u2_procs_re, u2_hat)
+        call fft_r2c(u3_procs_re, u3_hat)
+
+        !バンドパスフィルターをかける
+        do k3=sta(3)-1,last(3)-1
+            k(3) = k3 - judge(k3, zmax+1)
+            do k2=sta(2)-1,last(2)-1
+                k(2) = k2 - judge(k2, ymax+1)
+                do k1=sta(1)-1,last(1)-1
+                    k(1) = k1 - judge(k1, xmax+1)
+
+                    k_abs = ( dble(k(1))**2.0d0 + dble(k(2))**2.0d0 + dble(k(3))**2.0d0 )**0.5d0
+                    k_index = int( k_abs ) + 1
+
+                    if(k_index < k_low+1) then
+                        u1_hat(k1,k2,k3) = (0.0d0, 0.0d0)
+                        u2_hat(k1,k2,k3) = (0.0d0, 0.0d0)
+                        u3_hat(k1,k2,k3) = (0.0d0, 0.0d0)
+                    endif
+
+                    if(k_index >= k_high+1) then
+                        u1_hat(k1,k2,k3) = (0.0d0, 0.0d0)
+                        u2_hat(k1,k2,k3) = (0.0d0, 0.0d0)
+                        u3_hat(k1,k2,k3) = (0.0d0, 0.0d0)
+                    endif
+                enddo
+            enddo
+        enddo
+
+        u1_procs_re(:,:,:) = 0.0d0
+        u2_procs_re(:,:,:) = 0.0d0
+        u3_procs_re(:,:,:) = 0.0d0
+        u1_procs(:,:,:) = 0.0d0
+        u2_procs(:,:,:) = 0.0d0
+        u3_procs(:,:,:) = 0.0d0
+        !逆フーリエ変換（複素数→実数）
+        call fft_c2r(u1_hat, u1_procs_re)
+        call fft_c2r(u2_hat, u2_procs_re)
+        call fft_c2r(u3_hat, u3_procs_re)
+
+        do zi=1,zmax+1
+            do yi=1,y_procs
+                do xi=1,x_procs
+                    u1_procs(xi,yi,zi) = u1_procs_re(xi-1,yi-1,zi-1)
+                    u2_procs(xi,yi,zi) = u2_procs_re(xi-1,yi-1,zi-1)
+                    u3_procs(xi,yi,zi) = u3_procs_re(xi-1,yi-1,zi-1)
+                enddo
+            enddo
+        enddo
+    end subroutine scale_cal
+
+    subroutine grad_u_cal(grad_u_procs,u1_procs,u2_procs,u3_procs,cr)
+        real(8),intent(inout):: grad_u_procs(1:3,1:3,1:x_procs,1:y_procs,1:zmax+1)
+        real(8),intent(in):: u1_procs(0:x_procs+1,0:y_procs+1,0:zmax+2)
+        real(8),intent(in):: u2_procs(0:x_procs+1,0:y_procs+1,0:zmax+2)
+        real(8),intent(in):: u3_procs(0:x_procs+1,0:y_procs+1,0:zmax+2)
+        real(8),intent(in):: cr(1:3, 1:15)
+
+        do zi=1,zmax+1
+            do yi=1,y_procs
+                do xi=1,x_procs
+                    do alpha=1,3
+                        grad_u_procs(1,alpha,xi,yi,zi) = 0.0d0
+                        grad_u_procs(2,alpha,xi,yi,zi) = 0.0d0
+                        grad_u_procs(3,alpha,xi,yi,zi) = 0.0d0
+                        do i = 2,15
+                            grad_u_procs(1,alpha,xi,yi,zi) = grad_u_procs(1,alpha,xi,yi,zi) &
+                                                            + cr(alpha,i)*u1_procs(xi+cx(i),yi+cy(i),zi+cz(i))
+                            grad_u_procs(2,alpha,xi,yi,zi) = grad_u_procs(2,alpha,xi,yi,zi) &
+                                                            + cr(alpha,i)*u2_procs(xi+cx(i),yi+cy(i),zi+cz(i))
+                            grad_u_procs(3,alpha,xi,yi,zi) = grad_u_procs(3,alpha,xi,yi,zi) &
+                                                            + cr(alpha,i)*u3_procs(xi+cx(i),yi+cy(i),zi+cz(i))
+                        enddo
+                        grad_u_procs(1,alpha,xi,yi,zi) = grad_u_procs(1,alpha,xi,yi,zi)/(10.0d0*ds)
+                        grad_u_procs(2,alpha,xi,yi,zi) = grad_u_procs(2,alpha,xi,yi,zi)/(10.0d0*ds)
+                        grad_u_procs(3,alpha,xi,yi,zi) = grad_u_procs(3,alpha,xi,yi,zi)/(10.0d0*ds)
+                    enddo
+                enddo
+            enddo
+        enddo
+    end subroutine grad_u_cal
+
+    subroutine strain_cal(grad_u_procs,strain_procs)
+        real(8),intent(in):: grad_u_procs(1:3,1:3,1:x_procs,1:y_procs,1:zmax+1)
+        real(8),intent(out):: strain_procs(1:3,1:3,1:x_procs,1:y_procs,1:zmax+1)
+        integer xi, yi, zi, alpha, beta 
+
+        do zi=1,zmax+1
+            do yi=1,y_procs
+                do xi=1,x_procs
+                    do beta=1,3
+                        do alpha=1,3
+                            strain_procs(alpha,beta,xi,yi,zi) = grad_u_procs(alpha,beta,xi,yi,zi) + grad_u_procs(beta,alpha,xi,yi,zi)
+                        enddo
+                    enddo
+                enddo
+            enddo
+        enddo
+    end subroutine strain_cal
+
+    subroutine korteweg_cal(grad_phi_procs,korteweg_procs)
+        real(8),intent(in):: grad_phi_procs(1:3,1:x_procs,1:y_procs,1:zmax+1)
+        real(8),intent(inout):: korteweg_procs(1:3,1:3,1:x_procs,1:y_procs,1:zmax+1)
+
+        do zi = 1, zmax + 1
+            do yi = 1, y_procs
+                do xi = 1, x_procs
+                    do beta = 1, 3
+                        do alpha = 1, 3
+                            korteweg_procs(alpha,beta,xi,yi,zi) = grad_phi_procs(alpha,xi,yi,zi)*grad_phi_procs(beta,xi,yi,zi)
+                        enddo
+                    enddo
+                enddo
+            enddo
+        enddo
+    end subroutine korteweg_cal
+
+    subroutine interaction_cal(interaction_procs,strain_procs,korteweg_procs)
+        real(8),intent(inout):: interaction_procs(1:x_procs,1:y_procs,1:zmax+1)
+        real(8),intent(in):: strain_procs(1:3,1:3,1:x_procs,1:y_procs,1:zmax+1)
+        real(8),intent(in):: korteweg_procs(1:3,1:3,1:x_procs,1:y_procs,1:zmax+1)
+
+        do zi = 1, zmax + 1
+            do yi = 1, y_procs
+                do xi = 1, x_procs
+                    interaction_procs(xi,yi,zi) = 0.0d0
+                    do beta = 1, 3
+                        do alpha = 1, 3
+                            interaction_procs(xi,yi,zi) = interaction_procs(xi,yi,zi) + korteweg_procs(alpha,beta,xi,yi,zi)*strain_procs(alpha,beta,xi,yi,zi)
+                        enddo
+                    enddo
+                enddo
+            enddo
+        enddo
+    end subroutine interaction_cal
+
     !フーリエ変換
     subroutine fft_r2c(q, q_hat)
         real(8), intent(inout)            :: q(0:x_procs-1, 0:y_procs-1, 0:zmax)
@@ -594,6 +785,12 @@ use glassman
     real(8),allocatable :: advection_phi(:,:,:)
     real(8):: cr(1:3, 1:15)  !粒子速度（実数）
     real(8) At_ini
+    real(8),allocatable :: grad_u_procs(:,:,:,:,:)
+    real(8),allocatable :: strain_procs(:,:,:,:,:)
+    real(8),allocatable :: korteweg_procs(:,:,:,:,:)
+    real(8),allocatable :: interaction_procs(:,:,:)
+
+    real(8) interaction_sum, interaction_all
 
     !波数空間の変数
     complex(kind(0d0)), allocatable :: chemical_potencial_hat(:,:,:), advection_phi_hat(:,:,:)
@@ -602,6 +799,9 @@ use glassman
     complex(kind(0d0)), allocatable :: grad_phi1_hat(:,:,:), grad_phi2_hat(:,:,:), grad_phi3_hat(:,:,:)
     real(8),allocatable :: grad_phi1_re(:,:,:), grad_phi2_re(:,:,:), grad_phi3_re(:,:,:)
     real(8),allocatable :: phisupe(:), phisupe_sum(:), phisupe_result(:)
+
+    complex(kind(0d0)), allocatable :: u1_hat(:,:,:), u2_hat(:,:,:), u3_hat(:,:,:)
+    real(8),allocatable :: u1_procs_re(:,:,:), u2_procs_re(:,:,:), u3_procs_re(:,:,:)
 
     At_ini = 0.0d0
     cr(:,:) = 0.0d0
@@ -619,6 +819,7 @@ use glassman
     phisupe_sum(:) = 0.0d0
     phisupe_result(:) = 0.0d0
 
+
 !==================================MPI並列開始===============================================
     call MPI_Init(ierr)
     call MPI_Comm_Size(MPI_COMM_WORLD, comm_procs, ierr)
@@ -627,8 +828,8 @@ use glassman
     ! call mk_dirs(datadir_output)
     call par(cr)
     call ini(p_procs,u1_procs,u2_procs,u3_procs,phi_procs)
-    call ini_fft(chemical_potencial_hat,advection_phi_hat,grad_phi1_hat,grad_phi2_hat,grad_phi3_hat,grad_phi1_re,grad_phi2_re,grad_phi3_re)
-    call variable(grad_phi_procs,chemical_potencial,free_energy,grad_free_energy,lap_phi_procs,advection_phi)
+    call ini_fft(chemical_potencial_hat,advection_phi_hat,grad_phi1_hat,grad_phi2_hat,grad_phi3_hat,grad_phi1_re,grad_phi2_re,grad_phi3_re,u1_hat,u2_hat,u3_hat,u1_procs_re,u2_procs_re,u3_procs_re)
+    call variable(grad_phi_procs,chemical_potencial,free_energy,grad_free_energy,lap_phi_procs,advection_phi,grad_u_procs,strain_procs,korteweg_procs,interaction_procs)
 
 DO n = step_start, step_end, step_bin
     call input(u1_procs,u2_procs,u3_procs,p_procs,phi_procs)
@@ -637,29 +838,69 @@ DO n = step_start, step_end, step_bin
     call glue(u2_procs)
     call glue(u3_procs)
     !化学ポテンシャル
-    call lap_cal(lap_phi_procs,phi_procs)
-    call chemical_potencial_cal(chemical_potencial,phi_procs,lap_phi_procs)
+    ! call lap_cal(lap_phi_procs,phi_procs)
+    ! call chemical_potencial_cal(chemical_potencial,phi_procs,lap_phi_procs)
     !移流項
-    call grad_cal(grad_phi_procs,phi_procs,cr)
-    call advection_cal(advection_phi,grad_phi_procs,u1_procs,u2_procs,u3_procs)
+    ! call grad_cal(grad_phi_procs,phi_procs,cr)
+    ! call advection_cal(advection_phi,grad_phi_procs,u1_procs,u2_procs,u3_procs)
     !各スケールの界面への寄与
     ! call contribution(chemical_potencial,advection_phi,chemical_potencial_hat,advection_phi_hat,enesupe_phi,enesupe_phi_sum,enesupe_phi_result)
     !自由エネルギースペクトル
-    if((n == step_start)) then
-        call free_energy_cal(free_energy,phi_procs)
-        call phi_supectrum(grad_phi1_hat,grad_phi2_hat,grad_phi3_hat,grad_phi_procs,grad_phi1_re,grad_phi2_re,grad_phi3_re,phisupe,phisupe_sum,free_energy)
-        if(comm_rank == 0) then
-            do i = 1, (xmax+1)/2 + 1
-                phisupe_result(i) = phisupe_result(i) + phisupe_sum(i)
-            enddo
+    ! if((n == step_start)) then
+    !     call free_energy_cal(free_energy,phi_procs)
+    !     call phi_supectrum(grad_phi1_hat,grad_phi2_hat,grad_phi3_hat,grad_phi_procs,grad_phi1_re,grad_phi2_re,grad_phi3_re,phisupe,phisupe_sum,free_energy)
+    !     if(comm_rank == 0) then
+    !         do i = 1, (xmax+1)/2 + 1
+    !             phisupe_result(i) = phisupe_result(i) + phisupe_sum(i)
+    !         enddo
 
-            open(37,file ="./phisupe_d70we1.4_all.d")
-            do i=1,(xmax+1)/2+1
-                write(37,"(2es16.8)") dble(i)-1.0d0, phisupe_result(i)
+    !         open(37,file ="./phisupe_d70we1.4_all.d")
+    !         do i=1,(xmax+1)/2+1
+    !             write(37,"(2es16.8)") dble(i)-1.0d0, phisupe_result(i)
+    !         enddo
+    !         close(37)
+    !     endif
+    ! endif
+
+    call grad_cal(grad_phi_procs,phi_procs,cr)
+    call korteweg_cal(grad_phi_procs,korteweg_procs)
+
+    call scale_cal(u1_procs,u2_procs,u3_procs,u1_procs_re,u2_procs_re,u3_procs_re,u1_hat,u2_hat,u3_hat)
+    call glue(u1_procs)
+    call glue(u2_procs)
+    call glue(u3_procs)
+    call grad_u_cal(grad_u_procs,u1_procs,u2_procs,u3_procs,cr)
+    call strain_cal(grad_u_procs,strain_procs)
+
+    call interaction_cal(interaction_procs,strain_procs,korteweg_procs)
+
+    interaction_sum = 0.0d0
+    interaction_all = 0.0d0
+    do zi=1,zmax+1
+        do yi=1,y_procs
+            do xi=1,x_procs
+                interaction_sum = interaction_sum + interaction_procs(xi,yi,zi)
             enddo
-            close(37)
+        enddo
+    enddo
+    
+    call MPI_Reduce(interaction_sum, interaction_all, 1, MPI_REAL8, MPI_SUM, 0, MPI_COMM_WORLD, ierr)
+
+    if(comm_rank == 0) then
+        if(mod(n,1000)==0) then
+            interaction_all = interaction_all * (-1.0d0) * kappag
+            if(n == 1000) then
+                open(18,file="./contribution_s.d")
+                write(18,"(2es16.8)") dble(n), interaction_all / (dble(xmax+1)*dble(ymax+1)*dble(zmax+1))
+                close(18)
+            else
+                open(18,file="./contribution_s.d",action="write",position="append")
+                write(18,"(2es16.8)") dble(n), interaction_all / (dble(xmax+1)*dble(ymax+1)*dble(zmax+1))
+                close(18)
+            endif
         endif
     endif
+
 ENDDO
 
     ! if(comm_rank==0) then
