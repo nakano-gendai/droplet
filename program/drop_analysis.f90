@@ -692,7 +692,7 @@ contains
                 do xi=1,x_procs
                     do beta=1,3
                         do alpha=1,3
-                            strain_procs(alpha,beta,xi,yi,zi) = grad_u_procs(alpha,beta,xi,yi,zi) + grad_u_procs(beta,alpha,xi,yi,zi)
+                            strain_procs(alpha,beta,xi,yi,zi) = 0.5d0 * (grad_u_procs(alpha,beta,xi,yi,zi) + grad_u_procs(beta,alpha,xi,yi,zi))
                         enddo
                     enddo
                 enddo
