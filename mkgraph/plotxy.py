@@ -12,18 +12,18 @@ import math
 ### 入出力の設定
 fsize = 0   # 0：小さいサイズ（論文用）　1：大きいサイズ（プレゼン用）
 ext = 'pdf' # 保存ファイルの拡張子　pdf,svg,pngなどp
-plotdir = 'HIT_nu0.001' # 保存用ディレクトリ
+plotdir = './' # 保存用ディレクトリ
 os.makedirs(plotdir, exist_ok = True) # ディレクトリ作成
 
 # datadir = '/Users/nakanogendai/droplet/'
 # datadir ='/home/nakano/anime/b4/data/data_fig6/'
 datadir ="./"
 plotdir, datadir, ext = plotdir + '/', datadir + '/', '.' + ext
-dfile1   = datadir + 'enesupe_phi_30we1.4_3.d'
-dfile2   = datadir + 'enesupe_phi_40we1.4_3.d'
-dfile3   = datadir + 'enesupe_phi_50we1.4_3.d'
-dfile4   = datadir + 'enesupe_phi_60we1.4_3.d'
-dfile5   = datadir + 'enesupe_phi_70we1.4_3.d'
+dfile1   = datadir + 'energy_interface.d'
+# dfile2   = datadir + 'enesupe_phi_40we1.4_3.d'
+# dfile3   = datadir + 'enesupe_phi_50we1.4_3.d'
+# dfile4   = datadir + 'enesupe_phi_60we1.4_3.d'
+# dfile5   = datadir + 'enesupe_phi_70we1.4_3.d'
 # dfile6   = datadir + 'case1_e.d'
 # dfile7   = datadir + 'case2_e.d'
 # dfile8   = datadir + 'case20_e.d'
@@ -54,10 +54,10 @@ def sns_set(fs, tck_s, alw, ctxt):
 
 ### 読み込み
 x1 = np.loadtxt(dfile1, usecols = 0, dtype = 'float64') # usecolsは列番号　dtypeは実数float64, 整数
-x2 = np.loadtxt(dfile2, usecols = 0, dtype = 'float64') # usecolsは列番号　dtypeは実数float64, 整数
-x3 = np.loadtxt(dfile3, usecols = 0, dtype = 'float64') # usecolsは列番号　dtypeは実数float64, 整数
-x4 = np.loadtxt(dfile4, usecols = 0, dtype = 'float64') # usecolsは列番号　dtypeは実数float64, 整数
-x5 = np.loadtxt(dfile5, usecols = 0, dtype = 'float64') # usecolsは列番号　dtypeは実数float64, 整数
+# x2 = np.loadtxt(dfile2, usecols = 0, dtype = 'float64') # usecolsは列番号　dtypeは実数float64, 整数
+# x3 = np.loadtxt(dfile3, usecols = 0, dtype = 'float64') # usecolsは列番号　dtypeは実数float64, 整数
+# x4 = np.loadtxt(dfile4, usecols = 0, dtype = 'float64') # usecolsは列番号　dtypeは実数float64, 整数
+# x5 = np.loadtxt(dfile5, usecols = 0, dtype = 'float64') # usecolsは列番号　dtypeは実数float64, 整数
 # x6 = np.loadtxt(dfile6, usecols = 0, dtype = 'float64') # usecolsは列番号　dtypeは実数float64, 整数
 # x7 = np.loadtxt(dfile7, usecols = 0, dtype = 'float64') # usecolsは列番号　dtypeは実数float64, 整数
 # x8 = np.loadtxt(dfile8, usecols = 0, dtype = 'float64') # usecolsは列番号　dtypeは実数float64, 整数
@@ -65,10 +65,10 @@ x5 = np.loadtxt(dfile5, usecols = 0, dtype = 'float64') # usecolsは列番号　
 # x10 = np.loadtxt(dfile10, usecols = 0, dtype = 'float64') # usecolsは列番号　dtypeは実数float64, 整数
 
 y1 = np.loadtxt(dfile1, usecols = 1, dtype = 'float64')
-y2 = np.loadtxt(dfile2, usecols = 1, dtype = 'float64')
-y3 = np.loadtxt(dfile3, usecols = 1, dtype = 'float64')
-y4 = np.loadtxt(dfile4, usecols = 1, dtype = 'float64')
-y5 = np.loadtxt(dfile5, usecols = 1, dtype = 'float64')
+# y2 = np.loadtxt(dfile2, usecols = 1, dtype = 'float64')
+# y3 = np.loadtxt(dfile3, usecols = 1, dtype = 'float64')
+# y4 = np.loadtxt(dfile4, usecols = 1, dtype = 'float64')
+# y5 = np.loadtxt(dfile5, usecols = 1, dtype = 'float64')
 # y6 = np.loadtxt(dfile6, usecols = 2, dtype = 'float64')
 # y7 = np.loadtxt(dfile7, usecols = 2, dtype = 'float64')
 # y8 = np.loadtxt(dfile8, usecols = 2, dtype = 'float64')
@@ -78,7 +78,7 @@ y5 = np.loadtxt(dfile5, usecols = 1, dtype = 'float64')
 
 
 ### サイズ、ラベルなどの設定
-lx, ly = r'$k/k_{\eta_{\mathrm{k}}}$', r'$\Phi(k)$' # r''でTeX文字にできる
+lx, ly = r'$t$', r'$H_{\mathrm{interface}}$' # r''でTeX文字にできる
 if fsize == 0:
     fs1, lw1, ms1 = 1., 1., 2.8
     tck_s1, alw = 3, 0.625
@@ -107,7 +107,7 @@ def plot_y1y2(): # y1, y2プロット用
     ax1.set_xlabel(lx, labelpad = lpad[0]) # 軸ラベル
     ax1.set_ylabel(ly, labelpad = lpad[1])
     
-    xm, ym = [0.006, 1], [-0.0000000000025, 0.0000000000024]
+    xm, ym = [0, 35000], [0, 13]
     # xm, ym = [0, 35], [0, 1.5]
     # xm, ym = [0, 35], [0, 25]
     ax1.set_xlim(xm[0], xm[1]) # 軸の範囲
@@ -116,7 +116,7 @@ def plot_y1y2(): # y1, y2プロット用
     ax1.tick_params(axis='x', pad = tpad[0])
     ax1.tick_params(axis='y', pad = tpad[1])
     # plt.yscale('log')
-    plt.xscale('log')
+    # plt.xscale('log')
 
     # pos = [0, 0.00000001, 0.00000002] 
     # ticks = [r'$0$', r'$1\times 10^{-8}$', r'$2\times 10^{-8}$']
@@ -128,10 +128,10 @@ def plot_y1y2(): # y1, y2プロット用
     # ax1.set_yticks(pos)
     # ax1.set_yticklabels(ticks)
     
-    pos = [0.01, 0.1, 1] 
-    ticks = [r'$10^{-2}$', r'$10^{-1}$', r'$1$']
-    ax1.set_xticks(pos)
-    ax1.set_xticklabels(ticks)
+    # pos = [0.01, 0.1, 1] 
+    # ticks = [r'$10^{-2}$', r'$10^{-1}$', r'$1$']
+    # ax1.set_xticks(pos)
+    # ax1.set_xticklabels(ticks)
     
     # pos = [1, 10, 100] 
     # ticks = [r'$1$', r'$10$', r'$10^{2}$']
@@ -212,20 +212,20 @@ def plot_y1y2(): # y1, y2プロット用
     #         label = r'case6') 
 
     
-    # ax1.plot(x1, y1, lw = lw1*1.2, ls = 'solid',  color = 'black', alpha = 1.0, clip_on = True, zorder = 14, label = r'$D/L = 0.118$')
-    ax1.plot(x2, y2, lw = lw1*1.2, ls = 'solid',  color = 'black', alpha = 0.8, clip_on = True, zorder = 15, label = r'$D/L = 0.157$')
-    ax1.plot(x3, y3, lw = lw1*1.2, ls = '--',  color = 'magenta', alpha = 1.0, clip_on = True, zorder = 16, label = r'$D/L = 0.196$')
+    ax1.plot(x1, y1, lw = lw1*1.2, ls = 'solid',  color = 'black', alpha = 0.8, clip_on = True, zorder = 14)
+    # ax1.plot(x2, y2, lw = lw1*1.2, ls = 'solid',  color = 'black', alpha = 0.8, clip_on = True, zorder = 15, label = r'$D/L = 0.157$')
+    # ax1.plot(x3, y3, lw = lw1*1.2, ls = '--',  color = 'magenta', alpha = 1.0, clip_on = True, zorder = 16, label = r'$D/L = 0.196$')
     # ax1.plot(x4, y4, lw = lw1*1.2, ls = '--',  color = 'magenta', alpha = 1.0, clip_on = True, zorder = 17, label = r'$D/L = 0.235$')
-    ax1.plot(x5, y5, lw = lw1*1.2, ls = '-.',  color = 'deepskyblue', alpha = 1.0, clip_on = True, zorder = 18, label = r'$D/L = 0.275$')
+    # ax1.plot(x5, y5, lw = lw1*1.2, ls = '-.',  color = 'deepskyblue', alpha = 1.0, clip_on = True, zorder = 18, label = r'$D/L = 0.275$')
     # # ax1.plot(x6, y6, lw = lw1*1.5, ls = 'dashed',  color = 'blue', alpha = 1, clip_on = True, zorder = 11, label = 'small (LES)')
     # ax1.plot(x7, y7, lw = lw1*1.5, ls = 'dashed',  color = 'black', alpha = 0.9, clip_on = True, zorder = 11, label = r'case11')
     # ax1.plot(x8, y8, lw = lw1*2.3, ls = 'solid',  color = 'cyan', alpha = 1, clip_on = True, zorder = 11, label = r'$\mathrm{Re}\approx 0.2$, $\mathrm{Ca}\approx 0.4$ (initial data)')
     
     # ax1.axvline(255/30*0.93/127.5, lw = lw1*0.5, ls = 'dotted', dashes = [2, 2], color = 'black', alpha = 1.0, zorder = 10, label = r'$k_{D/L=0.118}$') # dashesで破線の間隔などを設定できる
-    ax1.axvline(255/40*0.93/127.5, lw = lw1*0.5, ls = 'dotted', color = 'black', alpha = 0.8, zorder = 10, label = r'$k_{D/L=0.157}$') # dashesで破線の間隔などを設定できる
-    ax1.axvline(255/50*0.93/127.5, lw = lw1*0.5, ls = 'dotted', dashes = [2, 2], color = 'magenta', alpha = 1.0, zorder = 10, label = r'$k_{D/L=0.196}$') # dashesで破線の間隔などを設定できる
+    # ax1.axvline(255/40*0.93/127.5, lw = lw1*0.5, ls = 'dotted', color = 'black', alpha = 0.8, zorder = 10, label = r'$k_{D/L=0.157}$') # dashesで破線の間隔などを設定できる
+    # ax1.axvline(255/50*0.93/127.5, lw = lw1*0.5, ls = 'dotted', dashes = [2, 2], color = 'magenta', alpha = 1.0, zorder = 10, label = r'$k_{D/L=0.196}$') # dashesで破線の間隔などを設定できる
     # ax1.axvline(255/60*0.93/127.5, lw = lw1*0.5, ls = 'dotted', dashes = [2, 2], color = 'magenta', alpha = 1.0, zorder = 10, label = r'$k_{D/L=0.235}$') # dashesで破線の間隔などを設定できる
-    ax1.axvline(255/70*0.93/127.5, lw = lw1*0.5, ls = 'dotted', dashes = [2, 2], color = 'deepskyblue', alpha = 1.0, zorder = 10, label = r'$k_{D/L=0.275}$') # dashesで破線の間隔などを設定できる
+    # ax1.axvline(255/70*0.93/127.5, lw = lw1*0.5, ls = 'dotted', dashes = [2, 2], color = 'deepskyblue', alpha = 1.0, zorder = 10, label = r'$k_{D/L=0.275}$') # dashesで破線の間隔などを設定できる
     
     # ax1.axvline(255/40*0.93/127.5, lw = lw1*0.5, ls = 'dotted', dashes = [1, 2], color = 'royalblue', label = r'$k_{D=40}$') # dashesで破線の間隔などを設定できる
     # za=np.arange(0.02, 1, 0.0001)
@@ -237,13 +237,13 @@ def plot_y1y2(): # y1, y2プロット用
     #         label = r'$\propto k^{-5/3}$') 
     
     # 凡例の設定
-    h1, l1 = ax1.get_legend_handles_labels()
-    ax1.legend(h1, l1, 
-    bbox_to_anchor = (1.0, 1.0), loc = "upper left", # bbox_to_anchorは凡例のlocの座標
-    framealpha = 1.0, fancybox=False, fontsize=8.0,
-    edgecolor = "black").get_frame().set_linewidth(alw*0.8)
+    # h1, l1 = ax1.get_legend_handles_labels()
+    # ax1.legend(h1, l1, 
+    # bbox_to_anchor = (1.0, 1.0), loc = "upper left", # bbox_to_anchorは凡例のlocの座標
+    # framealpha = 1.0, fancybox=False, fontsize=8.0,
+    # edgecolor = "black").get_frame().set_linewidth(alw*0.8)
     # ### 保存
-    fig.savefig(plotdir + "enesupe_phi_we1.4_d40_70_new5" + ext, bbox_inches = "tight") # bbox_inches="tight"で余白をなくす
+    fig.savefig(plotdir + "free_energy_interface" + ext, bbox_inches = "tight") # bbox_inches="tight"で余白をなくす
 
 ##=================== main ===================##
 if __name__ == '__main__':

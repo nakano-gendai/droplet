@@ -7,7 +7,7 @@ implicit none
     real(8) dummy1, dummy2, dummy3, dummy4, dummy5, dummy6, dummy7
     integer i
     real(8) wa_f, ave_f, wa_g, ave_g, wa_ff, ave_ff, wa_gg, ave_gg
-    integer,parameter:: num = 180
+    integer,parameter:: num = 33
     integer,parameter:: start = 1
     real(8),parameter:: pi = acos(-1.0d0) !円周率
     real(8),parameter:: nu = 0.001d0
@@ -34,11 +34,36 @@ implicit none
     ! enddo
     ! close(11)
 
-    open(12,file="enesupe_phi_30we1.4_4.d")
-    do i = 1, xmax/2+1
-        read(12,*) k(i), E(i)
+    ! open(12,file="enesupe_phi_30we1.4_4.d")
+    ! do i = 1, xmax/2+1
+    !     read(12,*) k(i), E(i)
+    ! enddo
+    ! close(12)
+
+    open(13,file="energy_interface.d")
+    do i = 1, 33
+        read(13,*) t(i), f(i)
     enddo
-    close(12)
+    close(13)
+
+    ! open(14,file="contribution_m.d")
+    ! do i = 1, 33
+    !     read(14,*) t(i), g(i)
+    ! enddo
+    ! close(14)
+
+    ! open(15,file="contribution_s.d")
+    ! do i = 1, 33
+    !     read(15,*) t(i), ff(i)
+    ! enddo
+    ! close(15)
+
+
+    open(20,file = "energy_interface.d")
+    do i = 1, 33
+        write(20,"(4es16.8)") t(i)-5000.0d0, f(i)
+    enddo
+    close(20)
 
     ! wa_f = 0.0d0
     ! wa_g = 0.0d0
@@ -74,10 +99,10 @@ implicit none
 
     ! write(*,*) "integral scale = ", integral_scale
 
-    open(20,file = "enesupe_phi_30we1.4_5.d")
-    do i = 1, xmax/2+1
-        write(20,"(2es16.8)") k(i)*0.93d0/127.5d0, E(i)
-    enddo
-    close(20)
+    ! open(20,file = "enesupe_phi_30we1.4_5.d")
+    ! do i = 1, xmax/2+1
+    !     write(20,"(2es16.8)") k(i)*0.93d0/127.5d0, E(i)
+    ! enddo
+    ! close(20)
 
 end program
