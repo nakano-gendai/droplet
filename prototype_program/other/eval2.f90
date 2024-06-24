@@ -107,11 +107,9 @@ DO step = 100, num, 100
     yi = ymax/2
     do zi=0,zmax
         ! do yi=0,ymax
-            do xi=(xmax+1)/2,xmax
-            ! do xi=0,(xmax+1)/2
+            do xi=0,(xmax+1)/2
                 if(phi(xi,yi,zi) >= phi_kaimen) then
-                ! xg = xg + dble(xi)
-                xg = xg + (dble(xi) - (dble(xmax)+1.0d0)/2.0d0) 
+                xg = xg + dble(xi)
                 yg = yg + dble(yi) 
                 zg = zg + dble(zi) 
                 phi_tmp = phi_tmp + 1.0d0
@@ -119,8 +117,8 @@ DO step = 100, num, 100
             enddo
         ! enddo
     enddo
-    xg = xg / phi_tmp + (dble(xmax)+1.0d0)/2.0d0
-    ! xg = xg / phi_tmp 
+
+    xg = xg / phi_tmp 
     yg = yg / phi_tmp
     zg = zg / phi_tmp
     !========================線形補間========================================================
