@@ -24,7 +24,7 @@ module globals
     !読み込みディレクトリ
     character(*),parameter :: datadir_input = "/data/sht/nakanog/DNS_turbulence_256_IHT/case6/"
     !出力ディレクトリ
-    character(*),parameter :: datadir_output = "/data/sht/nakanog/DNS_turbulence_256_IHT/case6/large/"
+    character(*),parameter :: datadir_output = "/data/sht/nakanog/DNS_turbulence_256_IHT/case6/contribution/all/"
 
     !粒子速度（整数）
     integer,parameter:: cx(15) = (/0, 1, 0,  0, -1,  0,  0,  1, -1,  1,  1, -1,  1, -1, -1/)
@@ -235,6 +235,60 @@ contains
         advection_phi(:,:,:) = 0.0d0
         korteweg_procs(:,:,:,:,:) = 0.0d0
     end subroutine variable
+
+    subroutine ini_energy3(tensor11,tensor12,tensor13,tensor21,tensor22,tensor23,tensor31,tensor32,tensor33)
+        real(8),allocatable :: tensor11(:,:,:), tensor12(:,:,:), tensor13(:,:,:)
+        real(8),allocatable :: tensor21(:,:,:), tensor22(:,:,:), tensor23(:,:,:)
+        real(8),allocatable :: tensor31(:,:,:), tensor32(:,:,:), tensor33(:,:,:)
+
+        !以下はのりしろ無しの変数
+        allocate(tensor11(0:x_procs+1,0:y_procs+1,0:zmax+2))
+        allocate(tensor12(0:x_procs+1,0:y_procs+1,0:zmax+2))
+        allocate(tensor13(0:x_procs+1,0:y_procs+1,0:zmax+2))
+        allocate(tensor21(0:x_procs+1,0:y_procs+1,0:zmax+2))
+        allocate(tensor22(0:x_procs+1,0:y_procs+1,0:zmax+2))
+        allocate(tensor23(0:x_procs+1,0:y_procs+1,0:zmax+2))
+        allocate(tensor31(0:x_procs+1,0:y_procs+1,0:zmax+2))
+        allocate(tensor32(0:x_procs+1,0:y_procs+1,0:zmax+2))
+        allocate(tensor33(0:x_procs+1,0:y_procs+1,0:zmax+2))
+
+        tensor11(:,:,:) = 0.0d0
+        tensor12(:,:,:) = 0.0d0
+        tensor13(:,:,:) = 0.0d0
+        tensor21(:,:,:) = 0.0d0
+        tensor22(:,:,:) = 0.0d0
+        tensor23(:,:,:) = 0.0d0
+        tensor31(:,:,:) = 0.0d0
+        tensor32(:,:,:) = 0.0d0
+        tensor33(:,:,:) = 0.0d0
+    end subroutine ini_energy3
+
+    subroutine ini_energy5(grad_tensor11,grad_tensor12,grad_tensor13,grad_tensor21,grad_tensor22,grad_tensor23,grad_tensor31,grad_tensor32,grad_tensor33)
+        real(8),allocatable :: grad_tensor11(:,:,:), grad_tensor12(:,:,:), grad_tensor13(:,:,:)
+        real(8),allocatable :: grad_tensor21(:,:,:), grad_tensor22(:,:,:), grad_tensor23(:,:,:)
+        real(8),allocatable :: grad_tensor31(:,:,:), grad_tensor32(:,:,:), grad_tensor33(:,:,:)
+
+        !以下はのりしろ無しの変数
+        allocate(grad_tensor11(0:x_procs+1,0:y_procs+1,0:zmax+2))
+        allocate(grad_tensor12(0:x_procs+1,0:y_procs+1,0:zmax+2))
+        allocate(grad_tensor13(0:x_procs+1,0:y_procs+1,0:zmax+2))
+        allocate(grad_tensor21(0:x_procs+1,0:y_procs+1,0:zmax+2))
+        allocate(grad_tensor22(0:x_procs+1,0:y_procs+1,0:zmax+2))
+        allocate(grad_tensor23(0:x_procs+1,0:y_procs+1,0:zmax+2))
+        allocate(grad_tensor31(0:x_procs+1,0:y_procs+1,0:zmax+2))
+        allocate(grad_tensor32(0:x_procs+1,0:y_procs+1,0:zmax+2))
+        allocate(grad_tensor33(0:x_procs+1,0:y_procs+1,0:zmax+2))
+
+        grad_tensor11(:,:,:) = 0.0d0
+        grad_tensor12(:,:,:) = 0.0d0
+        grad_tensor13(:,:,:) = 0.0d0
+        grad_tensor21(:,:,:) = 0.0d0
+        grad_tensor22(:,:,:) = 0.0d0
+        grad_tensor23(:,:,:) = 0.0d0
+        grad_tensor31(:,:,:) = 0.0d0
+        grad_tensor32(:,:,:) = 0.0d0
+        grad_tensor33(:,:,:) = 0.0d0
+    end subroutine ini_energy5
 
     subroutine input(u1_procs,u2_procs,u3_procs,p_procs,phi_procs)
         real(8),intent(inout):: u1_procs(0:x_procs+1,0:y_procs+1,0:zmax+2)
@@ -518,10 +572,11 @@ contains
         ! endif
     endsubroutine contribution
 
-    subroutine phi_supectrum(grad_phi1_hat,grad_phi2_hat,grad_phi3_hat,grad_phi_procs,grad_phi1_re,grad_phi2_re,grad_phi3_re,phisupe,phisupe_sum,free_energy)
+    subroutine phi_supectrum(grad_phi1_hat,grad_phi2_hat,grad_phi3_hat,grad_phi_procs,grad_phi1_re,grad_phi2_re,grad_phi3_re,phisupe,phisupe_sum,free_energy,phi_procs)
         complex(kind(0d0)), intent(inout) :: grad_phi1_hat(sta(1)-1:last(1)-1, sta(2)-1:last(2)-1, sta(3)-1:last(3)-1)
         complex(kind(0d0)), intent(inout) :: grad_phi2_hat(sta(1)-1:last(1)-1, sta(2)-1:last(2)-1, sta(3)-1:last(3)-1)
         complex(kind(0d0)), intent(inout) :: grad_phi3_hat(sta(1)-1:last(1)-1, sta(2)-1:last(2)-1, sta(3)-1:last(3)-1)
+        real(8),intent(inout):: phi_procs(0:x_procs+1,0:y_procs+1,0:zmax+2)
         real(8),intent(inout):: grad_phi_procs(1:3,1:x_procs,1:y_procs,1:zmax+1)
         real(8),intent(inout):: grad_phi1_re(0:x_procs-1, 0:y_procs-1, 0:zmax) 
         real(8),intent(inout):: grad_phi2_re(0:x_procs-1, 0:y_procs-1, 0:zmax) 
@@ -536,7 +591,7 @@ contains
         do zi=1,zmax+1
             do yi=1,y_procs
                 do xi=1,x_procs
-                    grad_phi1_re(xi-1,yi-1,zi-1) = 0.5d0*kappag*( grad_phi_procs(1,xi,yi,zi)**2 + grad_phi_procs(2,xi,yi,zi)**2 + grad_phi_procs(3,xi,yi,zi)**2 )
+                    grad_phi1_re(xi-1,yi-1,zi-1) = phi_procs(xi,yi,zi)
                     ! grad_phi2_re(xi-1,yi-1,zi-1) = grad_phi_procs(2,xi,yi,zi)*grad_phi_procs(2,xi,yi,zi)
                     ! grad_phi3_re(xi-1,yi-1,zi-1) = grad_phi_procs(3,xi,yi,zi)*grad_phi_procs(3,xi,yi,zi)
                 enddo
@@ -737,6 +792,26 @@ contains
         enddo
     end subroutine interaction_cal
 
+    subroutine output(interaction_procs)
+        real(8),intent(inout):: interaction_procs(1:x_procs,1:y_procs,1:zmax+1)
+
+        ! write(filename,*) group_new !i->filename 変換
+        write(filename2,*) n
+        write(filename3,*) comm_rank
+        ! filename=datadir//trim(adjustl(filename))//'_'//trim(adjustl(filename3))//'_'//trim(adjustl(filename2))//'.bin' 
+        filename=datadir_output//'0_'//trim(adjustl(filename3))//'_'//trim(adjustl(filename2))//'.bin' 
+        print *, filename !表示してみる
+        open(100,file=filename, form='unformatted',status='replace')
+        do zi=1,zmax+1
+            do yi=1,y_procs
+                do xi=1,x_procs
+                    write(100) interaction_procs(xi,yi,zi)
+                enddo
+            enddo
+        enddo
+        close(100)
+    end subroutine output
+
     !フーリエ変換
     subroutine fft_r2c(q, q_hat)
         real(8), intent(inout)            :: q(0:x_procs-1, 0:y_procs-1, 0:zmax)
@@ -791,6 +866,14 @@ use glassman
     real(8),allocatable :: korteweg_procs(:,:,:,:,:)
     real(8),allocatable :: interaction_procs(:,:,:)
 
+    real(8),allocatable :: tensor11(:,:,:), tensor12(:,:,:), tensor13(:,:,:)
+    real(8),allocatable :: tensor21(:,:,:), tensor22(:,:,:), tensor23(:,:,:)
+    real(8),allocatable :: tensor31(:,:,:), tensor32(:,:,:), tensor33(:,:,:)
+
+    real(8),allocatable :: grad_tensor11(:,:,:), grad_tensor12(:,:,:), grad_tensor13(:,:,:)
+    real(8),allocatable :: grad_tensor21(:,:,:), grad_tensor22(:,:,:), grad_tensor23(:,:,:)
+    real(8),allocatable :: grad_tensor31(:,:,:), grad_tensor32(:,:,:), grad_tensor33(:,:,:)
+
     real(8) interaction_sum, interaction_all
     real(8) free_energy_sum, free_energy_all
     real(8) kinetic_energy_sum, kinetic_energy_all
@@ -828,11 +911,13 @@ use glassman
     call MPI_Comm_Size(MPI_COMM_WORLD, comm_procs, ierr)
     call MPI_Comm_Rank(MPI_COMM_WORLD, comm_rank, ierr)
 !================================ディレクトリの作成============================================
-    ! call mk_dirs(datadir_output)
+    call mk_dirs(datadir_output)
     call par(cr)
     call ini(p_procs,u1_procs,u2_procs,u3_procs,phi_procs)
     call ini_fft(chemical_potencial_hat,advection_phi_hat,grad_phi1_hat,grad_phi2_hat,grad_phi3_hat,grad_phi1_re,grad_phi2_re,grad_phi3_re,u1_hat,u2_hat,u3_hat,u1_procs_re,u2_procs_re,u3_procs_re)
     call variable(grad_phi_procs,chemical_potencial,free_energy,grad_free_energy,lap_phi_procs,advection_phi,grad_u_procs,strain_procs,korteweg_procs,interaction_procs)
+    call ini_energy3(tensor11,tensor12,tensor13,tensor21,tensor22,tensor23,tensor31,tensor32,tensor33)
+    call ini_energy5(grad_tensor11,grad_tensor12,grad_tensor13,grad_tensor21,grad_tensor22,grad_tensor23,grad_tensor31,grad_tensor32,grad_tensor33)
 
 DO n = step_start, step_end, step_bin
     call input(u1_procs,u2_procs,u3_procs,p_procs,phi_procs)
@@ -844,20 +929,20 @@ DO n = step_start, step_end, step_bin
     ! call lap_cal(lap_phi_procs,phi_procs)
     ! call chemical_potencial_cal(chemical_potencial,phi_procs,lap_phi_procs)
     !移流項
-    call grad_cal(grad_phi_procs,phi_procs,cr)
+    ! call grad_cal(grad_phi_procs,phi_procs,cr)
     ! call advection_cal(advection_phi,grad_phi_procs,u1_procs,u2_procs,u3_procs)
     !各スケールの界面への寄与
     ! call contribution(chemical_potencial,advection_phi,chemical_potencial_hat,advection_phi_hat,enesupe_phi,enesupe_phi_sum,enesupe_phi_result)
     !自由エネルギースペクトル
     if((n == step_start)) then
-        call free_energy_cal(free_energy,phi_procs)
-        call phi_supectrum(grad_phi1_hat,grad_phi2_hat,grad_phi3_hat,grad_phi_procs,grad_phi1_re,grad_phi2_re,grad_phi3_re,phisupe,phisupe_sum,free_energy)
+        ! call free_energy_cal(free_energy,phi_procs)
+        call phi_supectrum(grad_phi1_hat,grad_phi2_hat,grad_phi3_hat,grad_phi_procs,grad_phi1_re,grad_phi2_re,grad_phi3_re,phisupe,phisupe_sum,free_energy,phi_procs)
         if(comm_rank == 0) then
             do i = 1, (xmax+1)/2 + 1
                 phisupe_result(i) = phisupe_result(i) + phisupe_sum(i)
             enddo
 
-            open(37,file ="./phisupe_d70we1.4_interface.d")
+            open(37,file ="./phisupe_d70we1.4_phionly.d")
             do i=1,(xmax+1)/2+1
                 write(37,"(2es16.8)") dble(i)-1.0d0, phisupe_result(i)
             enddo
@@ -880,6 +965,112 @@ DO n = step_start, step_end, step_bin
     !Korteweg応力テンソル
     ! call grad_cal(grad_phi_procs,phi_procs,cr)
     ! call korteweg_cal(grad_phi_procs,korteweg_procs)
+    ! do zi = 1, zmax+1
+    !     do yi = 1, y_procs
+    !         do xi = 1, x_procs
+    !             tensor11(xi,yi,zi) = korteweg_procs(1,1,xi,yi,zi)
+    !             tensor21(xi,yi,zi) = korteweg_procs(2,1,xi,yi,zi)
+    !             tensor31(xi,yi,zi) = korteweg_procs(3,1,xi,yi,zi)
+
+    !             tensor12(xi,yi,zi) = korteweg_procs(1,2,xi,yi,zi)
+    !             tensor22(xi,yi,zi) = korteweg_procs(2,2,xi,yi,zi)
+    !             tensor32(xi,yi,zi) = korteweg_procs(3,2,xi,yi,zi)
+
+    !             tensor13(xi,yi,zi) = korteweg_procs(1,3,xi,yi,zi)
+    !             tensor23(xi,yi,zi) = korteweg_procs(2,3,xi,yi,zi)
+    !             tensor33(xi,yi,zi) = korteweg_procs(3,3,xi,yi,zi)
+    !         enddo
+    !     enddo
+    ! enddo
+    ! call glue(tensor11)
+    ! call glue(tensor21)
+    ! call glue(tensor31)
+
+    ! call glue(tensor12)
+    ! call glue(tensor22)
+    ! call glue(tensor32)
+
+    ! call glue(tensor13)
+    ! call glue(tensor23)
+    ! call glue(tensor33)
+
+    ! ! alpha = 1
+    ! do zi=1,zmax+1
+    !     do yi=1,y_procs
+    !         do xi=1,x_procs
+    !             grad_tensor11(xi,yi,zi) = 0.0d0
+    !             grad_tensor21(xi,yi,zi) = 0.0d0
+    !             grad_tensor31(xi,yi,zi) = 0.0d0
+    !             do i = 2,15
+    !                 grad_tensor11(xi,yi,zi) = grad_tensor11(xi,yi,zi) &
+    !                                         + cr(1,i)*tensor11(xi+cx(i),yi+cy(i),zi+cz(i))
+    !                 grad_tensor21(xi,yi,zi) = grad_tensor21(xi,yi,zi) &
+    !                                         + cr(1,i)*tensor21(xi+cx(i),yi+cy(i),zi+cz(i))
+    !                 grad_tensor31(xi,yi,zi) = grad_tensor31(xi,yi,zi) &
+    !                                         + cr(1,i)*tensor31(xi+cx(i),yi+cy(i),zi+cz(i))
+    !             enddo
+    !             grad_tensor11(xi,yi,zi) = grad_tensor11(xi,yi,zi)/(10.0d0*ds)
+    !             grad_tensor21(xi,yi,zi) = grad_tensor21(xi,yi,zi)/(10.0d0*ds)
+    !             grad_tensor31(xi,yi,zi) = grad_tensor31(xi,yi,zi)/(10.0d0*ds)
+    !         enddo
+    !     enddo
+    ! enddo
+
+    ! ! alpha = 2
+    ! do zi=1,zmax+1
+    !     do yi=1,y_procs
+    !         do xi=1,x_procs
+    !             grad_tensor12(xi,yi,zi) = 0.0d0
+    !             grad_tensor22(xi,yi,zi) = 0.0d0
+    !             grad_tensor32(xi,yi,zi) = 0.0d0
+    !             do i = 2,15
+    !                 grad_tensor12(xi,yi,zi) = grad_tensor12(xi,yi,zi) &
+    !                                         + cr(2,i)*tensor12(xi+cx(i),yi+cy(i),zi+cz(i))
+    !                 grad_tensor22(xi,yi,zi) = grad_tensor22(xi,yi,zi) &
+    !                                         + cr(2,i)*tensor22(xi+cx(i),yi+cy(i),zi+cz(i))
+    !                 grad_tensor32(xi,yi,zi) = grad_tensor32(xi,yi,zi) &
+    !                                         + cr(2,i)*tensor32(xi+cx(i),yi+cy(i),zi+cz(i))
+    !             enddo
+    !             grad_tensor12(xi,yi,zi) = grad_tensor12(xi,yi,zi)/(10.0d0*ds)
+    !             grad_tensor22(xi,yi,zi) = grad_tensor22(xi,yi,zi)/(10.0d0*ds)
+    !             grad_tensor32(xi,yi,zi) = grad_tensor32(xi,yi,zi)/(10.0d0*ds)
+    !         enddo
+    !     enddo
+    ! enddo
+
+    ! ! alpha = 3
+    ! do zi=1,zmax+1
+    !     do yi=1,y_procs
+    !         do xi=1,x_procs
+    !             grad_tensor13(xi,yi,zi) = 0.0d0
+    !             grad_tensor23(xi,yi,zi) = 0.0d0
+    !             grad_tensor33(xi,yi,zi) = 0.0d0
+    !             do i = 2,15
+    !                 grad_tensor13(xi,yi,zi) = grad_tensor13(xi,yi,zi) &
+    !                                         + cr(3,i)*tensor13(xi+cx(i),yi+cy(i),zi+cz(i))
+    !                 grad_tensor23(xi,yi,zi) = grad_tensor23(xi,yi,zi) &
+    !                                         + cr(3,i)*tensor23(xi+cx(i),yi+cy(i),zi+cz(i))
+    !                 grad_tensor33(xi,yi,zi) = grad_tensor33(xi,yi,zi) &
+    !                                         + cr(3,i)*tensor33(xi+cx(i),yi+cy(i),zi+cz(i))
+    !             enddo
+    !             grad_tensor13(xi,yi,zi) = grad_tensor13(xi,yi,zi)/(10.0d0*ds)
+    !             grad_tensor23(xi,yi,zi) = grad_tensor23(xi,yi,zi)/(10.0d0*ds)
+    !             grad_tensor33(xi,yi,zi) = grad_tensor33(xi,yi,zi)/(10.0d0*ds)
+    !         enddo
+    !     enddo
+    ! enddo
+
+    ! do zi=1,zmax+1
+    !     do yi=1,y_procs
+    !         do xi=1,x_procs
+    !             interaction_procs(xi,yi,zi) = u1_procs(xi,yi,zi)*grad_tensor11(xi,yi,zi) + u2_procs(xi,yi,zi)*grad_tensor21(xi,yi,zi) + u3_procs(xi,yi,zi)*grad_tensor31(xi,yi,zi) &
+    !                                     + u1_procs(xi,yi,zi)*grad_tensor12(xi,yi,zi) + u2_procs(xi,yi,zi)*grad_tensor22(xi,yi,zi) + u3_procs(xi,yi,zi)*grad_tensor32(xi,yi,zi) &
+    !                                     + u1_procs(xi,yi,zi)*grad_tensor13(xi,yi,zi) + u2_procs(xi,yi,zi)*grad_tensor23(xi,yi,zi) + u3_procs(xi,yi,zi)*grad_tensor33(xi,yi,zi)
+                
+    !             interaction_procs(xi,yi,zi) = interaction_procs(xi,yi,zi) * kappag
+    !         enddo
+    !     enddo
+    ! enddo
 
     !スケール分解して渦の液滴への寄与を見る
     ! call scale_cal(u1_procs,u2_procs,u3_procs,u1_procs_re,u2_procs_re,u3_procs_re,u1_hat,u2_hat,u3_hat)
@@ -939,6 +1130,8 @@ DO n = step_start, step_end, step_bin
     !         endif
     !     endif
     ! endif
+
+    ! call output(interaction_procs)
 
 ENDDO
 

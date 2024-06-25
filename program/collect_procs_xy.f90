@@ -12,11 +12,11 @@ end module globals
 program main
 use globals
     implicit none
-    integer,parameter:: xmax = 511 !ｘ方向格子数
-    integer,parameter:: ymax = 511 !ｙ方向格子数
-    integer,parameter:: zmax = 511 !ｚ方向格子数
+    integer,parameter:: xmax = 255 !ｘ方向格子数
+    integer,parameter:: ymax = 255 !ｙ方向格子数
+    integer,parameter:: zmax = 255 !ｚ方向格子数
     integer,parameter:: Nx = 32 !ｘ方向の並列数
-    integer,parameter:: Ny = 64 !ｚ方向の並列数
+    integer,parameter:: Ny = 32 !ｚ方向の並列数
     integer,parameter:: x_procs = (xmax+1) / Nx
     integer,parameter:: y_procs = (ymax+1) / Ny
     integer,parameter:: new_procs = Nx * Ny
@@ -28,8 +28,8 @@ use globals
     ! character(*),parameter :: datadir = "/data/sht/nakanog/droplet_test/"
     ! !ディレクトリ作成
     ! character(*),parameter :: datadir2 = "/data/sht/nakanog/droplet_test/gnu/"
-    character(*),parameter :: datadir = "/data/sht/nakanog/taylor_512_drop_movie/"
-    character(*),parameter :: datadir2 = "/data/sht/nakanog/taylor_512_drop_movie/collect/"
+    character(*),parameter :: datadir = "/data/sht/nakanog/DNS_turbulence_256_IHT/case6/contribution/all/"
+    character(*),parameter :: datadir2 = "/data/sht/nakanog/DNS_turbulence_256_IHT/case6/contribution/all/collect/"
     real(8) phi(0:xmax,0:ymax,0:zmax)
     real(8) u1(0:xmax,0:ymax,0:zmax)
     real(8) u2(0:xmax,0:ymax,0:zmax)
@@ -47,7 +47,7 @@ use globals
     call mk_dirs(datadir2)
 
 !============phiをまとめて出力するプログラム=============================================
-    do step=5000, 10000000, 5000
+    do step=5000, 100000, 1000
         if((step > 99) .and. (step < 1000)) then
             write(file_num2, "(i3)") step
         elseif((step > 999) .and. (step < 10000)) then
@@ -70,12 +70,13 @@ use globals
                 write(file_num,"(i4)") i
             endif
 
-            set = 20 + i
+            set = 20
             open(set, file=datadir//"0_"//trim(file_num)//"_"//trim(file_num2)//".bin", form="unformatted")
             do zi = 1, zmax+1
                 do yi = 1, y_procs
                     do xi = 1, x_procs
-                        read(set) phiout(xi,yi,zi,i), a, b, c, d
+                        read(set) phiout(xi,yi,zi,i)
+                        ! read(set) phiout(xi,yi,zi,i), a, b, c, d
                         ! read(set) u1out(xi,yi,zi,i), u2out(xi,yi,zi,i), u3out(xi,yi,zi,i), a
                     enddo
                 enddo

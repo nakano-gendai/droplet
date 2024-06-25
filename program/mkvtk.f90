@@ -1,15 +1,15 @@
 module globals
-    integer,parameter :: nx = 512
-    integer,parameter :: ny = 512
-    integer,parameter :: nz = 512
+    integer,parameter :: nx = 256
+    integer,parameter :: ny = 256
+    integer,parameter :: nz = 256
     real(8),parameter :: dx = 1.0d0
     real(8),parameter :: dy = 1.0d0
     real(8),parameter :: dz = 1.0d0
     !読み込みディレクトリー
-    character(*),parameter :: dir = "/data/sht/nakanog/taylor_512_drop_movie/small/collect/"
+    character(*),parameter :: dir = "/data/sht/nakanog/DNS_turbulence_256_IHT/case6/contribution/all/collect/"
     ! character(*),parameter :: dir = "./"
     !出力ディレクトリー
-    character(*),parameter :: datadir = "/data/sht/nakanog/taylor_512_drop_movie/small/collect/vtk/"
+    character(*),parameter :: datadir = "/data/sht/nakanog/DNS_turbulence_256_IHT/case6/contribution/all/collect/vtk/"
     ! character(*),parameter :: datadir = "./"
     ! !読み込みディレクトリー
     ! character(*),parameter :: dir = "/data/sht/nakanog/taylor_re12000_ran/ens2/collect/"
@@ -121,8 +121,7 @@ use globals
     integer step, stepnum
     call mk_dirs(datadir)
     stepnum = 1
-    DO step = 5000, 10000000, 5000
-        ! step = 51000
+    DO step = 5000, 100000, 1000
         call read_files(scalar, step)
         call output_scalar(scalar, stepnum)
         stepnum = stepnum + 1
