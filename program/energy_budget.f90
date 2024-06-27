@@ -23,7 +23,7 @@ module globals
     integer,parameter:: yall = (ymax + 1) * Nyall !全体のz方向格子数
     !時間に関するパラメータ
     integer,parameter:: step = 37000 !計算時間step
-    integer,parameter:: step_input = 3000 !速度場入力時間step
+    integer,parameter:: step_input = 10000 !速度場入力時間step
     integer,parameter:: step_input_file_num = 200000 !入力する乱流場のstep
     !入力ディレクトリ
     character(*),parameter :: datadir_input = "/data/sht/nakanog/DNS_turbulence_256_IHT_new/fg/"
@@ -148,7 +148,7 @@ contains
 
     !========================並列数・コミュニケータ分割・通信先設定========================
         !配列のallocate(xi:0とx_procs+1がのりしろ)(yi:0とymax+2がのりしろ)(zi:0とz_procs+1がのりしろ)
-        Nx = 32 !x方向の並列数（ただし，Nx/=comm_procs）
+        Nx = 8 !x方向の並列数（ただし，Nx/=comm_procs）
         Ny = comm_procs / (Nx * Nxall * Nyall) !z方向の並列数
         x_procs = (xmax+1) / Nx
         y_procs = (ymax+1) / Ny
@@ -1256,7 +1256,7 @@ DO n=1,step
     do zi = 1, zmax+1
         do yi = 1, y_procs
             do xi = 1, x_procs
-                kinetic_former_procs(xi,yi,zi) = kinetic_procs(xi,yi,zi)
+                kinetic_former_procs(xi,yi,zi) = p0_procs(xi,yi,zi) - kappag*phi_procs(xi,yi,zi)*lap_phi_procs(xi,yi,zi) - 1.0d0/6.0d0*kappag*(grad_phi_procs(1,xi,yi,zi)**2+grad_phi_procs(2,xi,yi,zi)**2+grad_phi_procs(3,xi,yi,zi)**2)
             enddo
         enddo
     enddo
@@ -1264,19 +1264,35 @@ DO n=1,step
     do zi = 1, zmax+1
         do yi = 1, y_procs
             do xi = 1, x_procs
-                kinetic_procs(xi,yi,zi) = 0.5d0*(u1_procs(xi,yi,zi)*u1_procs(xi,yi,zi) + u2_procs(xi,yi,zi)*u2_procs(xi,yi,zi) + u3_procs(xi,yi,zi)*u3_procs(xi,yi,zi))
+                left1_procs(xi,yi,zi) = abs(p_procs(xi,yi,zi) - kinetic_former_procs(xi,yi,zi))
             enddo
         enddo
     enddo
+    ! !前の時間の運動エネルギー
+    ! do zi = 1, zmax+1
+    !     do yi = 1, y_procs
+    !         do xi = 1, x_procs
+    !             kinetic_former_procs(xi,yi,zi) = kinetic_procs(xi,yi,zi)
+    !         enddo
+    !     enddo
+    ! enddo
+    ! !今の時間の運動エネルギー
+    ! do zi = 1, zmax+1
+    !     do yi = 1, y_procs
+    !         do xi = 1, x_procs
+    !             kinetic_procs(xi,yi,zi) = 0.5d0*(u1_procs(xi,yi,zi)*u1_procs(xi,yi,zi) + u2_procs(xi,yi,zi)*u2_procs(xi,yi,zi) + u3_procs(xi,yi,zi)*u3_procs(xi,yi,zi))
+    !         enddo
+    !     enddo
+    ! enddo
 
     !left1
-    do zi=1,zmax+1
-        do yi=1,y_procs
-            do xi=1,x_procs
-                left1_procs(xi,yi,zi) = (kinetic_procs(xi,yi,zi)-kinetic_former_procs(xi,yi,zi))
-            enddo
-        enddo
-    enddo
+    ! do zi=1,zmax+1
+    !     do yi=1,y_procs
+    !         do xi=1,x_procs
+    !             left1_procs(xi,yi,zi) = (kinetic_procs(xi,yi,zi)-kinetic_former_procs(xi,yi,zi))
+    !         enddo
+    !     enddo
+    ! enddo
 
     !left2
     call glue(kinetic_procs)
@@ -1694,16 +1710,17 @@ DO n=1,step
     if(comm_rank == 0) then
         if(mod(n,100)==0) then
             if(n == 100) then
-                open(18,file="./energy_budget3.d")
-                write(18,"(11es16.8)") dble(n), left1_all, left2_all, right1_all, right2_all, right3_all,right4_all, right5_all, left1_all+left2_all, right1_all+right2_all+right3_all+right4_all+right5_all, left1_all/(-1.0d0*left2_all+right1_all+right2_all+right3_all+right4_all+right5_all)
+                open(18,file="./p.d")
+                ! write(18,"(11es16.8)") dble(n), left1_all, left2_all, right1_all, right2_all, right3_all,right4_all, right5_all, left1_all+left2_all, right1_all+right2_all+right3_all+right4_all+right5_all, left1_all/(-1.0d0*left2_all+right1_all+right2_all+right3_all+right4_all+right5_all)
+                write(18,"(4es16.8)") dble(n), left1_all, p_procs(1,1,1), kinetic_former_procs(1,1,1)
                 close(18)
 
                 ! open(18,file="./energy_budget.d")
                 ! write(18,"(8es16.8)") dble(n), left1_all, left2_all, right1_all, right3_all, right4_all, right5_all, right1_all+right3_all+right4_all+right5_all
                 ! close(18)
             else
-                open(18,file="./energy_budget3.d",action="write",position="append")
-                write(18,"(11es16.8)") dble(n), left1_all, left2_all, right1_all, right2_all, right3_all,right4_all, right5_all, left1_all+left2_all, right1_all+right2_all+right3_all+right4_all+right5_all, left1_all/(-1.0d0*left2_all+right1_all+right2_all+right3_all+right4_all+right5_all)
+                open(18,file="./p.d",action="write",position="append")
+                write(18,"(4es16.8)") dble(n), left1_all, p_procs(1,1,1), kinetic_former_procs(1,1,1)
                 close(18)
             endif
         endif
