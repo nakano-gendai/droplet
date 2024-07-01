@@ -170,57 +170,52 @@ def plot_y1y2(): # y1, y2プロット用
     # pp=fig.colorbar(im, ax=ax1, orientation="vertical", cax=pp_ax)
     
     ### 読み込みデータのプロット
-    ax1.plot(x1, y1, lw = 1, ls = 'none', marker = 'o', ms = ms1*1.0, mew = lw1*0.5, mfc = 'none', color = 'red', 
-            alpha = 0.8,     # 透明度
-            clip_on = False, # プロット枠外にもプロットする
-            zorder = 110,
-            label = r'$k=1$') 
-    ax1.plot(x2, y2, lw = 1, ls = 'none', marker = '^', ms = ms1*1.0, mew = lw1*0.5, mfc = 'none', color = 'black', 
-            alpha = 0.8,     # 透明度
-            clip_on = False, # プロット枠外にもプロットする
-            zorder = 109,      # zorderが大きいほど前面に表示される
-            label = r'$k=2$') 
-    ax1.plot(x3, y3, lw = 1, ls = 'none', marker = 'D', ms = ms1*1.0, mew = lw1*0.5, mfc = 'none', color = 'blue', 
-            alpha = 0.8,     # 透明度
-            clip_on = False, # プロット枠外にもプロットする
-            zorder = 108,      # zorderが大きいほど前面に表示される
-            label = r'$k=3$') 
-    ax1.plot(x4, y4, lw = 1, ls = 'none', marker = '*', ms = ms1*1.0, mew = lw1*0.5, mfc = 'none', color = 'gray', 
-            alpha = 0.8,     # 透明度
-            clip_on = False, # プロット枠外にもプロットする
-            zorder = 107,      # zorderが大きいほど前面に表示される
-            label = r'$k=4$') 
-    ax1.plot(x5, y5, lw = 1, ls = 'none', marker = 'h', ms = ms1*1.0, mew = lw1*0.5, mfc = 'none', color = 'deepskyblue', 
+    # ax1.plot(x1, y1, lw = 1, ls = 'none', marker = 'o', ms = ms1*1.5, mew = lw1*0.7, mfc = 'none', color = 'red', 
+    #         alpha = 0.8,     # 透明度
+    #         clip_on = False, # プロット枠外にもプロットする
+    #         zorder = 110,
+    #         label = r'$k=1$') 
+    # ax1.plot(x2, y2, lw = 1, ls = 'none', marker = '^', ms = ms1*1.5, mew = lw1*0.7, mfc = 'none', color = 'black', 
+    #         alpha = 0.8,     # 透明度
+    #         clip_on = False, # プロット枠外にもプロットする
+    #         zorder = 109,      # zorderが大きいほど前面に表示される
+    #         label = r'$k=2$') 
+    # ax1.plot(x3, y3, lw = 1, ls = 'none', marker = 'D', ms = ms1*1.5, mew = lw1*0.7, mfc = 'none', color = 'blue', 
+    #         alpha = 0.8,     # 透明度
+    #         clip_on = False, # プロット枠外にもプロットする
+    #         zorder = 108,      # zorderが大きいほど前面に表示される
+    #         label = r'$k=3$') 
+    # ax1.plot(x4, y4, lw = 1, ls = 'none', marker = '*', ms = ms1*1.5, mew = lw1*0.7, mfc = 'none', color = 'gray', 
+    #         alpha = 0.8,     # 透明度
+    #         clip_on = False, # プロット枠外にもプロットする
+    #         zorder = 107,      # zorderが大きいほど前面に表示される
+    #         label = r'$k=4$') 
+    ax1.plot(x5, y5, lw = 1, ls = 'none', marker = 'h', ms = ms1*1.5, mew = lw1*0.7, mfc = 'none', color = 'deepskyblue', 
             alpha = 0.8,     # 透明度
             clip_on = False, # プロット枠外にもプロットする
             zorder = 106,      # zorderが大きいほど前面に表示される
             label = r'$k=5$') 
-    ax1.plot(x6, y6, lw = 1, ls = 'none', marker = 's', ms = ms1*1.0, mew = lw1*0.5, mfc = 'none', color = 'orange', 
+    ax1.plot(x6, y6, lw = 1, ls = 'none', marker = 's', ms = ms1*1.5, mew = lw1*0.7, mfc = 'none', color = 'orange', 
             alpha = 0.8,     # 透明度
             clip_on = False, # プロット枠外にもプロットする
             zorder = 105,      # zorderが大きいほど前面に表示される
             label = r'$k=6$') 
-    ax1.plot(x7, y7, lw = 1, ls = 'none', marker = 'p', ms = ms1*1.0, mew = lw1*0.5, mfc = 'none', color = 'purple', 
+    ax1.plot(x7, y7, lw = 1, ls = 'none', marker = 'p', ms = ms1*1.5, mew = lw1*0.7, mfc = 'none', color = 'purple', 
             alpha = 0.8,     # 透明度
             clip_on = False, # プロット枠外にもプロットする
             zorder = 104,      # zorderが大きいほど前面に表示される
             label = r'$k=7$') 
-    # ax1.plot(x8, y8, lw = 1, ls = 'none', marker = 'x', ms = ms1*1.0, mew = lw1*0.5, mfc = 'none', color = 'lime', 
-    #         alpha = 0.8,     # 透明度
-    #         clip_on = False, # プロット枠外にもプロットする
-    #         zorder = 103,      # zorderが大きいほど前面に表示される
-    #         label = r'$k=8$') 
-    ax1.plot(x8, y8, lw = 1, ls = 'none', marker = 'x', ms = ms1*1.0, mew = lw1*0.5, mfc = 'none', color = 'lime', 
+    ax1.plot(x8, y8, lw = 1, ls = 'none', marker = 'x', ms = ms1*1.5, mew = lw1*0.7, mfc = 'none', color = 'lime', 
             alpha = 0.8,     # 透明度
             clip_on = False, # プロット枠外にもプロットする
             zorder = 103,      # zorderが大きいほど前面に表示される
             label = r'$k=8$') 
 
     
-    ax1.plot(x1, y1, lw = lw1*0.5, ls = 'solid',  color = 'red', alpha = 0.8, clip_on = True, zorder = 20)
-    ax1.plot(x2, y2, lw = lw1*0.5, ls = 'solid',  color = 'black', alpha = 0.8, clip_on = True, zorder = 19)
-    ax1.plot(x3, y3,lw = lw1*0.5, ls = 'solid',  color = 'blue', alpha = 0.8, clip_on = True, zorder = 18)
-    ax1.plot(x4, y4, lw = lw1*0.5, ls = 'solid',  color = 'gray', alpha = 0.8, clip_on = True, zorder = 17)
+    # ax1.plot(x1, y1, lw = lw1*0.5, ls = 'solid',  color = 'red', alpha = 0.8, clip_on = True, zorder = 20)
+    # ax1.plot(x2, y2, lw = lw1*0.5, ls = 'solid',  color = 'black', alpha = 0.8, clip_on = True, zorder = 19)
+    # ax1.plot(x3, y3,lw = lw1*0.5, ls = 'solid',  color = 'blue', alpha = 0.8, clip_on = True, zorder = 18)
+    # ax1.plot(x4, y4, lw = lw1*0.5, ls = 'solid',  color = 'gray', alpha = 0.8, clip_on = True, zorder = 17)
     ax1.plot(x5, y5, lw = lw1*0.5, ls = 'solid',  color = 'deepskyblue', alpha = 0.8, clip_on = True, zorder = 16)
     ax1.plot(x6, y6, lw = lw1*0.5, ls = 'solid',  color = 'orange', alpha = 0.8, clip_on = True, zorder = 15)
     ax1.plot(x7, y7, lw = lw1*0.5, ls = 'solid',  color = 'purple', alpha = 0.8, clip_on = True, zorder = 14)
@@ -248,7 +243,7 @@ def plot_y1y2(): # y1, y2プロット用
     framealpha = 1.0, fancybox=False, fontsize=8.0,
     edgecolor = "black").get_frame().set_linewidth(alw*0.8)
     # ### 保存
-    fig.savefig(plotdir + "energy_scale_k_1_8" + ext, bbox_inches = "tight") # bbox_inches="tight"で余白をなくす
+    fig.savefig(plotdir + "energy_scale_k_5_8" + ext, bbox_inches = "tight") # bbox_inches="tight"で余白をなくす
 
 ##=================== main ===================##
 if __name__ == '__main__':
