@@ -28,8 +28,8 @@ use globals
     ! character(*),parameter :: datadir = "/data/sht/nakanog/droplet_test/"
     ! !ディレクトリ作成
     ! character(*),parameter :: datadir2 = "/data/sht/nakanog/droplet_test/gnu/"
-    character(*),parameter :: datadir = "/data/sht/nakanog/DNS_turbulence_256_IHT/case6/contribution/all/"
-    character(*),parameter :: datadir2 = "/data/sht/nakanog/DNS_turbulence_256_IHT/case6/contribution/all/collect/"
+    character(*),parameter :: datadir = "/data/sht/nakanog/DNS_turbulence_256_IHT_new/case6/"
+    character(*),parameter :: datadir2 = "/data/sht/nakanog/DNS_turbulence_256_IHT_new/case6/collect/"
     real(8) phi(0:xmax,0:ymax,0:zmax)
     real(8) u1(0:xmax,0:ymax,0:zmax)
     real(8) u2(0:xmax,0:ymax,0:zmax)
@@ -47,7 +47,7 @@ use globals
     call mk_dirs(datadir2)
 
 !============phiをまとめて出力するプログラム=============================================
-    do step=5000, 100000, 1000
+    do step=3000, 100000, 1000
         if((step > 99) .and. (step < 1000)) then
             write(file_num2, "(i3)") step
         elseif((step > 999) .and. (step < 10000)) then
@@ -75,8 +75,8 @@ use globals
             do zi = 1, zmax+1
                 do yi = 1, y_procs
                     do xi = 1, x_procs
-                        read(set) phiout(xi,yi,zi,i)
-                        ! read(set) phiout(xi,yi,zi,i), a, b, c, d
+                        ! read(set) phiout(xi,yi,zi,i)
+                        read(set) phiout(xi,yi,zi,i), a, b, c, d
                         ! read(set) u1out(xi,yi,zi,i), u2out(xi,yi,zi,i), u3out(xi,yi,zi,i), a
                     enddo
                 enddo

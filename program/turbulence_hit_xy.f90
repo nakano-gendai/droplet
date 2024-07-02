@@ -16,8 +16,8 @@ module globals
     integer,parameter:: xmax = 255 !ｘ方向格子数（０から数える）
     integer,parameter:: ymax = 255 !ｙ方向格子数（０から数える）
     integer,parameter:: zmax = 255 !ｚ方向格子数（０から数える）
-    integer,parameter:: step_start = 4000
-    integer,parameter:: step_end = 1000000
+    integer,parameter:: step_start = 452000
+    integer,parameter:: step_end = 652000
     integer,parameter:: step_bin = 4000
     integer,parameter:: step_num2 = (step_end - step_start) / step_bin + 1 
 
@@ -830,36 +830,36 @@ use glassman
                 enddo
             enddo
         enddo
-        !コルモゴロフスケールの計算
-        call glue(u1_procs_fluctuation)
-        call glue(u2_procs_fluctuation)
-        call glue(u3_procs_fluctuation)
-        call grad_u_cal(grad_u_procs,u1_procs_fluctuation,u2_procs_fluctuation,u3_procs_fluctuation)
-        call strain_cal(grad_u_procs,strain_procs)
-        call energy_dissipation_cal(strain_procs,energy_dissipation,energy_dissipation_sum,Kolmogorov_scale)
+        ! !コルモゴロフスケールの計算
+        ! call glue(u1_procs_fluctuation)
+        ! call glue(u2_procs_fluctuation)
+        ! call glue(u3_procs_fluctuation)
+        ! call grad_u_cal(grad_u_procs,u1_procs_fluctuation,u2_procs_fluctuation,u3_procs_fluctuation)
+        ! call strain_cal(grad_u_procs,strain_procs)
+        ! call energy_dissipation_cal(strain_procs,energy_dissipation,energy_dissipation_sum,Kolmogorov_scale)
 
-        !テイラー長レイノルズ数の計算
-        call u_rms_cal(u_rms,u_rms_ave,u1_procs_fluctuation,u2_procs_fluctuation,u3_procs_fluctuation)
-        call u_grad_cal(u_grad,u_grad_ave,grad_u_procs)
-        call taylor_re_cal(u_rms_ave,u_rms_ave_sum,u_grad_ave,u_grad_ave_sum,taylor_re,taylor_length,u_rms,u_grad)
+        ! !テイラー長レイノルズ数の計算
+        ! call u_rms_cal(u_rms,u_rms_ave,u1_procs_fluctuation,u2_procs_fluctuation,u3_procs_fluctuation)
+        ! call u_grad_cal(u_grad,u_grad_ave,grad_u_procs)
+        ! call taylor_re_cal(u_rms_ave,u_rms_ave_sum,u_grad_ave,u_grad_ave_sum,taylor_re,taylor_length,u_rms,u_grad)
 
         !エネルギースペクトル
-        ! call enesupe_cal(u1_procs,u2_procs,u3_procs,u1_procs_re,u2_procs_re,u3_procs_re,u1_hat,u2_hat,u3_hat,enesupe,enesupe_sum)
-        ! if(comm_rank == 0) then
-        !     do i = 1, (xmax+1)/2 + 1
-        !         enesupe_result(i) = enesupe_result(i) + enesupe_sum(i)
-        !     enddo
-        ! endif
+        call enesupe_cal(u1_procs,u2_procs,u3_procs,u1_procs_re,u2_procs_re,u3_procs_re,u1_hat,u2_hat,u3_hat,enesupe,enesupe_sum)
+        if(comm_rank == 0) then
+            do i = 1, (xmax+1)/2 + 1
+                enesupe_result(i) = enesupe_result(i) + enesupe_sum(i)
+            enddo
+        endif
     ENDDO
 
-    ! if(comm_rank==0) then
-    !     open(37,file ="./enesupe_d70we1.2.d")
-    !     do i=1,(xmax+1)/2+1
-    !         enesupe_result(i) = enesupe_result(i) / dble(step_num2)
-    !         write(37,"(2es16.8)") dble(i)-1.0d0, enesupe_result(i)
-    !     enddo
-    !     close(37)
-    ! endif
+    if(comm_rank==0) then
+        open(37,file ="./enesupe.d")
+        do i=1,(xmax+1)/2+1
+            enesupe_result(i) = enesupe_result(i) / dble(step_num2)
+            write(37,"(2es16.8)") dble(i)-1.0d0, enesupe_result(i)
+        enddo
+        close(37)
+    endif
 
     ! !積分長
     ! if(comm_rank == 0) then
