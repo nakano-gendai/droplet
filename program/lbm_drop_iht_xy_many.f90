@@ -24,20 +24,20 @@ module globals
     !時間に関するパラメータ
     integer,parameter:: step = 100000 !計算時間step
     integer,parameter:: step_input = 5000 !速度場入力時間step
-    integer,parameter:: step_input_file_num = 400000 !case1での入力する乱流場のstep
+    integer,parameter:: step_input_file_num = 600000 !case1での入力する乱流場のstep
     integer,parameter:: step_input_bin = 40000 !入力する乱流場のstep間隔
-    integer,parameter:: case_initial_num = 11 !最初のケース番号
-    integer,parameter:: case_end_num = 15 !最後のケース番号
+    integer,parameter:: case_initial_num = 1 !最初のケース番号
+    integer,parameter:: case_end_num = 5 !最後のケース番号
     !入力ディレクトリ
-    character(*),parameter :: datadir_input = "/data/sht/nakanog/DNS_turbulence_256_IHT/fg/"
+    character(*),parameter :: datadir_input = "/data/sht/nakanog/DNS_turbulence_256_IHT_new/fg/"
     !出力ディレクトリ
-    character(*),parameter :: datadir_output = "/data/sht/nakanog/IHT_drop_d70_we1.4/"
-    character(*),parameter :: datadir_output_fg = "/data/sht/nakanog/IHT_drop_d70_we1.4/fg/"
+    character(*),parameter :: datadir_output = "/data/sht/nakanog/IHT_drop_d70_we5/"
+    character(*),parameter :: datadir_output_fg = "/data/sht/nakanog/IHT_drop_d70_we5/fg/"
     integer,parameter:: step_output = 1000
     integer,parameter:: step_putput_fg = 100000
 
     !無次元数
-    real(8),parameter:: We = 1.4d0 !ウェーバー数
+    real(8),parameter:: We = 5.0d0 !ウェーバー数
     real(8),parameter:: eta = 1.0d0 !粘度比（nu2/nu1）
 
     !撹乱（乱数）のオーダー
@@ -48,7 +48,7 @@ module globals
     real(8),parameter:: D = 70.0d0 !設置する液滴直径
     real(8),parameter:: nu1 = 0.001d0 !連続相の粘性係数
     real(8),parameter:: nu2 = eta*nu1 !分散相の粘性係数
-    real(8),parameter:: sigma = (1.32d-9)**(2.0d0/3.0d0)*D**(5.0d0/3.0d0)/We !界面張力
+    real(8),parameter:: sigma = (9.15d-10)**(2.0d0/3.0d0)*D**(5.0d0/3.0d0)/We !界面張力
     real(8),parameter:: kappaf = 0.06d0*ds**2 !界面厚さを決めるパラメータ
     ! real(8),parameter:: phi1 = 2.211d0 !連続相のオーダーパラメータ
     ! real(8),parameter:: phi2 = 4.895d0 !分散相のオーダーパラメータ
@@ -71,9 +71,9 @@ module globals
     real(8),parameter:: epsilon = (nu1**3.0d0) / (kolmogorov_scale**4.0d0) !エネルギー注入率
 
     !初期液滴中心
-    real(8), parameter:: xc = 0.5d0*dble(xmax)	
-    real(8), parameter:: yc = 0.5d0*dble(ymax)
-    real(8), parameter:: zc = 0.5d0*dble(zmax)
+    ! real(8), parameter:: xc = 0.5d0*dble(xmax)	
+    ! real(8), parameter:: yc = 0.5d0*dble(ymax)
+    ! real(8), parameter:: zc = 0.5d0*dble(zmax)
 
     !粒子速度（整数）
     integer,parameter:: cx(15) = (/0, 1, 0,  0, -1,  0,  0,  1, -1,  1,  1, -1,  1, -1, -1/)
@@ -93,7 +93,7 @@ module globals
                                 1.d0/24.d0, 1.d0/24.d0, 1.d0/24.d0, 1.d0/24.d0 /)
 
     !その他変数
-    real(8) phi_min, phi_max, min, max
+    real(8) phi_min, phi_max, saidai, saisyo
     real(8) gtemp, ftemp
     real(8) dif
     integer grobalx, grobaly, grobalz
@@ -611,22 +611,22 @@ contains
         !$omp end do
         !$omp end parallel
 
-        min = phi2
-        max = phi1
+        saisyo = phi2
+        saidai = phi1
         do zi=1,zmax+1
             do yi=1,y_procs
                 do xi=1,x_procs
-                    if(phi_procs(xi,yi,zi) > max) then
-                        max = phi_procs(xi,yi,zi)
-                    elseif(phi_procs(xi,yi,zi) < min) then
-                        min = phi_procs(xi,yi,zi)
+                    if(phi_procs(xi,yi,zi) > saidai) then
+                        saidai = phi_procs(xi,yi,zi)
+                    elseif(phi_procs(xi,yi,zi) < saisyo) then
+                        saisyo = phi_procs(xi,yi,zi)
                     endif
                 enddo
             enddo
         enddo
 
-        call MPI_Allreduce(max,phi_max,1,MPI_REAL8,MPI_MAX,MPI_COMM_WORLD,ierr)
-        call MPI_Allreduce(min,phi_min,1,MPI_REAL8,MPI_MIN,MPI_COMM_WORLD,ierr)
+        call MPI_Allreduce(saidai,phi_max,1,MPI_REAL8,MPI_MAX,MPI_COMM_WORLD,ierr)
+        call MPI_Allreduce(saisyo,phi_min,1,MPI_REAL8,MPI_MIN,MPI_COMM_WORLD,ierr)
 
         !$omp parallel
         !$omp do
@@ -786,7 +786,7 @@ contains
                     k_index = int( k_abs ) + 1
 
                     if((k_index > 1) .and. (k_index < kc + 1)) then
-                        energy_procs = energy_procs + 0.5d0 * (abs(u1_hat(k1,k2,k3))**2 + abs(u2_hat(k1,k2,k3))**2 + abs(u3_hat(k1,k2,k3))**2)
+                        energy_procs = energy_procs + 0.5d0 * (abs(u1_hat(k1,k2,k3))**2 + abs(u2_hat(k1,k2,k3))**2 + abs(u3_hat(k1,k2,k3))**2) * min(2.0d0, dble(k3)+1.0d0)
                     endif
                 enddo
             enddo
@@ -955,6 +955,16 @@ use glassman
     complex(kind(0d0)), allocatable :: forcex_hat(:,:,:), forcey_hat(:,:,:), forcez_hat(:,:,:)
     real(8),allocatable :: forcex_re(:,:,:), forcey_re(:,:,:), forcez_re(:,:,:)
 
+    !乱数
+    real(8),allocatable :: x_m(:,:,:), y_m(:,:,:)
+    real(8) eps, eps2
+    integer seedsize
+    integer, allocatable :: seeds(:), seeds2(:)
+    integer seed, seed2
+
+    !初期液滴中心
+    real(8) xc, yc, zc
+
 !!!!!!!!!!!!!!!!!!!!!!!!!!設定!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
     !MPI並列開始
     call MPI_Init(ierr)
@@ -968,6 +978,13 @@ use glassman
     call ini(g_procs,gnext_procs,f_procs,fnext_procs,feq_procs,geq_procs,phi_procs,p_procs,u1_procs,u2_procs,u3_procs,grad_phi_procs,gphi_procs,lap_phi_procs,p0_procs,grad_u_procs)
     call ini_op(taug_procs,nu_procs,phi_procs,forcex,forcey,forcez)
     call ini_fft(u1_hat,u2_hat,u3_hat,u1_procs_re,u2_procs_re,u3_procs_re,forcex_hat,forcey_hat,forcez_hat,forcex_re,forcey_re,forcez_re)
+
+    allocate(x_m(1:x_procs,1:y_procs,1:zmax+1))
+    allocate(y_m(1:x_procs,1:y_procs,1:zmax+1))
+
+    call random_seed(size=seedsize)
+    allocate(seeds(1:seedsize))
+    allocate(seeds2(1:seedsize))
 !!!!!!!!!!!!!!!!!!!!!!!時間発展開始!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
     call MPI_Barrier(MPI_COMM_WORLD, ierr)
     time1 = MPI_Wtime()
@@ -995,7 +1012,35 @@ DO  case_num = case_initial_num, case_end_num
     forcex(:,:,:) = 0.0d0
     forcey(:,:,:) = 0.0d0
     forcez(:,:,:) = 0.0d0
+    !乱数生成
+    seed = 0
+    call system_clock(seed)
+    do i=1,seedsize
+        seeds(i) = seed + i
+    enddo
+    call random_seed(put=seeds)
+    call random_number(eps)
+    xc = dble(xmax)*eps
+
+    seed = 0
+    call system_clock(seed)
+    do i=1,seedsize
+        seeds(i) = seed + i
+    enddo
+    call random_seed(put=seeds)
+    call random_number(eps)
+    yc = dble(ymax)*eps
+
+    seed = 0
+    call system_clock(seed)
+    do i=1,seedsize
+        seeds(i) = seed + i
+    enddo
+    call random_seed(put=seeds)
+    call random_number(eps)
+    zc = dble(zmax)*eps
 !===================================初期条件の設定================================================
+    
     do zi=1,zmax+1
         do yi=1,y_procs
             do xi=1,x_procs
@@ -1054,7 +1099,8 @@ DO  case_num = case_initial_num, case_end_num
     DO n=1,step
     !============================流れの入力（撹乱を添加）=========================================
         if(n == step_input) then
-            write(filename2,*) step_input_file_num + (case_num-1)*step_input_bin
+            ! write(filename2,*) step_input_file_num + (case_num-1)*step_input_bin
+            write(filename2,*) step_input_file_num
             write(filename3,*) comm_rank
             filename=datadir_input//'0_'//trim(adjustl(filename3))//'_'//trim(adjustl(filename2))//'_fg.bin' !adjustlで左寄せにしてからtrimで末尾の空白除去，拡張子等をくっつける
             print *, filename !表示してみる

@@ -615,9 +615,9 @@ contains
         do zi=1,zmax+1
             do yi=1,y_procs
                 do xi=1,x_procs
-                    if(phi_procs(xi,yi,zi) > max) then
+                    if(phi_procs(xi,yi,zi) > saidai) then
                         saidai = phi_procs(xi,yi,zi)
-                    elseif(phi_procs(xi,yi,zi) < min) then
+                    elseif(phi_procs(xi,yi,zi) < saisyo) then
                         saisyo = phi_procs(xi,yi,zi)
                     endif
                 enddo
