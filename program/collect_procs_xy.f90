@@ -28,8 +28,8 @@ use globals
     ! character(*),parameter :: datadir = "/data/sht/nakanog/droplet_test/"
     ! !ディレクトリ作成
     ! character(*),parameter :: datadir2 = "/data/sht/nakanog/droplet_test/gnu/"
-    character(*),parameter :: datadir = "/data/sht/nakanog/DNS_turbulence_256_IHT_new/case6/"
-    character(*),parameter :: datadir2 = "/data/sht/nakanog/DNS_turbulence_256_IHT_new/case6/collect/"
+    character(*),parameter :: datadir = "/data/sht/nakanog/IHT_drop_d70_we5/"
+    character(*),parameter :: datadir2 = "/data/sht/nakanog/IHT_drop_d70_we5/collect/"
     real(8) phi(0:xmax,0:ymax,0:zmax)
     real(8) u1(0:xmax,0:ymax,0:zmax)
     real(8) u2(0:xmax,0:ymax,0:zmax)
@@ -71,7 +71,7 @@ use globals
             endif
 
             set = 20
-            open(set, file=datadir//"0_"//trim(file_num)//"_"//trim(file_num2)//".bin", form="unformatted")
+            open(set, file=datadir//"1_"//trim(file_num)//"_"//trim(file_num2)//".bin", form="unformatted")
             do zi = 1, zmax+1
                 do yi = 1, y_procs
                     do xi = 1, x_procs
@@ -101,7 +101,7 @@ use globals
         enddo
         
         write(filename,*) step !i->filename 変換
-        filename=datadir2//trim(adjustl(filename))//'.bin' !adjustlで左寄せにしてからtrimで末尾の空白除去，拡張子等をくっつける
+        filename=datadir2//"1_"//trim(adjustl(filename))//'.bin' !adjustlで左寄せにしてからtrimで末尾の空白除去，拡張子等をくっつける
         print *, filename !表示してみる
         open(11, file=filename, form="unformatted", status='replace') 
         do zi=0,zmax

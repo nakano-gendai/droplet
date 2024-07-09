@@ -6,10 +6,10 @@ module globals
     real(8),parameter :: dy = 1.0d0
     real(8),parameter :: dz = 1.0d0
     !読み込みディレクトリー
-    character(*),parameter :: dir = "/data/sht/nakanog/DNS_turbulence_256_IHT_new/case6/"
+    character(*),parameter :: dir = "/data/sht/nakanog/IHT_drop_d70_we5/collect/"
     ! character(*),parameter :: dir = "./"
     !出力ディレクトリー
-    character(*),parameter :: datadir = "/data/sht/nakanog/DNS_turbulence_256_IHT_new/case6/collect/vtk/"
+    character(*),parameter :: datadir = "/data/sht/nakanog/IHT_drop_d70_we5/collect/vtk1/"
     ! character(*),parameter :: datadir = "./"
     ! !読み込みディレクトリー
     ! character(*),parameter :: dir = "/data/sht/nakanog/taylor_re12000_ran/ens2/collect/"
@@ -43,7 +43,7 @@ contains
             write(file_num,"(i7)") step
         endif
         ! open(20, file=dir//"10004000_m.bin", form='unformatted')
-        open(20, file=dir//trim(file_num)//".bin", form='unformatted')
+        open(20, file=dir//'1_'//trim(file_num)//".bin", form='unformatted')
         do k = 1, nz
             do j = 1, ny
                 do i = 1, nx
