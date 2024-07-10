@@ -22,17 +22,17 @@ module globals
     integer,parameter:: xall = (xmax + 1) * Nxall !全体のx方向格子数
     integer,parameter:: yall = (ymax + 1) * Nyall !全体のz方向格子数
     !時間に関するパラメータ
-    integer,parameter:: step = 100000 !計算時間step
+    integer,parameter:: step = 80000 !計算時間step
     integer,parameter:: step_input = 5000 !速度場入力時間step
     integer,parameter:: step_input_file_num = 600000 !case1での入力する乱流場のstep
     integer,parameter:: step_input_bin = 40000 !入力する乱流場のstep間隔
-    integer,parameter:: case_initial_num = 36 !最初のケース番号
-    integer,parameter:: case_end_num = 40 !最後のケース番号
+    integer,parameter:: case_initial_num = 21 !最初のケース番号
+    integer,parameter:: case_end_num = 25 !最後のケース番号
     !入力ディレクトリ
     character(*),parameter :: datadir_input = "/data/sht/nakanog/DNS_turbulence_256_IHT_new/fg/"
     !出力ディレクトリ
-    character(*),parameter :: datadir_output = "/data/sht/nakanog/IHT_drop_d70_we5_2/"
-    character(*),parameter :: datadir_output_fg = "/data/sht/nakanog/IHT_drop_d70_we5_2/fg/"
+    character(*),parameter :: datadir_output = "/data/sht/nakanog/IHT_drop_d70_we5/"
+    character(*),parameter :: datadir_output_fg = "/data/sht/nakanog/IHT_drop_d70_we5/fg/"
     integer,parameter:: step_output = 1000
     integer,parameter:: step_putput_fg = 100000
 
@@ -49,19 +49,20 @@ module globals
     real(8),parameter:: nu1 = 0.001d0 !連続相の粘性係数
     real(8),parameter:: nu2 = eta*nu1 !分散相の粘性係数
     real(8),parameter:: sigma = (9.15d-10)**(2.0d0/3.0d0)*D**(5.0d0/3.0d0)/We !界面張力
-    real(8),parameter:: kappaf = 0.06d0*ds**2 !界面厚さを決めるパラメータ
     ! real(8),parameter:: phi1 = 2.211d0 !連続相のオーダーパラメータ
     ! real(8),parameter:: phi2 = 4.895d0 !分散相のオーダーパラメータ
     ! real(8),parameter:: a = 9.0d0/49.0d0
     ! real(8),parameter:: b = 2.0d0/21.0d0
     ! real(8),parameter:: T = 0.55d0
     ! real(8),parameter:: kappag = (sigma/1.7039d0)**(1.0d0/0.9991d0)  !界面張力を決めるパラメータ
+    ! real(8),parameter:: kappaf = 0.01d0*ds**2 !界面厚さを決めるパラメータ
     real(8),parameter:: phi1 = 2.638d-1 !連続相のオーダーパラメータ
     real(8),parameter:: phi2 = 4.031d-1 !分散相のオーダーパラメータ
     real(8),parameter:: a = 1.0d0
     real(8),parameter:: b = 1.0d0
     real(8),parameter:: T = 2.93d-1
     real(8),parameter:: kappag = sigma / (2.95d-3) !kappaf=0.06のときの近似式
+    real(8),parameter:: kappaf = 0.06d0*ds**2 !界面厚さを決めるパラメータ
     real(8),parameter:: tauf = 0.7d0 !緩和時間
     real(8),parameter:: Anu = 0.0d0 !粘性係数が小さいときに値を入れると良い
 
@@ -948,6 +949,7 @@ use glassman
     !その他変数
     integer n, xi, yi, zi, i
     integer case_num
+    integer i_rank, Nxx, Nyy, k_rank
 
     !波数空間の変数
     complex(kind(0d0)), allocatable :: u1_hat(:,:,:), u2_hat(:,:,:), u3_hat(:,:,:)
@@ -964,6 +966,10 @@ use glassman
 
     !初期液滴中心
     real(8) xc, yc, zc
+
+    !出力変数
+    real(8),allocatable :: phiout(:,:,:,:)
+    real(8),allocatable :: phi_all(:,:,:)
 
 !!!!!!!!!!!!!!!!!!!!!!!!!!設定!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
     !MPI並列開始
@@ -985,6 +991,9 @@ use glassman
     call random_seed(size=seedsize)
     allocate(seeds(1:seedsize))
     allocate(seeds2(1:seedsize))
+
+    allocate(phiout(0:x_procs+1,0:y_procs+1,0:zmax+2,0:comm_procs-1))
+    allocate(phi_all(-1:xmax+1,-1:ymax+1,-1:zmax+1))
 !!!!!!!!!!!!!!!!!!!!!!!時間発展開始!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
     call MPI_Barrier(MPI_COMM_WORLD, ierr)
     time1 = MPI_Wtime()
@@ -1013,32 +1022,36 @@ DO  case_num = case_initial_num, case_end_num
     forcey(:,:,:) = 0.0d0
     forcez(:,:,:) = 0.0d0
     !乱数生成
-    seed = 0
-    call system_clock(seed)
-    do i=1,seedsize
-        seeds(i) = seed + i*case_num*1
-    enddo
-    call random_seed(put=seeds)
-    call random_number(eps)
-    xc = dble(xmax)*eps
+    ! seed = 0
+    ! call system_clock(seed)
+    ! do i=1,seedsize
+    !     seeds(i) = i*case_num*1
+    ! enddo
+    ! call random_seed(put=seeds)
+    ! call random_number(eps)
+    ! xc = dble(xmax)*eps
 
-    seed = 0
-    call system_clock(seed)
-    do i=1,seedsize
-        seeds(i) = seed + i*case_num*100
-    enddo
-    call random_seed(put=seeds)
-    call random_number(eps)
-    yc = dble(ymax)*eps
+    ! seed = 0
+    ! call system_clock(seed)
+    ! do i=1,seedsize
+    !     seeds(i) = i*case_num*1000
+    ! enddo
+    ! call random_seed(put=seeds)
+    ! call random_number(eps)
+    ! yc = dble(ymax)*eps
 
-    seed = 0
-    call system_clock(seed)
-    do i=1,seedsize
-        seeds(i) = seed + i*case_num*10000
-    enddo
-    call random_seed(put=seeds)
-    call random_number(eps)
-    zc = dble(zmax)*eps
+    ! seed = 0
+    ! call system_clock(seed)
+    ! do i=1,seedsize
+    !     seeds(i) = i*case_num*100000
+    ! enddo
+    ! call random_seed(put=seeds)
+    ! call random_number(eps)
+    ! zc = dble(zmax)*eps
+
+    xc = dble(xmax)*0.18d0*dble(case_num - case_initial_num+1)
+    yc = dble(ymax)*0.9d0
+    zc = dble(zmax)*0.9d0
 
     if(comm_rank == 0) then
         if(case_num == case_initial_num) then
@@ -1052,7 +1065,6 @@ DO  case_num = case_initial_num, case_end_num
         endif
     endif
 !===================================初期条件の設定================================================
-    
     do zi=1,zmax+1
         do yi=1,y_procs
             do xi=1,x_procs
@@ -1081,8 +1093,6 @@ DO  case_num = case_initial_num, case_end_num
     call gphi_cal(gphi_procs,grad_phi_procs)
     call equilibrium_cal(gphi_procs,phi_procs,p0_procs,lap_phi_procs,grad_phi_procs,grad_u_procs,p_procs,u1_procs,u2_procs,u3_procs,f_procs,g_procs)
 
-    !$omp parallel
-    !$omp do
     do zi=1,zmax+1
         do yi=1,y_procs
             do xi=1,x_procs
@@ -1091,8 +1101,6 @@ DO  case_num = case_initial_num, case_end_num
             enddo
         enddo
     enddo
-    !$omp end do
-    !$omp end parallel
 
     u1_procs_re(:,:,:) = 0.0d0
     u2_procs_re(:,:,:) = 0.0d0
@@ -1167,9 +1175,9 @@ DO  case_num = case_initial_num, case_end_num
     !==========================物理量の計算(OMP)=====================================================
         call physics(phi_procs,p_procs,u1_procs,u2_procs,u3_procs,f_procs,g_procs,nu_procs,taug_procs,fnext_procs,gnext_procs)
     !================================出力==================================
-        if((mod(n,step_output)==0)) then
-            call output(phi_procs,u1_procs,u2_procs,u3_procs,p_procs,n,case_num)
-        endif
+    !     if((mod(n,step_output)==0)) then
+    !         call output(phi_procs,u1_procs,u2_procs,u3_procs,p_procs,n,case_num)
+    !     endif
 
         ! if(mod(n,step_putput_fg)==0) then
         !     call outputfg(f_procs,g_procs,n)
@@ -1190,8 +1198,55 @@ DO  case_num = case_initial_num, case_end_num
                 endif
             endif
         endif
-    ENDDO
 
+        if(mod(n,step_output)==0) then
+            !まとめて出力
+            do i_rank = 0, comm_procs-1
+                if(comm_rank == i_rank) then
+                    call MPI_Isend(phi_procs(0,0,0),(x_procs+2)*(y_procs+2)*(zmax+3),MPI_REAL8,0,1,MPI_COMM_WORLD,req1s,ierr)
+                    call MPI_Wait(req1s,sta1s,ierr)
+                endif
+                if(comm_rank == 0) then
+                    call MPI_Irecv(phiout(0,0,0,i_rank),(x_procs+2)*(y_procs+2)*(zmax+3),MPI_REAL8,i_rank,1,MPI_COMM_WORLD,req1r,ierr)
+                    call MPI_Wait(req1r,sta1r,ierr)
+                endif
+            enddo
+
+            if(comm_rank == 0) then
+                k_rank = 0
+                do Nxx=0,Nx-1
+                    do Nyy=0,Ny-1
+                        do zi=1,zmax+1
+                            do yi=1,y_procs
+                                do xi=1,x_procs
+                                    phi_all((xi-1)+Nxx*x_procs,(yi-1)+Nyy*y_procs,zi-1) = phiout(xi,yi,zi,k_rank)
+                                enddo
+                            enddo
+                        enddo
+                        k_rank = k_rank + 1
+                    enddo
+                enddo
+            endif
+
+            if(comm_rank == 0) then
+                write(filename,*) case_num !i->filename 変換
+                write(filename2,*) n
+
+                filename=datadir_output//trim(adjustl(filename))//'_'//trim(adjustl(filename2))//'.bin' 
+
+                open(100,file=filename, form='unformatted',status='replace')
+                do zi=0,zmax
+                    do yi=0,ymax
+                        do xi=0,xmax
+                            write(100) phi_all(xi,yi,zi)
+                        enddo
+                    enddo
+                enddo
+                close(100)
+            endif
+        endif
+
+    ENDDO
 ENDDO
 !!!!!!!!!!!!!!!!!!MPI並列とFFT終わり!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
     call MPI_Finalize(ierr)
