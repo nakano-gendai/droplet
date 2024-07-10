@@ -13,9 +13,9 @@ module globals
     include 'fftw3.f'
     !計算領域
     real(8),parameter:: ds = 1.0d0 !格子間隔（lattice unit）
-    integer,parameter:: xmax = 255 !ｘ方向格子数（０から数える）
-    integer,parameter:: ymax = 255 !ｙ方向格子数（０から数える）
-    integer,parameter:: zmax = 255 !ｚ方向格子数（０から数える）
+    integer,parameter:: xmax = 35 !ｘ方向格子数（０から数える）
+    integer,parameter:: ymax = 35 !ｙ方向格子数（０から数える）
+    integer,parameter:: zmax = 35 !ｚ方向格子数（０から数える）
     !並行して計算する数
     integer,parameter:: Nxall = 1 !x方向の分割数（Nxall*Nzall=全体の計算数）
     integer,parameter:: Nyall = 1 !z方向の分割数（Nxall*Nzall=全体の計算数）
@@ -24,20 +24,18 @@ module globals
     !時間に関するパラメータ
     integer,parameter:: step = 100000 !計算時間step
     integer,parameter:: step_input = 5000 !速度場入力時間step
-    integer,parameter:: step_input_file_num = 600000 !case1での入力する乱流場のstep
-    integer,parameter:: step_input_bin = 40000 !入力する乱流場のstep間隔
-    integer,parameter:: case_initial_num = 36 !最初のケース番号
-    integer,parameter:: case_end_num = 40 !最後のケース番号
+    integer,parameter:: step_input_file_num = 600000 !入力する乱流場のstep
     !入力ディレクトリ
     character(*),parameter :: datadir_input = "/data/sht/nakanog/DNS_turbulence_256_IHT_new/fg/"
     !出力ディレクトリ
-    character(*),parameter :: datadir_output = "/data/sht/nakanog/IHT_drop_d70_we5_2/"
-    character(*),parameter :: datadir_output_fg = "/data/sht/nakanog/IHT_drop_d70_we5_2/fg/"
+    character(*),parameter :: datadir_output = "/data/sht/nakanog/mpi_test/"
+    ! character(*),parameter :: datadir_output = "/data/sht/nakanog/DNS_turbulence_256_IHT/case26/"
+    character(*),parameter :: datadir_output_fg = "/data/sht/nakanog/DNS_turbulence_256_IHT_new/case6/fg/"
     integer,parameter:: step_output = 1000
     integer,parameter:: step_putput_fg = 100000
 
     !無次元数
-    real(8),parameter:: We = 5.0d0 !ウェーバー数
+    real(8),parameter:: We = 20.0d0 !ウェーバー数
     real(8),parameter:: eta = 1.0d0 !粘度比（nu2/nu1）
 
     !撹乱（乱数）のオーダー
@@ -45,11 +43,11 @@ module globals
 
     !支配パラメータ
     real(8),parameter:: pi = acos(-1.0d0) !円周率
-    real(8),parameter:: D = 70.0d0 !設置する液滴直径
+    real(8),parameter:: D = 16.0d0 !設置する液滴直径
     real(8),parameter:: nu1 = 0.001d0 !連続相の粘性係数
     real(8),parameter:: nu2 = eta*nu1 !分散相の粘性係数
     real(8),parameter:: sigma = (9.15d-10)**(2.0d0/3.0d0)*D**(5.0d0/3.0d0)/We !界面張力
-    real(8),parameter:: kappaf = 0.06d0*ds**2 !界面厚さを決めるパラメータ
+    ! real(8),parameter:: kappaf = 0.01d0*ds**2 !界面厚さを決めるパラメータ
     ! real(8),parameter:: phi1 = 2.211d0 !連続相のオーダーパラメータ
     ! real(8),parameter:: phi2 = 4.895d0 !分散相のオーダーパラメータ
     ! real(8),parameter:: a = 9.0d0/49.0d0
@@ -62,6 +60,7 @@ module globals
     real(8),parameter:: b = 1.0d0
     real(8),parameter:: T = 2.93d-1
     real(8),parameter:: kappag = sigma / (2.95d-3) !kappaf=0.06のときの近似式
+    real(8),parameter:: kappaf = 0.06d0*ds**2 !界面厚さを決めるパラメータ
     real(8),parameter:: tauf = 0.7d0 !緩和時間
     real(8),parameter:: Anu = 0.0d0 !粘性係数が小さいときに値を入れると良い
 
@@ -71,9 +70,9 @@ module globals
     real(8),parameter:: epsilon = (nu1**3.0d0) / (kolmogorov_scale**4.0d0) !エネルギー注入率
 
     !初期液滴中心
-    ! real(8), parameter:: xc = 0.5d0*dble(xmax)	
-    ! real(8), parameter:: yc = 0.5d0*dble(ymax)
-    ! real(8), parameter:: zc = 0.5d0*dble(zmax)
+    real(8), parameter:: xc = 0.5d0*dble(xmax)	
+    real(8), parameter:: yc = 0.5d0*dble(ymax)
+    real(8), parameter:: zc = 0.5d0*dble(zmax)
 
     !粒子速度（整数）
     integer,parameter:: cx(15) = (/0, 1, 0,  0, -1,  0,  0,  1, -1,  1,  1, -1,  1, -1, -1/)
@@ -119,6 +118,9 @@ module globals
     integer, dimension(MPI_STATUS_SIZE) :: sta1s, sta1r, sta2s, sta2r
     integer tags, tagr, recv_rank
     character(2) chmyrank
+    !MPI I/O用変数
+    integer fh
+    integer, dimension(MPI_STATUS_SIZE) :: staio
     !2decomp用変数
     integer, save:: sta(1:3), last(1:3), sized(1:3) 
 
@@ -149,7 +151,7 @@ contains
 
     !========================並列数・コミュニケータ分割・通信先設定========================
         !配列のallocate(xi:0とx_procs+1がのりしろ)(yi:0とymax+2がのりしろ)(zi:0とz_procs+1がのりしろ)
-        Nx = 32 !x方向の並列数（ただし，Nx/=comm_procs）
+        Nx = 3 !x方向の並列数（ただし，Nx/=comm_procs）
         Ny = comm_procs / (Nx * Nxall * Nyall) !z方向の並列数
         x_procs = (xmax+1) / Nx
         y_procs = (ymax+1) / Ny
@@ -230,34 +232,34 @@ contains
         grad_u_procs(:,:,:,:,:) = 0.0d0
 
 !===================================初期条件の設定================================================
-        ! do zi=1,zmax+1
-        !     do yi=1,y_procs
-        !         do xi=1,x_procs
-        !             grobalx = (xi-1) + comm_rank_x * x_procs
-        !             grobaly = (yi-1) + comm_rank_y * y_procs
-        !             grobalz = (zi-1)
-        !             dif = (dble(grobalx)*ds-xc)**2 + (dble(grobaly)*ds-yc)**2 + (dble(grobalz)*ds-zc)**2
-        !             if(dif <= (0.5d0*D)**2) then
-        !                 phi_procs(xi,yi,zi) = phi2
-        !             else
-        !                 phi_procs(xi,yi,zi) = phi1
-        !             endif
-        !             u1_procs(xi,yi,zi) = 0.0d0
-        !             u2_procs(xi,yi,zi) = 0.0d0
-        !             u3_procs(xi,yi,zi) = 0.0d0
-        !             p_procs(xi,yi,zi) = 1.0d0 / 3.0d0
-        !         enddo
-        !     enddo
-        ! enddo
+        do zi=1,zmax+1
+            do yi=1,y_procs
+                do xi=1,x_procs
+                    grobalx = (xi-1) + comm_rank_x * x_procs
+                    grobaly = (yi-1) + comm_rank_y * y_procs
+                    grobalz = (zi-1)
+                    dif = (dble(grobalx)*ds-xc)**2 + (dble(grobaly)*ds-yc)**2 + (dble(grobalz)*ds-zc)**2
+                    if(dif <= (0.5d0*D)**2) then
+                        phi_procs(xi,yi,zi) = phi2
+                    else
+                        phi_procs(xi,yi,zi) = phi1
+                    endif
+                    u1_procs(xi,yi,zi) = 0.0d0
+                    u2_procs(xi,yi,zi) = 0.0d0
+                    u3_procs(xi,yi,zi) = 0.0d0
+                    p_procs(xi,yi,zi) = 1.0d0 / 3.0d0
+                enddo
+            enddo
+        enddo
 
-        ! call glue(phi_procs)
-        ! call glue(u1_procs)
-        ! call glue(u2_procs)
-        ! call glue(u3_procs)
-        ! call various_cal(lap_phi_procs,grad_phi_procs,grad_u_procs,p0_procs,phi_procs,u1_procs,u2_procs,u3_procs)
-        ! call gphi_cal(gphi_procs,grad_phi_procs)
+        call glue(phi_procs)
+        call glue(u1_procs)
+        call glue(u2_procs)
+        call glue(u3_procs)
+        call various_cal(lap_phi_procs,grad_phi_procs,grad_u_procs,p0_procs,phi_procs,u1_procs,u2_procs,u3_procs)
+        call gphi_cal(gphi_procs,grad_phi_procs)
         
-        ! call equilibrium_cal(gphi_procs,phi_procs,p0_procs,lap_phi_procs,grad_phi_procs,grad_u_procs,p_procs,u1_procs,u2_procs,u3_procs,f_procs,g_procs)
+        call equilibrium_cal(gphi_procs,phi_procs,p0_procs,lap_phi_procs,grad_phi_procs,grad_u_procs,p_procs,u1_procs,u2_procs,u3_procs,f_procs,g_procs)
 
         if(comm_rank == 0) then
             open(121,file="./para.d")
@@ -285,18 +287,18 @@ contains
         forcey(:,:,:) = 0.0d0
         forcez(:,:,:) = 0.0d0
 
-        ! !$omp parallel
-        ! !$omp do
-        ! do zi=1,zmax+1
-        !     do yi=1,y_procs
-        !         do xi=1,x_procs
-        !             nu_procs(xi,yi,zi) = (phi_procs(xi,yi,zi)-phi1)/(phi2-phi1)*(nu2-nu1) + nu1
-        !             taug_procs(xi,yi,zi) = 0.5d0 + 3.0d0 * nu_procs(xi,yi,zi)/ds + 2.0d0/3.0d0 * Anu
-        !         enddo
-        !     enddo
-        ! enddo
-        ! !$omp end do
-        ! !$omp end parallel
+        !$omp parallel
+        !$omp do
+        do zi=1,zmax+1
+            do yi=1,y_procs
+                do xi=1,x_procs
+                    nu_procs(xi,yi,zi) = (phi_procs(xi,yi,zi)-phi1)/(phi2-phi1)*(nu2-nu1) + nu1
+                    taug_procs(xi,yi,zi) = 0.5d0 + 3.0d0 * nu_procs(xi,yi,zi)/ds + 2.0d0/3.0d0 * Anu
+                enddo
+            enddo
+        enddo
+        !$omp end do
+        !$omp end parallel
     end subroutine ini_op
 
     subroutine ini_fft(u1_hat,u2_hat,u3_hat,u1_procs_re,u2_procs_re,u3_procs_re,forcex_hat,forcey_hat,forcez_hat,forcex_re,forcey_re,forcez_re)
@@ -841,32 +843,46 @@ contains
         !$omp end parallel
     endsubroutine externalforce
 
-    subroutine output(phi_procs,u1_procs,u2_procs,u3_procs,p_procs,n,case_num)
+    subroutine output(phi_procs,u1_procs,u2_procs,u3_procs,p_procs,n)
         real(8),intent(inout):: phi_procs(0:x_procs+1,0:y_procs+1,0:zmax+2)
         real(8),intent(inout):: p_procs(0:x_procs+1,0:y_procs+1,0:zmax+2)
         real(8),intent(inout):: u1_procs(0:x_procs+1,0:y_procs+1,0:zmax+2)
         real(8),intent(inout):: u2_procs(0:x_procs+1,0:y_procs+1,0:zmax+2)
         real(8),intent(inout):: u3_procs(0:x_procs+1,0:y_procs+1,0:zmax+2)
         integer,intent(in):: n
-        integer,intent(in):: case_num
         integer xi, yi, zi
+        integer(kind=mpi_offset_kind) idisp
 
-        write(filename,*) case_num !i->filename 変換
+        ! idisp = 0 + (x_procs+1)*(y_procs+1)*(zmax+1) * comm_rank
+        idisp = (x_procs+1) * comm_rank_x
+
+        ! write(filename,*) group_new !i->filename 変換
         write(filename2,*) n
         write(filename3,*) comm_rank
+        ! filename=datadir//trim(adjustl(filename))//'_'//trim(adjustl(filename3))//'_'//trim(adjustl(filename2))//'.bin' 
+        ! filename=datadir_output//'0_'//trim(adjustl(filename3))//'_'//trim(adjustl(filename2))//'.bin' 
 
-        filename=datadir_output//trim(adjustl(filename))//'_'//trim(adjustl(filename3))//'_'//trim(adjustl(filename2))//'.bin' 
-
-        print *, filename !表示してみる
-        open(100,file=filename, form='unformatted',status='replace')
-        do zi=1,zmax+1
-            do yi=1,y_procs
-                do xi=1,x_procs
-                    write(100) phi_procs(xi,yi,zi), u1_procs(xi,yi,zi), u2_procs(xi,yi,zi), u3_procs(xi,yi,zi), p_procs(xi,yi,zi)
-                enddo
+        ! print *, filename !表示してみる
+        ! open(100,file=filename, form='unformatted',status='replace')
+        ! do zi=1,zmax+1
+        !     do yi=1,y_procs
+        !         do xi=1,x_procs
+        !             write(100) phi_procs(xi,yi,zi), u1_procs(xi,yi,zi), u2_procs(xi,yi,zi), u3_procs(xi,yi,zi), p_procs(xi,yi,zi)
+        !         enddo
+        !     enddo
+        ! enddo
+        ! close(100)
+        filename=datadir_output//trim(adjustl(filename2))//'.bin' 
+        call mpi_file_open(MPI_COMM_WORLD, filename, MPI_MODE_CREATE+MPI_MODE_RDWR, MPI_INFO_NULL, fh, ierr)
+        call mpi_file_set_view(fh, idisp, MPI_REAL, MPI_REAL,'native', MPI_INFO_NULL, ierr)
+        do zi = 1, zmax+1
+            do yi = 1, y_procs
+                ! do xi = 1, x_procs
+                    call mpi_file_write_all(fh, phi_procs(1,yi,zi), (x_procs+1), MPI_REAL, staio, ierr)
+                ! enddo
             enddo
         enddo
-        close(100)
+        call mpi_file_close(fh, ierr)
     end subroutine output
 
     subroutine outputfg(f_procs, g_procs, n)
@@ -947,23 +963,12 @@ use glassman
 
     !その他変数
     integer n, xi, yi, zi, i
-    integer case_num
 
     !波数空間の変数
     complex(kind(0d0)), allocatable :: u1_hat(:,:,:), u2_hat(:,:,:), u3_hat(:,:,:)
     real(8),allocatable :: u1_procs_re(:,:,:), u2_procs_re(:,:,:), u3_procs_re(:,:,:)
     complex(kind(0d0)), allocatable :: forcex_hat(:,:,:), forcey_hat(:,:,:), forcez_hat(:,:,:)
     real(8),allocatable :: forcex_re(:,:,:), forcey_re(:,:,:), forcez_re(:,:,:)
-
-    !乱数
-    real(8),allocatable :: x_m(:,:,:), y_m(:,:,:)
-    real(8) eps, eps2
-    integer seedsize
-    integer, allocatable :: seeds(:), seeds2(:)
-    integer seed, seed2
-
-    !初期液滴中心
-    real(8) xc, yc, zc
 
 !!!!!!!!!!!!!!!!!!!!!!!!!!設定!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
     !MPI並列開始
@@ -972,227 +977,99 @@ use glassman
     call MPI_Comm_Rank(MPI_COMM_WORLD, comm_rank, ierr)
     !ディレクトリの作成
     call mk_dirs(datadir_output)
-    call mk_dirs(datadir_output_fg)
+!     call mk_dirs(datadir_output_fg)
     !初期条件・配列のallocate
     call par(cx,cy,cz,cr,krone)
     call ini(g_procs,gnext_procs,f_procs,fnext_procs,feq_procs,geq_procs,phi_procs,p_procs,u1_procs,u2_procs,u3_procs,grad_phi_procs,gphi_procs,lap_phi_procs,p0_procs,grad_u_procs)
     call ini_op(taug_procs,nu_procs,phi_procs,forcex,forcey,forcez)
     call ini_fft(u1_hat,u2_hat,u3_hat,u1_procs_re,u2_procs_re,u3_procs_re,forcex_hat,forcey_hat,forcez_hat,forcex_re,forcey_re,forcez_re)
+! !!!!!!!!!!!!!!!!!!!!!!!時間発展開始!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+!     call MPI_Barrier(MPI_COMM_WORLD, ierr)
+!     time1 = MPI_Wtime()
+! DO n=1,step
+! !============================流れの入力（撹乱を添加）=========================================
+!     if(n == step_input) then
+!         write(filename2,*) step_input_file_num
+!         write(filename3,*) comm_rank
+!         filename=datadir_input//'0_'//trim(adjustl(filename3))//'_'//trim(adjustl(filename2))//'_fg.bin' !adjustlで左寄せにしてからtrimで末尾の空白除去，拡張子等をくっつける
+!         print *, filename !表示してみる
+!         open(103, file=filename, form="unformatted")
+!         do zi=1,zmax+1
+!             do yi=1,y_procs
+!                 do xi=1,x_procs
+!                     do i=1,15
+!                         read(103) g_procs(i,xi,yi,zi)
+!                         ! read(103) dummy, g_procs(i,xi,yi,zi)
+!                     enddo
+!                 enddo
+!             enddo
+!         enddo
+!         close(103)
 
-    allocate(x_m(1:x_procs,1:y_procs,1:zmax+1))
-    allocate(y_m(1:x_procs,1:y_procs,1:zmax+1))
+!         do zi=1,zmax+1
+!             do yi=1,y_procs
+!                 do xi=1,x_procs
+!                     p_procs(xi,yi,zi) = 0.0d0
+!                     u1_procs(xi,yi,zi) = 0.0d0
+!                     u2_procs(xi,yi,zi) = 0.0d0
+!                     u3_procs(xi,yi,zi) = 0.0d0
+!                     do i=1,15
+!                         p_procs(xi,yi,zi) = p_procs(xi,yi,zi) + g_procs(i,xi,yi,zi) / 3.0d0
+!                         u1_procs(xi,yi,zi) = u1_procs(xi,yi,zi) + dble(cx(i))*g_procs(i,xi,yi,zi)
+!                         u2_procs(xi,yi,zi) = u2_procs(xi,yi,zi) + dble(cy(i))*g_procs(i,xi,yi,zi)
+!                         u3_procs(xi,yi,zi) = u3_procs(xi,yi,zi) + dble(cz(i))*g_procs(i,xi,yi,zi)
+!                     enddo
+!                 enddo
+!             enddo
+!         enddo
+!     endif
 
-    call random_seed(size=seedsize)
-    allocate(seeds(1:seedsize))
-    allocate(seeds2(1:seedsize))
-!!!!!!!!!!!!!!!!!!!!!!!時間発展開始!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
-    call MPI_Barrier(MPI_COMM_WORLD, ierr)
-    time1 = MPI_Wtime()
+!     if(n >= step_input) then
+!         !外力
+!         call externalforce(forcex,forcey,forcez,forcex_re,forcey_re,forcez_re,forcex_hat,forcey_hat,forcez_hat, &
+!         u1_procs,u2_procs,u3_procs,u1_procs_re,u2_procs_re,u3_procs_re,u1_hat,u2_hat,u3_hat)
+!         call glue(forcex)
+!         call glue(forcey)
+!         call glue(forcez)
+!     endif
+! !========================のりしろ境界=======================================================
+!     call MPI_boundary(phi_procs,u1_procs,u2_procs,u3_procs,f_procs,g_procs,taug_procs)
+! !=======================諸変数の計算(OMP)======================================================
+!     call various_cal(lap_phi_procs,grad_phi_procs,grad_u_procs,p0_procs,phi_procs,u1_procs,u2_procs,u3_procs)
+!     call gphi_cal(gphi_procs,grad_phi_procs)
+! !=======================局所平衡分布関数の計算(OMP)==============================================
+!     call equilibrium_cal(gphi_procs,phi_procs,p0_procs,lap_phi_procs,grad_phi_procs,grad_u_procs,p_procs,u1_procs,u2_procs,u3_procs,feq_procs,geq_procs)
+!     call MPI_boundary_fg(feq_procs,geq_procs)
+! !=======================平衡分布関数fgの計算(OMP)=================================================
+!     call fg_cal(fnext_procs,f_procs,feq_procs,gnext_procs,g_procs,geq_procs,taug_procs,forcex,forcey,forcez)
+! !==========================物理量の計算(OMP)=====================================================
+!     call physics(phi_procs,p_procs,u1_procs,u2_procs,u3_procs,f_procs,g_procs,nu_procs,taug_procs,fnext_procs,gnext_procs)
+! !================================出力==================================
+!     if((mod(n,step_output)==0)) then
+        n = 1
+        call output(phi_procs,u1_procs,u2_procs,u3_procs,p_procs,n)
+!     endif
 
-DO  case_num = case_initial_num, case_end_num
-    !初期化
-    phi_procs(:,:,:) = 0.0d0
-    p_procs(:,:,:) = 0.0d0
-    u1_procs(:,:,:) = 0.0d0
-    u2_procs(:,:,:) = 0.0d0
-    u3_procs(:,:,:) = 0.0d0
-    feq_procs(:,:,:,:) = 0.0d0
-    f_procs(:,:,:,:) = 0.0d0
-    fnext_procs(:,:,:,:) = 0.0d0
-    geq_procs(:,:,:,:) = 0.0d0
-    g_procs(:,:,:,:) = 0.0d0
-    gnext_procs(:,:,:,:) = 0.0d0
-    p0_procs(:,:,:) = 0.0d0
-    lap_phi_procs(:,:,:) = 0.0d0
-    grad_phi_procs(:,:,:,:) = 0.0d0
-    gphi_procs(:,:,:,:,:) = 0.0d0
-    grad_u_procs(:,:,:,:,:) = 0.0d0
-    taug_procs(:,:,:) = 0.0d0
-    nu_procs(:,:,:) = 0.0d0
-    forcex(:,:,:) = 0.0d0
-    forcey(:,:,:) = 0.0d0
-    forcez(:,:,:) = 0.0d0
-    !乱数生成
-    seed = 0
-    call system_clock(seed)
-    do i=1,seedsize
-        seeds(i) = seed + i*case_num*1
-    enddo
-    call random_seed(put=seeds)
-    call random_number(eps)
-    xc = dble(xmax)*eps
+!     if(mod(n,step_putput_fg)==0) then
+!         call outputfg(f_procs,g_procs,n)
+!     endif
 
-    seed = 0
-    call system_clock(seed)
-    do i=1,seedsize
-        seeds(i) = seed + i*case_num*100
-    enddo
-    call random_seed(put=seeds)
-    call random_number(eps)
-    yc = dble(ymax)*eps
-
-    seed = 0
-    call system_clock(seed)
-    do i=1,seedsize
-        seeds(i) = seed + i*case_num*10000
-    enddo
-    call random_seed(put=seeds)
-    call random_number(eps)
-    zc = dble(zmax)*eps
-
-    if(comm_rank == 0) then
-        if(case_num == case_initial_num) then
-            open(10,file="./xg.d")
-            write(10,*) case_num ,xc, yc, zc
-            close(10)
-        else
-            open(10,file="./xg.d",action="write",position="append")
-            write(10,*) case_num ,xc, yc, zc
-            close(10)
-        endif
-    endif
-!===================================初期条件の設定================================================
-    
-    do zi=1,zmax+1
-        do yi=1,y_procs
-            do xi=1,x_procs
-                grobalx = (xi-1) + comm_rank_x * x_procs
-                grobaly = (yi-1) + comm_rank_y * y_procs
-                grobalz = (zi-1)
-                dif = (dble(grobalx)*ds-xc)**2 + (dble(grobaly)*ds-yc)**2 + (dble(grobalz)*ds-zc)**2
-                if(dif <= (0.5d0*D)**2) then
-                    phi_procs(xi,yi,zi) = phi2
-                else
-                    phi_procs(xi,yi,zi) = phi1
-                endif
-                u1_procs(xi,yi,zi) = 0.0d0
-                u2_procs(xi,yi,zi) = 0.0d0
-                u3_procs(xi,yi,zi) = 0.0d0
-                p_procs(xi,yi,zi) = 1.0d0 / 3.0d0
-            enddo
-        enddo
-    enddo
-
-    call glue(phi_procs)
-    call glue(u1_procs)
-    call glue(u2_procs)
-    call glue(u3_procs)
-    call various_cal(lap_phi_procs,grad_phi_procs,grad_u_procs,p0_procs,phi_procs,u1_procs,u2_procs,u3_procs)
-    call gphi_cal(gphi_procs,grad_phi_procs)
-    call equilibrium_cal(gphi_procs,phi_procs,p0_procs,lap_phi_procs,grad_phi_procs,grad_u_procs,p_procs,u1_procs,u2_procs,u3_procs,f_procs,g_procs)
-
-    !$omp parallel
-    !$omp do
-    do zi=1,zmax+1
-        do yi=1,y_procs
-            do xi=1,x_procs
-                nu_procs(xi,yi,zi) = (phi_procs(xi,yi,zi)-phi1)/(phi2-phi1)*(nu2-nu1) + nu1
-                taug_procs(xi,yi,zi) = 0.5d0 + 3.0d0 * nu_procs(xi,yi,zi)/ds + 2.0d0/3.0d0 * Anu
-            enddo
-        enddo
-    enddo
-    !$omp end do
-    !$omp end parallel
-
-    u1_procs_re(:,:,:) = 0.0d0
-    u2_procs_re(:,:,:) = 0.0d0
-    u3_procs_re(:,:,:) = 0.0d0
-    u1_hat(:,:,:) = (0.0d0, 0.0d0)
-    u2_hat(:,:,:) = (0.0d0, 0.0d0)
-    u3_hat(:,:,:) = (0.0d0, 0.0d0)
-
-    forcex_re(:,:,:) = 0.0d0
-    forcey_re(:,:,:) = 0.0d0
-    forcez_re(:,:,:) = 0.0d0
-    forcex_hat(:,:,:) = (0.0d0, 0.0d0)
-    forcey_hat(:,:,:) = (0.0d0, 0.0d0)
-    forcez_hat(:,:,:) = (0.0d0, 0.0d0)
-
-    DO n=1,step
-    !============================流れの入力（撹乱を添加）=========================================
-        if(n == step_input) then
-            ! write(filename2,*) step_input_file_num + (case_num-1)*step_input_bin
-            write(filename2,*) step_input_file_num
-            write(filename3,*) comm_rank
-            filename=datadir_input//'0_'//trim(adjustl(filename3))//'_'//trim(adjustl(filename2))//'_fg.bin' !adjustlで左寄せにしてからtrimで末尾の空白除去，拡張子等をくっつける
-            print *, filename !表示してみる
-            open(103, file=filename, form="unformatted")
-            do zi=1,zmax+1
-                do yi=1,y_procs
-                    do xi=1,x_procs
-                        do i=1,15
-                            read(103) g_procs(i,xi,yi,zi)
-                        enddo
-                    enddo
-                enddo
-            enddo
-            close(103)
-
-            do zi=1,zmax+1
-                do yi=1,y_procs
-                    do xi=1,x_procs
-                        p_procs(xi,yi,zi) = 0.0d0
-                        u1_procs(xi,yi,zi) = 0.0d0
-                        u2_procs(xi,yi,zi) = 0.0d0
-                        u3_procs(xi,yi,zi) = 0.0d0
-                        do i=1,15
-                            p_procs(xi,yi,zi) = p_procs(xi,yi,zi) + g_procs(i,xi,yi,zi) / 3.0d0
-                            u1_procs(xi,yi,zi) = u1_procs(xi,yi,zi) + dble(cx(i))*g_procs(i,xi,yi,zi)
-                            u2_procs(xi,yi,zi) = u2_procs(xi,yi,zi) + dble(cy(i))*g_procs(i,xi,yi,zi)
-                            u3_procs(xi,yi,zi) = u3_procs(xi,yi,zi) + dble(cz(i))*g_procs(i,xi,yi,zi)
-                        enddo
-                    enddo
-                enddo
-            enddo
-        endif
-
-        if(n >= step_input) then
-            !外力
-            call externalforce(forcex,forcey,forcez,forcex_re,forcey_re,forcez_re,forcex_hat,forcey_hat,forcez_hat, &
-            u1_procs,u2_procs,u3_procs,u1_procs_re,u2_procs_re,u3_procs_re,u1_hat,u2_hat,u3_hat)
-            call glue(forcex)
-            call glue(forcey)
-            call glue(forcez)
-        endif
-    !========================のりしろ境界=======================================================
-        call MPI_boundary(phi_procs,u1_procs,u2_procs,u3_procs,f_procs,g_procs,taug_procs)
-    !=======================諸変数の計算(OMP)======================================================
-        call various_cal(lap_phi_procs,grad_phi_procs,grad_u_procs,p0_procs,phi_procs,u1_procs,u2_procs,u3_procs)
-        call gphi_cal(gphi_procs,grad_phi_procs)
-    !=======================局所平衡分布関数の計算(OMP)==============================================
-        call equilibrium_cal(gphi_procs,phi_procs,p0_procs,lap_phi_procs,grad_phi_procs,grad_u_procs,p_procs,u1_procs,u2_procs,u3_procs,feq_procs,geq_procs)
-        call MPI_boundary_fg(feq_procs,geq_procs)
-    !=======================平衡分布関数fgの計算(OMP)=================================================
-        call fg_cal(fnext_procs,f_procs,feq_procs,gnext_procs,g_procs,geq_procs,taug_procs,forcex,forcey,forcez)
-    !==========================物理量の計算(OMP)=====================================================
-        call physics(phi_procs,p_procs,u1_procs,u2_procs,u3_procs,f_procs,g_procs,nu_procs,taug_procs,fnext_procs,gnext_procs)
-    !================================出力==================================
-        if((mod(n,step_output)==0)) then
-            call output(phi_procs,u1_procs,u2_procs,u3_procs,p_procs,n,case_num)
-        endif
-
-        ! if(mod(n,step_putput_fg)==0) then
-        !     call outputfg(f_procs,g_procs,n)
-        ! endif
-
-        call MPI_Barrier(MPI_COMM_WORLD, ierr)
-        time2 = MPI_Wtime()
-        if(comm_rank == 0) then
-            if(mod(n,100)==0) then
-                if(n == 100) then
-                    open(10,file="./time.d")
-                    write(10,*) n, case_num ,time2-time1, u1_procs(1,1,1)
-                    close(10)
-                else
-                    open(10,file="./time.d",action="write",position="append")
-                    write(10,*) n, case_num ,time2-time1, u1_procs(1,1,1)
-                    close(10)
-                endif
-            endif
-        endif
-    ENDDO
-
-ENDDO
+!     call MPI_Barrier(MPI_COMM_WORLD, ierr)
+!     time2 = MPI_Wtime()
+!     if(comm_rank == 0) then
+!         if(mod(n,100)==0) then
+!             if(n == 100) then
+!                 open(10,file="./time.d")
+!                 write(10,*) n, time2-time1, u1_procs(1,1,1)
+!                 close(10)
+!             else
+!                 open(10,file="./time.d",action="write",position="append")
+!                 write(10,*) n, time2-time1, u1_procs(1,1,1)
+!                 close(10)
+!             endif
+!         endif
+!     endif
+! ENDDO
 !!!!!!!!!!!!!!!!!!MPI並列とFFT終わり!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
     call MPI_Finalize(ierr)
 end program main
