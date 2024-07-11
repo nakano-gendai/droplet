@@ -22,7 +22,7 @@ module globals
     integer,parameter:: xall = (xmax + 1) * Nxall !全体のx方向格子数
     integer,parameter:: yall = (ymax + 1) * Nyall !全体のz方向格子数
     !時間に関するパラメータ
-    integer,parameter:: step = 80000 !計算時間step
+    integer,parameter:: step = 75000 !計算時間step
     integer,parameter:: step_input = 5000 !速度場入力時間step
     integer,parameter:: step_input_file_num = 600000 !case1での入力する乱流場のstep
     integer,parameter:: step_input_bin = 40000 !入力する乱流場のstep間隔
@@ -32,6 +32,7 @@ module globals
     character(*),parameter :: datadir_input = "/data/sht/nakanog/DNS_turbulence_256_IHT_new/fg/"
     !出力ディレクトリ
     character(*),parameter :: datadir_output = "/data/sht/nakanog/IHT_drop_d70_we5/"
+    character(*),parameter :: datadir_output2 = "/data/sht/nakanog/IHT_drop_d70_we5/contribution/"
     character(*),parameter :: datadir_output_fg = "/data/sht/nakanog/IHT_drop_d70_we5/fg/"
     integer,parameter:: step_output = 1000
     integer,parameter:: step_putput_fg = 100000
@@ -267,10 +268,12 @@ contains
         endif
     end subroutine ini
 
-    subroutine ini_op(taug_procs,nu_procs,phi_procs,forcex,forcey,forcez)
+    subroutine ini_op(taug_procs,nu_procs,phi_procs,forcex,forcey,forcez,korteweg_procs,interaction_procs)
         real(8),intent(in):: phi_procs(0:x_procs+1,0:y_procs+1,0:zmax+2)
         real(8),allocatable :: taug_procs(:,:,:), nu_procs(:,:,:)
         real(8),allocatable :: forcex(:,:,:), forcey(:,:,:), forcez(:,:,:)
+        real(8),allocatable :: korteweg_procs(:,:,:,:,:)
+        real(8),allocatable :: interaction_procs(:,:,:)
         integer xi, yi, zi
 
         !以下はのりしろ無しの変数
@@ -279,12 +282,16 @@ contains
         allocate(forcez(0:x_procs+1,0:y_procs+1,0:zmax+2))
         allocate(taug_procs(0:x_procs+1,0:y_procs+1,0:zmax+2))
         allocate(nu_procs(1:x_procs,1:y_procs,1:zmax+1))
+        allocate(korteweg_procs(1:3,1:3,1:x_procs,1:y_procs,1:zmax+1))
+        allocate(interaction_procs(1:x_procs,1:y_procs,1:zmax+1))
 
         taug_procs(:,:,:) = 0.0d0
         nu_procs(:,:,:) = 0.0d0
         forcex(:,:,:) = 0.0d0
         forcey(:,:,:) = 0.0d0
         forcez(:,:,:) = 0.0d0
+        korteweg_procs(:,:,:,:,:) = 0.0d0
+        interaction_procs(:,:,:) = 0.0d0
 
         ! !$omp parallel
         ! !$omp do
@@ -300,11 +307,14 @@ contains
         ! !$omp end parallel
     end subroutine ini_op
 
-    subroutine ini_fft(u1_hat,u2_hat,u3_hat,u1_procs_re,u2_procs_re,u3_procs_re,forcex_hat,forcey_hat,forcez_hat,forcex_re,forcey_re,forcez_re)
+    subroutine ini_fft(u1_hat,u2_hat,u3_hat,u1_procs_re,u2_procs_re,u3_procs_re,forcex_hat,forcey_hat,forcez_hat,forcex_re,forcey_re,forcez_re,u1_procs_scale,u2_procs_scale,u3_procs_scale,u1_hat2,u2_hat2,u3_hat2,u1_procs_re2,u2_procs_re2,u3_procs_re2)
         complex(kind(0d0)), allocatable :: u1_hat(:,:,:), u2_hat(:,:,:), u3_hat(:,:,:)
         real(8),allocatable :: u1_procs_re(:,:,:), u2_procs_re(:,:,:), u3_procs_re(:,:,:)
         complex(kind(0d0)), allocatable :: forcex_hat(:,:,:), forcey_hat(:,:,:), forcez_hat(:,:,:)
         real(8),allocatable :: forcex_re(:,:,:), forcey_re(:,:,:), forcez_re(:,:,:)
+        real(8),allocatable :: u1_procs_scale(:,:,:), u2_procs_scale(:,:,:), u3_procs_scale(:,:,:)
+        complex(kind(0d0)), allocatable :: u1_hat2(:,:,:), u2_hat2(:,:,:), u3_hat2(:,:,:)
+        real(8),allocatable :: u1_procs_re2(:,:,:), u2_procs_re2(:,:,:), u3_procs_re2(:,:,:)
 
         call decomp_2d_init(xmax+1, ymax+1, zmax+1, Nx, Ny)
         call decomp_2d_fft_init(PHYSICAL_IN_Z)
@@ -337,8 +347,80 @@ contains
         forcex_hat(:,:,:) = (0.0d0, 0.0d0)
         forcey_hat(:,:,:) = (0.0d0, 0.0d0)
         forcez_hat(:,:,:) = (0.0d0, 0.0d0)
+
+        allocate(u1_procs_scale(0:x_procs+1,0:y_procs+1,0:zmax+2))
+        allocate(u2_procs_scale(0:x_procs+1,0:y_procs+1,0:zmax+2))
+        allocate(u3_procs_scale(0:x_procs+1,0:y_procs+1,0:zmax+2))
+        allocate(u1_procs_re2(0:x_procs-1, 0:y_procs-1, 0:zmax))
+        allocate(u2_procs_re2(0:x_procs-1, 0:y_procs-1, 0:zmax))
+        allocate(u3_procs_re2(0:x_procs-1, 0:y_procs-1, 0:zmax))
+        allocate(u1_hat2(sta(1)-1:last(1)-1, sta(2)-1:last(2)-1, sta(3)-1:last(3)-1))
+        allocate(u2_hat2(sta(1)-1:last(1)-1, sta(2)-1:last(2)-1, sta(3)-1:last(3)-1))
+        allocate(u3_hat2(sta(1)-1:last(1)-1, sta(2)-1:last(2)-1, sta(3)-1:last(3)-1))
+        u1_procs_scale(:,:,:) = 0.0d0
+        u2_procs_scale(:,:,:) = 0.0d0
+        u3_procs_scale(:,:,:) = 0.0d0
+        u1_hat2(:,:,:) = (0.0d0, 0.0d0)
+        u2_hat2(:,:,:) = (0.0d0, 0.0d0)
+        u3_hat2(:,:,:) = (0.0d0, 0.0d0)
+        u1_procs_re2(:,:,:) = 0.0d0
+        u2_procs_re2(:,:,:) = 0.0d0
+        u3_procs_re2(:,:,:) = 0.0d0
     end subroutine ini_fft
 
+    subroutine ini_energy3(tensor11,tensor12,tensor13,tensor21,tensor22,tensor23,tensor31,tensor32,tensor33)
+        real(8),allocatable :: tensor11(:,:,:), tensor12(:,:,:), tensor13(:,:,:)
+        real(8),allocatable :: tensor21(:,:,:), tensor22(:,:,:), tensor23(:,:,:)
+        real(8),allocatable :: tensor31(:,:,:), tensor32(:,:,:), tensor33(:,:,:)
+
+        !以下はのりしろ無しの変数
+        allocate(tensor11(0:x_procs+1,0:y_procs+1,0:zmax+2))
+        allocate(tensor12(0:x_procs+1,0:y_procs+1,0:zmax+2))
+        allocate(tensor13(0:x_procs+1,0:y_procs+1,0:zmax+2))
+        allocate(tensor21(0:x_procs+1,0:y_procs+1,0:zmax+2))
+        allocate(tensor22(0:x_procs+1,0:y_procs+1,0:zmax+2))
+        allocate(tensor23(0:x_procs+1,0:y_procs+1,0:zmax+2))
+        allocate(tensor31(0:x_procs+1,0:y_procs+1,0:zmax+2))
+        allocate(tensor32(0:x_procs+1,0:y_procs+1,0:zmax+2))
+        allocate(tensor33(0:x_procs+1,0:y_procs+1,0:zmax+2))
+
+        tensor11(:,:,:) = 0.0d0
+        tensor12(:,:,:) = 0.0d0
+        tensor13(:,:,:) = 0.0d0
+        tensor21(:,:,:) = 0.0d0
+        tensor22(:,:,:) = 0.0d0
+        tensor23(:,:,:) = 0.0d0
+        tensor31(:,:,:) = 0.0d0
+        tensor32(:,:,:) = 0.0d0
+        tensor33(:,:,:) = 0.0d0
+    end subroutine ini_energy3
+
+    subroutine ini_energy5(grad_tensor11,grad_tensor12,grad_tensor13,grad_tensor21,grad_tensor22,grad_tensor23,grad_tensor31,grad_tensor32,grad_tensor33)
+        real(8),allocatable :: grad_tensor11(:,:,:), grad_tensor12(:,:,:), grad_tensor13(:,:,:)
+        real(8),allocatable :: grad_tensor21(:,:,:), grad_tensor22(:,:,:), grad_tensor23(:,:,:)
+        real(8),allocatable :: grad_tensor31(:,:,:), grad_tensor32(:,:,:), grad_tensor33(:,:,:)
+
+        !以下はのりしろ無しの変数
+        allocate(grad_tensor11(0:x_procs+1,0:y_procs+1,0:zmax+2))
+        allocate(grad_tensor12(0:x_procs+1,0:y_procs+1,0:zmax+2))
+        allocate(grad_tensor13(0:x_procs+1,0:y_procs+1,0:zmax+2))
+        allocate(grad_tensor21(0:x_procs+1,0:y_procs+1,0:zmax+2))
+        allocate(grad_tensor22(0:x_procs+1,0:y_procs+1,0:zmax+2))
+        allocate(grad_tensor23(0:x_procs+1,0:y_procs+1,0:zmax+2))
+        allocate(grad_tensor31(0:x_procs+1,0:y_procs+1,0:zmax+2))
+        allocate(grad_tensor32(0:x_procs+1,0:y_procs+1,0:zmax+2))
+        allocate(grad_tensor33(0:x_procs+1,0:y_procs+1,0:zmax+2))
+
+        grad_tensor11(:,:,:) = 0.0d0
+        grad_tensor12(:,:,:) = 0.0d0
+        grad_tensor13(:,:,:) = 0.0d0
+        grad_tensor21(:,:,:) = 0.0d0
+        grad_tensor22(:,:,:) = 0.0d0
+        grad_tensor23(:,:,:) = 0.0d0
+        grad_tensor31(:,:,:) = 0.0d0
+        grad_tensor32(:,:,:) = 0.0d0
+        grad_tensor33(:,:,:) = 0.0d0
+    end subroutine ini_energy5
 
     subroutine glue(var)
         real(8),intent(inout) :: var(0:x_procs+1,0:y_procs+1,0:zmax+2)
@@ -842,6 +924,100 @@ contains
         !$omp end parallel
     endsubroutine externalforce
 
+    subroutine korteweg_cal(grad_phi_procs,korteweg_procs)
+        real(8),intent(in):: grad_phi_procs(1:3,1:x_procs,1:y_procs,1:zmax+1)
+        real(8),intent(inout):: korteweg_procs(1:3,1:3,1:x_procs,1:y_procs,1:zmax+1)
+
+        do zi = 1, zmax + 1
+            do yi = 1, y_procs
+                do xi = 1, x_procs
+                    do beta = 1, 3
+                        do alpha = 1, 3
+                            korteweg_procs(alpha,beta,xi,yi,zi) = grad_phi_procs(alpha,xi,yi,zi)*grad_phi_procs(beta,xi,yi,zi)
+                        enddo
+                    enddo
+                enddo
+            enddo
+        enddo
+    end subroutine korteweg_cal
+
+    subroutine scale_cal2(u1_procs,u2_procs,u3_procs,u1_procs_re2,u2_procs_re2,u3_procs_re2,u1_hat2,u2_hat2,u3_hat2,k_analysis,u1_procs_scale,u2_procs_scale,u3_procs_scale)
+        real(8),intent(inout):: u1_procs(0:x_procs+1,0:y_procs+1,0:zmax+2)
+        real(8),intent(inout):: u2_procs(0:x_procs+1,0:y_procs+1,0:zmax+2)
+        real(8),intent(inout):: u3_procs(0:x_procs+1,0:y_procs+1,0:zmax+2)
+        real(8),intent(inout):: u1_procs_re2(0:x_procs-1, 0:y_procs-1, 0:zmax)
+        real(8),intent(inout):: u2_procs_re2(0:x_procs-1, 0:y_procs-1, 0:zmax)
+        real(8),intent(inout):: u3_procs_re2(0:x_procs-1, 0:y_procs-1, 0:zmax)
+        complex(kind(0d0)), intent(inout) :: u1_hat2(sta(1)-1:last(1)-1, sta(2)-1:last(2)-1, sta(3)-1:last(3)-1)
+        complex(kind(0d0)), intent(inout) :: u2_hat2(sta(1)-1:last(1)-1, sta(2)-1:last(2)-1, sta(3)-1:last(3)-1)
+        complex(kind(0d0)), intent(inout) :: u3_hat2(sta(1)-1:last(1)-1, sta(2)-1:last(2)-1, sta(3)-1:last(3)-1)
+        integer,intent(in) :: k_analysis
+        real(8),intent(inout):: u1_procs_scale(0:x_procs+1,0:y_procs+1,0:zmax+2)
+        real(8),intent(inout):: u2_procs_scale(0:x_procs+1,0:y_procs+1,0:zmax+2)
+        real(8),intent(inout):: u3_procs_scale(0:x_procs+1,0:y_procs+1,0:zmax+2)
+        integer xi, yi, zi
+        integer k1, k2, k3, k(1:3), k_index
+        real(8) k_abs
+
+        !u_hatの配列数と合わせる
+        do zi=1,zmax+1
+            do yi=1,y_procs
+                do xi=1,x_procs
+                    u1_procs_re2(xi-1,yi-1,zi-1) = u1_procs(xi,yi,zi)
+                    u2_procs_re2(xi-1,yi-1,zi-1) = u2_procs(xi,yi,zi)
+                    u3_procs_re2(xi-1,yi-1,zi-1) = u3_procs(xi,yi,zi)
+                enddo
+            enddo
+        enddo
+
+        !フーリエ変換（実数→複素数）
+        call fft_r2c(u1_procs_re2, u1_hat2)
+        call fft_r2c(u2_procs_re2, u2_hat2)
+        call fft_r2c(u3_procs_re2, u3_hat2)
+
+        !バンドパスフィルターをかける
+        do k3=sta(3)-1,last(3)-1
+            k(3) = k3 - judge(k3, zmax+1)
+            do k2=sta(2)-1,last(2)-1
+                k(2) = k2 - judge(k2, ymax+1)
+                do k1=sta(1)-1,last(1)-1
+                    k(1) = k1 - judge(k1, xmax+1)
+
+                    k_abs = ( dble(k(1))**2.0d0 + dble(k(2))**2.0d0 + dble(k(3))**2.0d0 )**0.5d0
+                    k_index = int( k_abs ) + 1
+
+                    if(k_index - 1 == k_analysis) then
+                        u1_hat2(k1,k2,k3) = u1_hat2(k1,k2,k3)
+                        u2_hat2(k1,k2,k3) = u2_hat2(k1,k2,k3)
+                        u3_hat2(k1,k2,k3) = u3_hat2(k1,k2,k3)
+                    else
+                        u1_hat2(k1,k2,k3) = (0.0d0, 0.0d0)
+                        u2_hat2(k1,k2,k3) = (0.0d0, 0.0d0)
+                        u3_hat2(k1,k2,k3) = (0.0d0, 0.0d0)
+                    endif
+                enddo
+            enddo
+        enddo
+
+        u1_procs_re2(:,:,:) = 0.0d0
+        u2_procs_re2(:,:,:) = 0.0d0
+        u3_procs_re2(:,:,:) = 0.0d0
+        !逆フーリエ変換（複素数→実数）
+        call fft_c2r(u1_hat2, u1_procs_re2)
+        call fft_c2r(u2_hat2, u2_procs_re2)
+        call fft_c2r(u3_hat2, u3_procs_re2)
+
+        do zi=1,zmax+1
+            do yi=1,y_procs
+                do xi=1,x_procs
+                    u1_procs_scale(xi,yi,zi) = u1_procs_re2(xi-1,yi-1,zi-1)
+                    u2_procs_scale(xi,yi,zi) = u2_procs_re2(xi-1,yi-1,zi-1)
+                    u3_procs_scale(xi,yi,zi) = u3_procs_re2(xi-1,yi-1,zi-1)
+                enddo
+            enddo
+        enddo
+    end subroutine scale_cal2
+
     subroutine output(phi_procs,u1_procs,u2_procs,u3_procs,p_procs,n,case_num)
         real(8),intent(inout):: phi_procs(0:x_procs+1,0:y_procs+1,0:zmax+2)
         real(8),intent(inout):: p_procs(0:x_procs+1,0:y_procs+1,0:zmax+2)
@@ -971,6 +1147,25 @@ use glassman
     real(8),allocatable :: phiout(:,:,:,:)
     real(8),allocatable :: phi_all(:,:,:)
 
+    !寄与を評価するための変数
+    real(8),allocatable :: korteweg_procs(:,:,:,:,:)
+    real(8),allocatable :: interaction_procs(:,:,:)
+    real(8),allocatable :: tensor11(:,:,:), tensor12(:,:,:), tensor13(:,:,:)
+    real(8),allocatable :: tensor21(:,:,:), tensor22(:,:,:), tensor23(:,:,:)
+    real(8),allocatable :: tensor31(:,:,:), tensor32(:,:,:), tensor33(:,:,:)
+
+    real(8),allocatable :: grad_tensor11(:,:,:), grad_tensor12(:,:,:), grad_tensor13(:,:,:)
+    real(8),allocatable :: grad_tensor21(:,:,:), grad_tensor22(:,:,:), grad_tensor23(:,:,:)
+    real(8),allocatable :: grad_tensor31(:,:,:), grad_tensor32(:,:,:), grad_tensor33(:,:,:)
+
+    real(8),allocatable :: u1_procs_scale(:,:,:), u2_procs_scale(:,:,:), u3_procs_scale(:,:,:)
+    complex(kind(0d0)), allocatable :: u1_hat2(:,:,:), u2_hat2(:,:,:), u3_hat2(:,:,:)
+    real(8),allocatable :: u1_procs_re2(:,:,:), u2_procs_re2(:,:,:), u3_procs_re2(:,:,:)
+
+    real(8) interaction_sum, interaction_all
+    integer k_analysis, k_analysis_step
+    real(8),allocatable :: contribution_each_scale(:,:)
+
 !!!!!!!!!!!!!!!!!!!!!!!!!!設定!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
     !MPI並列開始
     call MPI_Init(ierr)
@@ -978,12 +1173,14 @@ use glassman
     call MPI_Comm_Rank(MPI_COMM_WORLD, comm_rank, ierr)
     !ディレクトリの作成
     call mk_dirs(datadir_output)
-    call mk_dirs(datadir_output_fg)
+    call mk_dirs(datadir_output2)
     !初期条件・配列のallocate
     call par(cx,cy,cz,cr,krone)
     call ini(g_procs,gnext_procs,f_procs,fnext_procs,feq_procs,geq_procs,phi_procs,p_procs,u1_procs,u2_procs,u3_procs,grad_phi_procs,gphi_procs,lap_phi_procs,p0_procs,grad_u_procs)
-    call ini_op(taug_procs,nu_procs,phi_procs,forcex,forcey,forcez)
-    call ini_fft(u1_hat,u2_hat,u3_hat,u1_procs_re,u2_procs_re,u3_procs_re,forcex_hat,forcey_hat,forcez_hat,forcex_re,forcey_re,forcez_re)
+    call ini_op(taug_procs,nu_procs,phi_procs,forcex,forcey,forcez,korteweg_procs,interaction_procs)
+    call ini_fft(u1_hat,u2_hat,u3_hat,u1_procs_re,u2_procs_re,u3_procs_re,forcex_hat,forcey_hat,forcez_hat,forcex_re,forcey_re,forcez_re,u1_procs_scale,u2_procs_scale,u3_procs_scale,u1_hat2,u2_hat2,u3_hat2,u1_procs_re2,u2_procs_re2,u3_procs_re2)
+    call ini_energy3(tensor11,tensor12,tensor13,tensor21,tensor22,tensor23,tensor31,tensor32,tensor33)
+    call ini_energy5(grad_tensor11,grad_tensor12,grad_tensor13,grad_tensor21,grad_tensor22,grad_tensor23,grad_tensor31,grad_tensor32,grad_tensor33)
 
     allocate(x_m(1:x_procs,1:y_procs,1:zmax+1))
     allocate(y_m(1:x_procs,1:y_procs,1:zmax+1))
@@ -994,6 +1191,10 @@ use glassman
 
     allocate(phiout(0:x_procs+1,0:y_procs+1,0:zmax+2,0:comm_procs-1))
     allocate(phi_all(-1:xmax+1,-1:ymax+1,-1:zmax+1))
+
+    allocate(contribution_each_scale(step/step_output,(xmax+1)/2 + 1))
+    contribution_each_scale(:,:) = 0.0d0
+    k_analysis_step = 0
 !!!!!!!!!!!!!!!!!!!!!!!時間発展開始!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
     call MPI_Barrier(MPI_COMM_WORLD, ierr)
     time1 = MPI_Wtime()
@@ -1021,6 +1222,7 @@ DO  case_num = case_initial_num, case_end_num
     forcex(:,:,:) = 0.0d0
     forcey(:,:,:) = 0.0d0
     forcez(:,:,:) = 0.0d0
+    k_analysis_step = 0
     !乱数生成
     ! seed = 0
     ! call system_clock(seed)
@@ -1243,6 +1445,156 @@ DO  case_num = case_initial_num, case_end_num
                     enddo
                 enddo
                 close(100)
+            endif
+        endif
+
+        !解析
+        if(mod(n,step_output)==0) then
+            k_analysis_step = k_analysis + 1
+            call korteweg_cal(grad_phi_procs,korteweg_procs)
+            do zi = 1, zmax+1
+                do yi = 1, y_procs
+                    do xi = 1, x_procs
+                        tensor11(xi,yi,zi) = korteweg_procs(1,1,xi,yi,zi)
+                        tensor21(xi,yi,zi) = korteweg_procs(2,1,xi,yi,zi)
+                        tensor31(xi,yi,zi) = korteweg_procs(3,1,xi,yi,zi)
+        
+                        tensor12(xi,yi,zi) = korteweg_procs(1,2,xi,yi,zi)
+                        tensor22(xi,yi,zi) = korteweg_procs(2,2,xi,yi,zi)
+                        tensor32(xi,yi,zi) = korteweg_procs(3,2,xi,yi,zi)
+        
+                        tensor13(xi,yi,zi) = korteweg_procs(1,3,xi,yi,zi)
+                        tensor23(xi,yi,zi) = korteweg_procs(2,3,xi,yi,zi)
+                        tensor33(xi,yi,zi) = korteweg_procs(3,3,xi,yi,zi)
+                    enddo
+                enddo
+            enddo
+            call glue(tensor11)
+            call glue(tensor21)
+            call glue(tensor31)
+        
+            call glue(tensor12)
+            call glue(tensor22)
+            call glue(tensor32)
+        
+            call glue(tensor13)
+            call glue(tensor23)
+            call glue(tensor33)
+        
+            ! alpha = 1
+            do zi=1,zmax+1
+                do yi=1,y_procs
+                    do xi=1,x_procs
+                        grad_tensor11(xi,yi,zi) = 0.0d0
+                        grad_tensor21(xi,yi,zi) = 0.0d0
+                        grad_tensor31(xi,yi,zi) = 0.0d0
+                        do i = 2,15
+                            grad_tensor11(xi,yi,zi) = grad_tensor11(xi,yi,zi) &
+                                                    + cr(1,i)*tensor11(xi+cx(i),yi+cy(i),zi+cz(i))
+                            grad_tensor21(xi,yi,zi) = grad_tensor21(xi,yi,zi) &
+                                                    + cr(1,i)*tensor21(xi+cx(i),yi+cy(i),zi+cz(i))
+                            grad_tensor31(xi,yi,zi) = grad_tensor31(xi,yi,zi) &
+                                                    + cr(1,i)*tensor31(xi+cx(i),yi+cy(i),zi+cz(i))
+                        enddo
+                        grad_tensor11(xi,yi,zi) = grad_tensor11(xi,yi,zi)/(10.0d0*ds)
+                        grad_tensor21(xi,yi,zi) = grad_tensor21(xi,yi,zi)/(10.0d0*ds)
+                        grad_tensor31(xi,yi,zi) = grad_tensor31(xi,yi,zi)/(10.0d0*ds)
+                    enddo
+                enddo
+            enddo
+        
+            ! alpha = 2
+            do zi=1,zmax+1
+                do yi=1,y_procs
+                    do xi=1,x_procs
+                        grad_tensor12(xi,yi,zi) = 0.0d0
+                        grad_tensor22(xi,yi,zi) = 0.0d0
+                        grad_tensor32(xi,yi,zi) = 0.0d0
+                        do i = 2,15
+                            grad_tensor12(xi,yi,zi) = grad_tensor12(xi,yi,zi) &
+                                                    + cr(2,i)*tensor12(xi+cx(i),yi+cy(i),zi+cz(i))
+                            grad_tensor22(xi,yi,zi) = grad_tensor22(xi,yi,zi) &
+                                                    + cr(2,i)*tensor22(xi+cx(i),yi+cy(i),zi+cz(i))
+                            grad_tensor32(xi,yi,zi) = grad_tensor32(xi,yi,zi) &
+                                                    + cr(2,i)*tensor32(xi+cx(i),yi+cy(i),zi+cz(i))
+                        enddo
+                        grad_tensor12(xi,yi,zi) = grad_tensor12(xi,yi,zi)/(10.0d0*ds)
+                        grad_tensor22(xi,yi,zi) = grad_tensor22(xi,yi,zi)/(10.0d0*ds)
+                        grad_tensor32(xi,yi,zi) = grad_tensor32(xi,yi,zi)/(10.0d0*ds)
+                    enddo
+                enddo
+            enddo
+        
+            ! alpha = 3
+            do zi=1,zmax+1
+                do yi=1,y_procs
+                    do xi=1,x_procs
+                        grad_tensor13(xi,yi,zi) = 0.0d0
+                        grad_tensor23(xi,yi,zi) = 0.0d0
+                        grad_tensor33(xi,yi,zi) = 0.0d0
+                        do i = 2,15
+                            grad_tensor13(xi,yi,zi) = grad_tensor13(xi,yi,zi) &
+                                                    + cr(3,i)*tensor13(xi+cx(i),yi+cy(i),zi+cz(i))
+                            grad_tensor23(xi,yi,zi) = grad_tensor23(xi,yi,zi) &
+                                                    + cr(3,i)*tensor23(xi+cx(i),yi+cy(i),zi+cz(i))
+                            grad_tensor33(xi,yi,zi) = grad_tensor33(xi,yi,zi) &
+                                                    + cr(3,i)*tensor33(xi+cx(i),yi+cy(i),zi+cz(i))
+                        enddo
+                        grad_tensor13(xi,yi,zi) = grad_tensor13(xi,yi,zi)/(10.0d0*ds)
+                        grad_tensor23(xi,yi,zi) = grad_tensor23(xi,yi,zi)/(10.0d0*ds)
+                        grad_tensor33(xi,yi,zi) = grad_tensor33(xi,yi,zi)/(10.0d0*ds)
+                    enddo
+                enddo
+            enddo
+
+            !スケール分解して渦の液滴への寄与を見る
+            do k_analysis = 1, (xmax+1)/2 + 1
+                call scale_cal2(u1_procs,u2_procs,u3_procs,u1_procs_re2,u2_procs_re2,u3_procs_re2,u1_hat2,u2_hat2,u3_hat2,k_analysis,u1_procs_scale,u2_procs_scale,u3_procs_scale)
+                call glue(u1_procs_scale)
+                call glue(u2_procs_scale)
+                call glue(u3_procs_scale)
+
+                do zi=1,zmax+1
+                    do yi=1,y_procs
+                        do xi=1,x_procs
+                            interaction_procs(xi,yi,zi) = u1_procs_scale(xi,yi,zi)*grad_tensor11(xi,yi,zi) + u2_procs_scale(xi,yi,zi)*grad_tensor21(xi,yi,zi) + u3_procs_scale(xi,yi,zi)*grad_tensor31(xi,yi,zi) &
+                                                    + u1_procs_scale(xi,yi,zi)*grad_tensor12(xi,yi,zi) + u2_procs_scale(xi,yi,zi)*grad_tensor22(xi,yi,zi) + u3_procs_scale(xi,yi,zi)*grad_tensor32(xi,yi,zi) &
+                                                    + u1_procs_scale(xi,yi,zi)*grad_tensor13(xi,yi,zi) + u2_procs_scale(xi,yi,zi)*grad_tensor23(xi,yi,zi) + u3_procs_scale(xi,yi,zi)*grad_tensor33(xi,yi,zi)
+                            
+                            interaction_procs(xi,yi,zi) = interaction_procs(xi,yi,zi) * kappag
+                        enddo
+                    enddo
+                enddo
+
+                interaction_sum = 0.0d0
+                interaction_all = 0.0d0
+                do zi=1,zmax+1
+                    do yi=1,y_procs
+                        do xi=1,x_procs
+                            interaction_sum = interaction_sum + interaction_procs(xi,yi,zi)
+                        enddo
+                    enddo
+                enddo
+                call MPI_Reduce(interaction_sum, interaction_all, 1, MPI_REAL8, MPI_SUM, 0, MPI_COMM_WORLD, ierr)
+
+                if(comm_rank == 0) then
+                    contribution_each_scale(k_analysis_step,k_analysis) = contribution_each_scale(k_analysis_step,k_analysis) + (interaction_all / (dble(xmax+1)*dble(ymax+1)*dble(zmax+1)))
+                endif
+            enddo
+        endif
+
+        if((case_num == case_end_num).and.(n == step)) then
+            if(comm_rank == 0) then
+                write(filename2,*) case_initial_num !i->filename 変換
+                filename2=datadir_output2//trim(adjustl(filename2))//'_contribution_each_scale.d' 
+
+                open(109,file=filename2, form='formatted',status='replace')
+                do k_analysis=1,(xmax+1)/2 + 1
+                    do k_analysis_step=1,step/step_output
+                        write(109,"(2es16.8)") contribution_each_scale(k_analysis_step,k_analysis) / (step/step_output)
+                    enddo
+                enddo
+                close(109)
             endif
         endif
 
