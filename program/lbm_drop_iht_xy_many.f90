@@ -31,14 +31,14 @@ module globals
     !入力ディレクトリ
     character(*),parameter :: datadir_input = "/data/sht/nakanog/DNS_turbulence_256_IHT_new/fg/"
     !出力ディレクトリ
-    character(*),parameter :: datadir_output = "/data/sht/nakanog/IHT_drop_d70_we5/"
-    character(*),parameter :: datadir_output2 = "/data/sht/nakanog/IHT_drop_d70_we5/u/"
+    character(*),parameter :: datadir_output = "/data/sht/nakanog/IHT_drop_d70_we1.4/"
+    character(*),parameter :: datadir_output2 = "/data/sht/nakanog/IHT_drop_d70_we1.4/u/"
     character(*),parameter :: datadir_output_fg = "/data/sht/nakanog/IHT_drop_d70_we5/fg/"
     integer,parameter:: step_output = 1000
     integer,parameter:: step_putput_fg = 100000
 
     !無次元数
-    real(8),parameter:: We = 5.0d0 !ウェーバー数
+    real(8),parameter:: We = 1.4d0 !ウェーバー数
     real(8),parameter:: eta = 1.0d0 !粘度比（nu2/nu1）
 
     !撹乱（乱数）のオーダー
@@ -107,6 +107,7 @@ module globals
     character :: filename3*200
     character :: filename4*200
     character :: filename5*200
+    character :: filename6*200
 
     !MPI用変数
     integer ierr, comm_procs, comm_rank
@@ -1411,16 +1412,16 @@ DO  case_num = case_initial_num, case_end_num
 
         if(mod(n,step_output)==0) then
             !まとめて出力
-            ! do i_rank = 0, comm_procs-1
-            !     if(comm_rank == i_rank) then
-            !         call MPI_Isend(phi_procs(0,0,0),(x_procs+2)*(y_procs+2)*(zmax+3),MPI_REAL8,0,1,MPI_COMM_WORLD,req1s,ierr)
-            !         call MPI_Wait(req1s,sta1s,ierr)
-            !     endif
-            !     if(comm_rank == 0) then
-            !         call MPI_Irecv(phiout(0,0,0,i_rank),(x_procs+2)*(y_procs+2)*(zmax+3),MPI_REAL8,i_rank,1,MPI_COMM_WORLD,req1r,ierr)
-            !         call MPI_Wait(req1r,sta1r,ierr)
-            !     endif
-            ! enddo
+            do i_rank = 0, comm_procs-1
+                if(comm_rank == i_rank) then
+                    call MPI_Isend(phi_procs(0,0,0),(x_procs+2)*(y_procs+2)*(zmax+3),MPI_REAL8,0,1,MPI_COMM_WORLD,req1s,ierr)
+                    call MPI_Wait(req1s,sta1s,ierr)
+                endif
+                if(comm_rank == 0) then
+                    call MPI_Irecv(phiout(0,0,0,i_rank),(x_procs+2)*(y_procs+2)*(zmax+3),MPI_REAL8,i_rank,1,MPI_COMM_WORLD,req1r,ierr)
+                    call MPI_Wait(req1r,sta1r,ierr)
+                endif
+            enddo
 
             do i_rank = 0, comm_procs-1
                 if(comm_rank == i_rank) then
@@ -1462,7 +1463,7 @@ DO  case_num = case_initial_num, case_end_num
                         do zi=1,zmax+1
                             do yi=1,y_procs
                                 do xi=1,x_procs
-                                    ! phi_all((xi-1)+Nxx*x_procs,(yi-1)+Nyy*y_procs,zi-1) = phiout(xi,yi,zi,k_rank)
+                                    phi_all((xi-1)+Nxx*x_procs,(yi-1)+Nyy*y_procs,zi-1) = phiout(xi,yi,zi,k_rank)
                                     u1_all((xi-1)+Nxx*x_procs,(yi-1)+Nyy*y_procs,zi-1) = u1out(xi,yi,zi,k_rank)
                                     u2_all((xi-1)+Nxx*x_procs,(yi-1)+Nyy*y_procs,zi-1) = u2out(xi,yi,zi,k_rank)
                                     u3_all((xi-1)+Nxx*x_procs,(yi-1)+Nyy*y_procs,zi-1) = u3out(xi,yi,zi,k_rank)
@@ -1480,22 +1481,26 @@ DO  case_num = case_initial_num, case_end_num
                 filename3=datadir_output2//trim(adjustl(filename))//'_'//trim(adjustl(filename2))//'_u1.bin' 
                 filename4=datadir_output2//trim(adjustl(filename))//'_'//trim(adjustl(filename2))//'_u2.bin' 
                 filename5=datadir_output2//trim(adjustl(filename))//'_'//trim(adjustl(filename2))//'_u3.bin' 
+                filename6=datadir_output//trim(adjustl(filename))//'_'//trim(adjustl(filename2))//'.bin' 
 
                 open(100,file=filename3, form='unformatted',status='replace')
                 open(101,file=filename4, form='unformatted',status='replace')
                 open(102,file=filename5, form='unformatted',status='replace')
+                open(103,file=filename6, form='unformatted',status='replace')
                 do zi=0,zmax
                     do yi=0,ymax
                         do xi=0,xmax
                             write(100) u1_all(xi,yi,zi)
                             write(101) u2_all(xi,yi,zi)
                             write(102) u3_all(xi,yi,zi)
+                            write(103) phi_all(xi,yi,zi)
                         enddo
                     enddo
                 enddo
                 close(100)
                 close(101)
                 close(102)
+                close(103)
             endif
         endif
 

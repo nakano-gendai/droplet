@@ -5,7 +5,7 @@ program main
     integer,parameter:: zmax = 255 !ｚ方向格子数（０から数える）
     real(8),parameter:: phi1 = 2.638d-1 !連続相のオーダーパラメータ
     real(8),parameter:: phi2 = 4.031d-1 !分散相のオーダーパラメータ
-    integer,parameter:: case_initial_num = 1 !最初のケース番号
+    integer,parameter:: case_initial_num = 6 !最初のケース番号
     integer,parameter:: case_end_num = 25 !最後のケース番号
 
     real(8) phi(-1:xmax+1,-1:ymax+1,-1:zmax+1)
