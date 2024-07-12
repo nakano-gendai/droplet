@@ -32,7 +32,7 @@ module globals
     character(*),parameter :: datadir_input = "/data/sht/nakanog/DNS_turbulence_256_IHT_new/fg/"
     !出力ディレクトリ
     character(*),parameter :: datadir_output = "/data/sht/nakanog/IHT_drop_d70_we5/"
-    character(*),parameter :: datadir_output2 = "/data/sht/nakanog/IHT_drop_d70_we5/contribution/"
+    character(*),parameter :: datadir_output2 = "/data/sht/nakanog/IHT_drop_d70_we5/u/"
     character(*),parameter :: datadir_output_fg = "/data/sht/nakanog/IHT_drop_d70_we5/fg/"
     integer,parameter:: step_output = 1000
     integer,parameter:: step_putput_fg = 100000
@@ -105,6 +105,8 @@ module globals
     character :: filename*200
     character :: filename2*200
     character :: filename3*200
+    character :: filename4*200
+    character :: filename5*200
 
     !MPI用変数
     integer ierr, comm_procs, comm_rank
@@ -1144,8 +1146,8 @@ use glassman
     real(8) xc, yc, zc
 
     !出力変数
-    real(8),allocatable :: phiout(:,:,:,:)
-    real(8),allocatable :: phi_all(:,:,:)
+    real(8),allocatable :: phiout(:,:,:,:), u1out(:,:,:,:), u2out(:,:,:,:), u3out(:,:,:,:)
+    real(8),allocatable :: phi_all(:,:,:), u1_all(:,:,:), u2_all(:,:,:), u3_all(:,:,:)
 
     !寄与を評価するための変数
     real(8),allocatable :: korteweg_procs(:,:,:,:,:)
@@ -1191,6 +1193,12 @@ use glassman
 
     allocate(phiout(0:x_procs+1,0:y_procs+1,0:zmax+2,0:comm_procs-1))
     allocate(phi_all(-1:xmax+1,-1:ymax+1,-1:zmax+1))
+    allocate(u1out(0:x_procs+1,0:y_procs+1,0:zmax+2,0:comm_procs-1))
+    allocate(u1_all(-1:xmax+1,-1:ymax+1,-1:zmax+1))
+    allocate(u2out(0:x_procs+1,0:y_procs+1,0:zmax+2,0:comm_procs-1))
+    allocate(u2_all(-1:xmax+1,-1:ymax+1,-1:zmax+1))
+    allocate(u3out(0:x_procs+1,0:y_procs+1,0:zmax+2,0:comm_procs-1))
+    allocate(u3_all(-1:xmax+1,-1:ymax+1,-1:zmax+1))
 
     allocate(contribution_each_scale(step/step_output,(xmax+1)/2 + 1))
     contribution_each_scale(:,:) = 0.0d0
@@ -1403,13 +1411,46 @@ DO  case_num = case_initial_num, case_end_num
 
         if(mod(n,step_output)==0) then
             !まとめて出力
+            ! do i_rank = 0, comm_procs-1
+            !     if(comm_rank == i_rank) then
+            !         call MPI_Isend(phi_procs(0,0,0),(x_procs+2)*(y_procs+2)*(zmax+3),MPI_REAL8,0,1,MPI_COMM_WORLD,req1s,ierr)
+            !         call MPI_Wait(req1s,sta1s,ierr)
+            !     endif
+            !     if(comm_rank == 0) then
+            !         call MPI_Irecv(phiout(0,0,0,i_rank),(x_procs+2)*(y_procs+2)*(zmax+3),MPI_REAL8,i_rank,1,MPI_COMM_WORLD,req1r,ierr)
+            !         call MPI_Wait(req1r,sta1r,ierr)
+            !     endif
+            ! enddo
+
             do i_rank = 0, comm_procs-1
                 if(comm_rank == i_rank) then
-                    call MPI_Isend(phi_procs(0,0,0),(x_procs+2)*(y_procs+2)*(zmax+3),MPI_REAL8,0,1,MPI_COMM_WORLD,req1s,ierr)
+                    call MPI_Isend(u1_procs(0,0,0),(x_procs+2)*(y_procs+2)*(zmax+3),MPI_REAL8,0,1,MPI_COMM_WORLD,req1s,ierr)
                     call MPI_Wait(req1s,sta1s,ierr)
                 endif
                 if(comm_rank == 0) then
-                    call MPI_Irecv(phiout(0,0,0,i_rank),(x_procs+2)*(y_procs+2)*(zmax+3),MPI_REAL8,i_rank,1,MPI_COMM_WORLD,req1r,ierr)
+                    call MPI_Irecv(u1out(0,0,0,i_rank),(x_procs+2)*(y_procs+2)*(zmax+3),MPI_REAL8,i_rank,1,MPI_COMM_WORLD,req1r,ierr)
+                    call MPI_Wait(req1r,sta1r,ierr)
+                endif
+            enddo
+
+            do i_rank = 0, comm_procs-1
+                if(comm_rank == i_rank) then
+                    call MPI_Isend(u2_procs(0,0,0),(x_procs+2)*(y_procs+2)*(zmax+3),MPI_REAL8,0,1,MPI_COMM_WORLD,req1s,ierr)
+                    call MPI_Wait(req1s,sta1s,ierr)
+                endif
+                if(comm_rank == 0) then
+                    call MPI_Irecv(u2out(0,0,0,i_rank),(x_procs+2)*(y_procs+2)*(zmax+3),MPI_REAL8,i_rank,1,MPI_COMM_WORLD,req1r,ierr)
+                    call MPI_Wait(req1r,sta1r,ierr)
+                endif
+            enddo
+
+            do i_rank = 0, comm_procs-1
+                if(comm_rank == i_rank) then
+                    call MPI_Isend(u3_procs(0,0,0),(x_procs+2)*(y_procs+2)*(zmax+3),MPI_REAL8,0,1,MPI_COMM_WORLD,req1s,ierr)
+                    call MPI_Wait(req1s,sta1s,ierr)
+                endif
+                if(comm_rank == 0) then
+                    call MPI_Irecv(u3out(0,0,0,i_rank),(x_procs+2)*(y_procs+2)*(zmax+3),MPI_REAL8,i_rank,1,MPI_COMM_WORLD,req1r,ierr)
                     call MPI_Wait(req1r,sta1r,ierr)
                 endif
             enddo
@@ -1421,7 +1462,10 @@ DO  case_num = case_initial_num, case_end_num
                         do zi=1,zmax+1
                             do yi=1,y_procs
                                 do xi=1,x_procs
-                                    phi_all((xi-1)+Nxx*x_procs,(yi-1)+Nyy*y_procs,zi-1) = phiout(xi,yi,zi,k_rank)
+                                    ! phi_all((xi-1)+Nxx*x_procs,(yi-1)+Nyy*y_procs,zi-1) = phiout(xi,yi,zi,k_rank)
+                                    u1_all((xi-1)+Nxx*x_procs,(yi-1)+Nyy*y_procs,zi-1) = u1out(xi,yi,zi,k_rank)
+                                    u2_all((xi-1)+Nxx*x_procs,(yi-1)+Nyy*y_procs,zi-1) = u2out(xi,yi,zi,k_rank)
+                                    u3_all((xi-1)+Nxx*x_procs,(yi-1)+Nyy*y_procs,zi-1) = u3out(xi,yi,zi,k_rank)
                                 enddo
                             enddo
                         enddo
@@ -1433,170 +1477,177 @@ DO  case_num = case_initial_num, case_end_num
             if(comm_rank == 0) then
                 write(filename,*) case_num !i->filename 変換
                 write(filename2,*) n
+                filename3=datadir_output2//trim(adjustl(filename))//'_'//trim(adjustl(filename2))//'_u1.bin' 
+                filename4=datadir_output2//trim(adjustl(filename))//'_'//trim(adjustl(filename2))//'_u2.bin' 
+                filename5=datadir_output2//trim(adjustl(filename))//'_'//trim(adjustl(filename2))//'_u3.bin' 
 
-                filename=datadir_output//trim(adjustl(filename))//'_'//trim(adjustl(filename2))//'.bin' 
-
-                open(100,file=filename, form='unformatted',status='replace')
+                open(100,file=filename3, form='unformatted',status='replace')
+                open(101,file=filename4, form='unformatted',status='replace')
+                open(102,file=filename5, form='unformatted',status='replace')
                 do zi=0,zmax
                     do yi=0,ymax
                         do xi=0,xmax
-                            write(100) phi_all(xi,yi,zi)
+                            write(100) u1_all(xi,yi,zi)
+                            write(101) u2_all(xi,yi,zi)
+                            write(102) u3_all(xi,yi,zi)
                         enddo
                     enddo
                 enddo
                 close(100)
+                close(101)
+                close(102)
             endif
         endif
 
-        !解析
-        if(mod(n,step_output)==0) then
-            k_analysis_step = k_analysis + 1
-            call korteweg_cal(grad_phi_procs,korteweg_procs)
-            do zi = 1, zmax+1
-                do yi = 1, y_procs
-                    do xi = 1, x_procs
-                        tensor11(xi,yi,zi) = korteweg_procs(1,1,xi,yi,zi)
-                        tensor21(xi,yi,zi) = korteweg_procs(2,1,xi,yi,zi)
-                        tensor31(xi,yi,zi) = korteweg_procs(3,1,xi,yi,zi)
+        ! !解析
+        ! if(mod(n,step_output)==0) then
+        !     k_analysis_step = k_analysis + 1
+        !     call korteweg_cal(grad_phi_procs,korteweg_procs)
+        !     do zi = 1, zmax+1
+        !         do yi = 1, y_procs
+        !             do xi = 1, x_procs
+        !                 tensor11(xi,yi,zi) = korteweg_procs(1,1,xi,yi,zi)
+        !                 tensor21(xi,yi,zi) = korteweg_procs(2,1,xi,yi,zi)
+        !                 tensor31(xi,yi,zi) = korteweg_procs(3,1,xi,yi,zi)
         
-                        tensor12(xi,yi,zi) = korteweg_procs(1,2,xi,yi,zi)
-                        tensor22(xi,yi,zi) = korteweg_procs(2,2,xi,yi,zi)
-                        tensor32(xi,yi,zi) = korteweg_procs(3,2,xi,yi,zi)
+        !                 tensor12(xi,yi,zi) = korteweg_procs(1,2,xi,yi,zi)
+        !                 tensor22(xi,yi,zi) = korteweg_procs(2,2,xi,yi,zi)
+        !                 tensor32(xi,yi,zi) = korteweg_procs(3,2,xi,yi,zi)
         
-                        tensor13(xi,yi,zi) = korteweg_procs(1,3,xi,yi,zi)
-                        tensor23(xi,yi,zi) = korteweg_procs(2,3,xi,yi,zi)
-                        tensor33(xi,yi,zi) = korteweg_procs(3,3,xi,yi,zi)
-                    enddo
-                enddo
-            enddo
-            call glue(tensor11)
-            call glue(tensor21)
-            call glue(tensor31)
+        !                 tensor13(xi,yi,zi) = korteweg_procs(1,3,xi,yi,zi)
+        !                 tensor23(xi,yi,zi) = korteweg_procs(2,3,xi,yi,zi)
+        !                 tensor33(xi,yi,zi) = korteweg_procs(3,3,xi,yi,zi)
+        !             enddo
+        !         enddo
+        !     enddo
+        !     call glue(tensor11)
+        !     call glue(tensor21)
+        !     call glue(tensor31)
         
-            call glue(tensor12)
-            call glue(tensor22)
-            call glue(tensor32)
+        !     call glue(tensor12)
+        !     call glue(tensor22)
+        !     call glue(tensor32)
         
-            call glue(tensor13)
-            call glue(tensor23)
-            call glue(tensor33)
+        !     call glue(tensor13)
+        !     call glue(tensor23)
+        !     call glue(tensor33)
         
-            ! alpha = 1
-            do zi=1,zmax+1
-                do yi=1,y_procs
-                    do xi=1,x_procs
-                        grad_tensor11(xi,yi,zi) = 0.0d0
-                        grad_tensor21(xi,yi,zi) = 0.0d0
-                        grad_tensor31(xi,yi,zi) = 0.0d0
-                        do i = 2,15
-                            grad_tensor11(xi,yi,zi) = grad_tensor11(xi,yi,zi) &
-                                                    + cr(1,i)*tensor11(xi+cx(i),yi+cy(i),zi+cz(i))
-                            grad_tensor21(xi,yi,zi) = grad_tensor21(xi,yi,zi) &
-                                                    + cr(1,i)*tensor21(xi+cx(i),yi+cy(i),zi+cz(i))
-                            grad_tensor31(xi,yi,zi) = grad_tensor31(xi,yi,zi) &
-                                                    + cr(1,i)*tensor31(xi+cx(i),yi+cy(i),zi+cz(i))
-                        enddo
-                        grad_tensor11(xi,yi,zi) = grad_tensor11(xi,yi,zi)/(10.0d0*ds)
-                        grad_tensor21(xi,yi,zi) = grad_tensor21(xi,yi,zi)/(10.0d0*ds)
-                        grad_tensor31(xi,yi,zi) = grad_tensor31(xi,yi,zi)/(10.0d0*ds)
-                    enddo
-                enddo
-            enddo
+        !     ! alpha = 1
+        !     do zi=1,zmax+1
+        !         do yi=1,y_procs
+        !             do xi=1,x_procs
+        !                 grad_tensor11(xi,yi,zi) = 0.0d0
+        !                 grad_tensor21(xi,yi,zi) = 0.0d0
+        !                 grad_tensor31(xi,yi,zi) = 0.0d0
+        !                 do i = 2,15
+        !                     grad_tensor11(xi,yi,zi) = grad_tensor11(xi,yi,zi) &
+        !                                             + cr(1,i)*tensor11(xi+cx(i),yi+cy(i),zi+cz(i))
+        !                     grad_tensor21(xi,yi,zi) = grad_tensor21(xi,yi,zi) &
+        !                                             + cr(1,i)*tensor21(xi+cx(i),yi+cy(i),zi+cz(i))
+        !                     grad_tensor31(xi,yi,zi) = grad_tensor31(xi,yi,zi) &
+        !                                             + cr(1,i)*tensor31(xi+cx(i),yi+cy(i),zi+cz(i))
+        !                 enddo
+        !                 grad_tensor11(xi,yi,zi) = grad_tensor11(xi,yi,zi)/(10.0d0*ds)
+        !                 grad_tensor21(xi,yi,zi) = grad_tensor21(xi,yi,zi)/(10.0d0*ds)
+        !                 grad_tensor31(xi,yi,zi) = grad_tensor31(xi,yi,zi)/(10.0d0*ds)
+        !             enddo
+        !         enddo
+        !     enddo
         
-            ! alpha = 2
-            do zi=1,zmax+1
-                do yi=1,y_procs
-                    do xi=1,x_procs
-                        grad_tensor12(xi,yi,zi) = 0.0d0
-                        grad_tensor22(xi,yi,zi) = 0.0d0
-                        grad_tensor32(xi,yi,zi) = 0.0d0
-                        do i = 2,15
-                            grad_tensor12(xi,yi,zi) = grad_tensor12(xi,yi,zi) &
-                                                    + cr(2,i)*tensor12(xi+cx(i),yi+cy(i),zi+cz(i))
-                            grad_tensor22(xi,yi,zi) = grad_tensor22(xi,yi,zi) &
-                                                    + cr(2,i)*tensor22(xi+cx(i),yi+cy(i),zi+cz(i))
-                            grad_tensor32(xi,yi,zi) = grad_tensor32(xi,yi,zi) &
-                                                    + cr(2,i)*tensor32(xi+cx(i),yi+cy(i),zi+cz(i))
-                        enddo
-                        grad_tensor12(xi,yi,zi) = grad_tensor12(xi,yi,zi)/(10.0d0*ds)
-                        grad_tensor22(xi,yi,zi) = grad_tensor22(xi,yi,zi)/(10.0d0*ds)
-                        grad_tensor32(xi,yi,zi) = grad_tensor32(xi,yi,zi)/(10.0d0*ds)
-                    enddo
-                enddo
-            enddo
+        !     ! alpha = 2
+        !     do zi=1,zmax+1
+        !         do yi=1,y_procs
+        !             do xi=1,x_procs
+        !                 grad_tensor12(xi,yi,zi) = 0.0d0
+        !                 grad_tensor22(xi,yi,zi) = 0.0d0
+        !                 grad_tensor32(xi,yi,zi) = 0.0d0
+        !                 do i = 2,15
+        !                     grad_tensor12(xi,yi,zi) = grad_tensor12(xi,yi,zi) &
+        !                                             + cr(2,i)*tensor12(xi+cx(i),yi+cy(i),zi+cz(i))
+        !                     grad_tensor22(xi,yi,zi) = grad_tensor22(xi,yi,zi) &
+        !                                             + cr(2,i)*tensor22(xi+cx(i),yi+cy(i),zi+cz(i))
+        !                     grad_tensor32(xi,yi,zi) = grad_tensor32(xi,yi,zi) &
+        !                                             + cr(2,i)*tensor32(xi+cx(i),yi+cy(i),zi+cz(i))
+        !                 enddo
+        !                 grad_tensor12(xi,yi,zi) = grad_tensor12(xi,yi,zi)/(10.0d0*ds)
+        !                 grad_tensor22(xi,yi,zi) = grad_tensor22(xi,yi,zi)/(10.0d0*ds)
+        !                 grad_tensor32(xi,yi,zi) = grad_tensor32(xi,yi,zi)/(10.0d0*ds)
+        !             enddo
+        !         enddo
+        !     enddo
         
-            ! alpha = 3
-            do zi=1,zmax+1
-                do yi=1,y_procs
-                    do xi=1,x_procs
-                        grad_tensor13(xi,yi,zi) = 0.0d0
-                        grad_tensor23(xi,yi,zi) = 0.0d0
-                        grad_tensor33(xi,yi,zi) = 0.0d0
-                        do i = 2,15
-                            grad_tensor13(xi,yi,zi) = grad_tensor13(xi,yi,zi) &
-                                                    + cr(3,i)*tensor13(xi+cx(i),yi+cy(i),zi+cz(i))
-                            grad_tensor23(xi,yi,zi) = grad_tensor23(xi,yi,zi) &
-                                                    + cr(3,i)*tensor23(xi+cx(i),yi+cy(i),zi+cz(i))
-                            grad_tensor33(xi,yi,zi) = grad_tensor33(xi,yi,zi) &
-                                                    + cr(3,i)*tensor33(xi+cx(i),yi+cy(i),zi+cz(i))
-                        enddo
-                        grad_tensor13(xi,yi,zi) = grad_tensor13(xi,yi,zi)/(10.0d0*ds)
-                        grad_tensor23(xi,yi,zi) = grad_tensor23(xi,yi,zi)/(10.0d0*ds)
-                        grad_tensor33(xi,yi,zi) = grad_tensor33(xi,yi,zi)/(10.0d0*ds)
-                    enddo
-                enddo
-            enddo
+        !     ! alpha = 3
+        !     do zi=1,zmax+1
+        !         do yi=1,y_procs
+        !             do xi=1,x_procs
+        !                 grad_tensor13(xi,yi,zi) = 0.0d0
+        !                 grad_tensor23(xi,yi,zi) = 0.0d0
+        !                 grad_tensor33(xi,yi,zi) = 0.0d0
+        !                 do i = 2,15
+        !                     grad_tensor13(xi,yi,zi) = grad_tensor13(xi,yi,zi) &
+        !                                             + cr(3,i)*tensor13(xi+cx(i),yi+cy(i),zi+cz(i))
+        !                     grad_tensor23(xi,yi,zi) = grad_tensor23(xi,yi,zi) &
+        !                                             + cr(3,i)*tensor23(xi+cx(i),yi+cy(i),zi+cz(i))
+        !                     grad_tensor33(xi,yi,zi) = grad_tensor33(xi,yi,zi) &
+        !                                             + cr(3,i)*tensor33(xi+cx(i),yi+cy(i),zi+cz(i))
+        !                 enddo
+        !                 grad_tensor13(xi,yi,zi) = grad_tensor13(xi,yi,zi)/(10.0d0*ds)
+        !                 grad_tensor23(xi,yi,zi) = grad_tensor23(xi,yi,zi)/(10.0d0*ds)
+        !                 grad_tensor33(xi,yi,zi) = grad_tensor33(xi,yi,zi)/(10.0d0*ds)
+        !             enddo
+        !         enddo
+        !     enddo
 
-            !スケール分解して渦の液滴への寄与を見る
-            do k_analysis = 1, (xmax+1)/2 + 1
-                call scale_cal2(u1_procs,u2_procs,u3_procs,u1_procs_re2,u2_procs_re2,u3_procs_re2,u1_hat2,u2_hat2,u3_hat2,k_analysis,u1_procs_scale,u2_procs_scale,u3_procs_scale)
-                call glue(u1_procs_scale)
-                call glue(u2_procs_scale)
-                call glue(u3_procs_scale)
+        !     !スケール分解して渦の液滴への寄与を見る
+        !     do k_analysis = 1, (xmax+1)/2 + 1
+        !         call scale_cal2(u1_procs,u2_procs,u3_procs,u1_procs_re2,u2_procs_re2,u3_procs_re2,u1_hat2,u2_hat2,u3_hat2,k_analysis,u1_procs_scale,u2_procs_scale,u3_procs_scale)
+        !         call glue(u1_procs_scale)
+        !         call glue(u2_procs_scale)
+        !         call glue(u3_procs_scale)
 
-                do zi=1,zmax+1
-                    do yi=1,y_procs
-                        do xi=1,x_procs
-                            interaction_procs(xi,yi,zi) = u1_procs_scale(xi,yi,zi)*grad_tensor11(xi,yi,zi) + u2_procs_scale(xi,yi,zi)*grad_tensor21(xi,yi,zi) + u3_procs_scale(xi,yi,zi)*grad_tensor31(xi,yi,zi) &
-                                                    + u1_procs_scale(xi,yi,zi)*grad_tensor12(xi,yi,zi) + u2_procs_scale(xi,yi,zi)*grad_tensor22(xi,yi,zi) + u3_procs_scale(xi,yi,zi)*grad_tensor32(xi,yi,zi) &
-                                                    + u1_procs_scale(xi,yi,zi)*grad_tensor13(xi,yi,zi) + u2_procs_scale(xi,yi,zi)*grad_tensor23(xi,yi,zi) + u3_procs_scale(xi,yi,zi)*grad_tensor33(xi,yi,zi)
+        !         do zi=1,zmax+1
+        !             do yi=1,y_procs
+        !                 do xi=1,x_procs
+        !                     interaction_procs(xi,yi,zi) = u1_procs_scale(xi,yi,zi)*grad_tensor11(xi,yi,zi) + u2_procs_scale(xi,yi,zi)*grad_tensor21(xi,yi,zi) + u3_procs_scale(xi,yi,zi)*grad_tensor31(xi,yi,zi) &
+        !                                             + u1_procs_scale(xi,yi,zi)*grad_tensor12(xi,yi,zi) + u2_procs_scale(xi,yi,zi)*grad_tensor22(xi,yi,zi) + u3_procs_scale(xi,yi,zi)*grad_tensor32(xi,yi,zi) &
+        !                                             + u1_procs_scale(xi,yi,zi)*grad_tensor13(xi,yi,zi) + u2_procs_scale(xi,yi,zi)*grad_tensor23(xi,yi,zi) + u3_procs_scale(xi,yi,zi)*grad_tensor33(xi,yi,zi)
                             
-                            interaction_procs(xi,yi,zi) = interaction_procs(xi,yi,zi) * kappag
-                        enddo
-                    enddo
-                enddo
+        !                     interaction_procs(xi,yi,zi) = interaction_procs(xi,yi,zi) * kappag
+        !                 enddo
+        !             enddo
+        !         enddo
 
-                interaction_sum = 0.0d0
-                interaction_all = 0.0d0
-                do zi=1,zmax+1
-                    do yi=1,y_procs
-                        do xi=1,x_procs
-                            interaction_sum = interaction_sum + interaction_procs(xi,yi,zi)
-                        enddo
-                    enddo
-                enddo
-                call MPI_Reduce(interaction_sum, interaction_all, 1, MPI_REAL8, MPI_SUM, 0, MPI_COMM_WORLD, ierr)
+        !         interaction_sum = 0.0d0
+        !         interaction_all = 0.0d0
+        !         do zi=1,zmax+1
+        !             do yi=1,y_procs
+        !                 do xi=1,x_procs
+        !                     interaction_sum = interaction_sum + interaction_procs(xi,yi,zi)
+        !                 enddo
+        !             enddo
+        !         enddo
+        !         call MPI_Reduce(interaction_sum, interaction_all, 1, MPI_REAL8, MPI_SUM, 0, MPI_COMM_WORLD, ierr)
 
-                if(comm_rank == 0) then
-                    contribution_each_scale(k_analysis_step,k_analysis) = contribution_each_scale(k_analysis_step,k_analysis) + (interaction_all / (dble(xmax+1)*dble(ymax+1)*dble(zmax+1)))
-                endif
-            enddo
-        endif
+        !         if(comm_rank == 0) then
+        !             contribution_each_scale(k_analysis_step,k_analysis) = contribution_each_scale(k_analysis_step,k_analysis) + (interaction_all / (dble(xmax+1)*dble(ymax+1)*dble(zmax+1)))
+        !         endif
+        !     enddo
+        ! endif
 
-        if((case_num == case_end_num).and.(n == step)) then
-            if(comm_rank == 0) then
-                write(filename2,*) case_initial_num !i->filename 変換
-                filename2=datadir_output2//trim(adjustl(filename2))//'_contribution_each_scale.d' 
+        ! if((case_num == case_end_num).and.(n == step)) then
+        !     if(comm_rank == 0) then
+        !         write(filename2,*) case_initial_num !i->filename 変換
+        !         filename2=datadir_output2//trim(adjustl(filename2))//'_contribution_each_scale.d' 
 
-                open(109,file=filename2, form='formatted',status='replace')
-                do k_analysis=1,(xmax+1)/2 + 1
-                    do k_analysis_step=1,step/step_output
-                        write(109,"(2es16.8)") contribution_each_scale(k_analysis_step,k_analysis) / (step/step_output)
-                    enddo
-                enddo
-                close(109)
-            endif
-        endif
+        !         open(109,file=filename2, form='formatted',status='replace')
+        !         do k_analysis=1,(xmax+1)/2 + 1
+        !             do k_analysis_step=1,step/step_output
+        !                 write(109,"(2es16.8)") contribution_each_scale(k_analysis_step,k_analysis) / (step/step_output)
+        !             enddo
+        !         enddo
+        !         close(109)
+        !     endif
+        ! endif
 
     ENDDO
 ENDDO

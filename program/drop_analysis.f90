@@ -22,9 +22,10 @@ module globals
     integer,parameter:: step_num2 = (step_end - step_start) / step_bin + 1 
 
     !読み込みディレクトリ
-    character(*),parameter :: datadir_input = "/data/sht/nakanog/DNS_turbulence_256_IHT_new/case1/"
+    character(*),parameter :: datadir_input = "/data/sht/nakanog/IHT_drop_d70_we5/"
+    character(*),parameter :: datadir_input2 = "/data/sht/nakanog/IHT_drop_d70_we5/u/"
     !出力ディレクトリ
-    character(*),parameter :: datadir_output = "/data/sht/nakanog/DNS_turbulence_256_IHT_new/case1/contribution/each_scale/"
+    character(*),parameter :: datadir_output = "/data/sht/nakanog/IHT_drop_d70_we5/contribution/"
 
     !粒子速度（整数）
     integer,parameter:: cx(15) = (/0, 1, 0,  0, -1,  0,  0,  1, -1,  1,  1, -1,  1, -1, -1/)
@@ -32,7 +33,7 @@ module globals
     integer,parameter:: cz(15) = (/0, 0, 0,  1,  0,  0, -1,  1,  1,  1, -1, -1, -1, -1,  1/)
 
     !無次元数
-    real(8),parameter:: We = 1.0d0 !粒子ウエーバー数
+    real(8),parameter:: We = 5.0d0 !粒子ウエーバー数
     real(8),parameter:: eta = 1.0d0 !粘度比（nu2/nu1）
 
     real(8),parameter:: epsilon = 9.15d-10 !エネルギー散逸率
@@ -59,9 +60,13 @@ module globals
     real(8) dummy
     real(8) time1, time2 !計算時間測定用
     integer i, j, k, n, xi, yi, zi, alpha, beta
+    integer i_input, Nxx, Nyy
     character :: filename*200
     character :: filename2*200
     character :: filename3*200
+    character :: filenameu1*200
+    character :: filenameu2*200
+    character :: filenameu3*200
     integer step_num
 
     !MPI用変数
@@ -977,6 +982,9 @@ use glassman
     complex(kind(0d0)), allocatable :: u1_hat(:,:,:), u2_hat(:,:,:), u3_hat(:,:,:)
     real(8),allocatable :: u1_procs_re(:,:,:), u2_procs_re(:,:,:), u3_procs_re(:,:,:)
 
+    real(8) phi(0:xmax,0:ymax,0:zmax), u1(0:xmax,0:ymax,0:zmax), u2(0:xmax,0:ymax,0:zmax), u3(0:xmax,0:ymax,0:zmax)
+    real(8),allocatable :: tmp1(:,:,:,:), tmp2(:,:,:,:), tmp3(:,:,:,:), tmp4(:,:,:,:)
+
     At_ini = 0.0d0
     cr(:,:) = 0.0d0
     allocate(enesupe_phi((xmax+1)/2 + 1))
@@ -1009,8 +1017,67 @@ use glassman
     call ini_energy3(tensor11,tensor12,tensor13,tensor21,tensor22,tensor23,tensor31,tensor32,tensor33)
     call ini_energy5(grad_tensor11,grad_tensor12,grad_tensor13,grad_tensor21,grad_tensor22,grad_tensor23,grad_tensor31,grad_tensor32,grad_tensor33)
 
+    allocate(tmp1(0:comm_procs-1,0:x_procs+1,0:y_procs+1,0:zmax+2))
+    allocate(tmp2(0:comm_procs-1,0:x_procs+1,0:y_procs+1,0:zmax+2))
+    allocate(tmp3(0:comm_procs-1,0:x_procs+1,0:y_procs+1,0:zmax+2))
+    allocate(tmp4(0:comm_procs-1,0:x_procs+1,0:y_procs+1,0:zmax+2))
+
 DO n = step_start, step_end, step_bin
-    call input(u1_procs,u2_procs,u3_procs,p_procs,phi_procs)
+    ! call input(u1_procs,u2_procs,u3_procs,p_procs,phi_procs)
+    write(filename2,*) n
+    filename=datadir_input//'1_'//trim(adjustl(filename2))//'.bin'
+    filenameu1=datadir_input2//'1_'//trim(adjustl(filename2))//'_u1.bin'
+    filenameu2=datadir_input2//'1_'//trim(adjustl(filename2))//'_u2.bin'
+    filenameu3=datadir_input2//'1_'//trim(adjustl(filename2))//'_u3.bin'
+    open(10, file=filename, form="unformatted")
+    open(11, file=filenameu1, form="unformatted")
+    open(12, file=filenameu2, form="unformatted")
+    open(13, file=filenameu3, form="unformatted")
+    do zi=0,zmax
+        do yi=0,ymax
+            do xi=0,xmax
+                read(10) phi(xi,yi,zi)
+                read(11) u1(xi,yi,zi)
+                read(12) u2(xi,yi,zi)
+                read(13) u3(xi,yi,zi)
+            enddo
+        enddo
+    enddo
+    close(10)
+    close(11)
+    close(12)
+    close(13)
+
+    i_input = 0
+    do Nxx=0,Nx-1
+        do Nyy=0,Ny-1
+            do zi=1,zmax+1
+                do yi=1,y_procs
+                    do xi=1,x_procs
+                        tmp1(i_input,xi,yi,zi) = u1((xi-1)+Nxx*x_procs,(yi-1)+Nyy*y_procs,zi-1)
+                        tmp2(i_input,xi,yi,zi) = u2((xi-1)+Nxx*x_procs,(yi-1)+Nyy*y_procs,zi-1)
+                        tmp3(i_input,xi,yi,zi) = u3((xi-1)+Nxx*x_procs,(yi-1)+Nyy*y_procs,zi-1)
+                        tmp4(i_input,xi,yi,zi) = phi((xi-1)+Nxx*x_procs,(yi-1)+Nyy*y_procs,zi-1)
+                    enddo
+                enddo
+            enddo
+            i_input = i_input + 1
+        enddo
+    enddo
+    do i_input=0,comm_procs-1
+        if(i_input == comm_rank)then
+            do zi=1,zmax+1
+                do yi=1,y_procs
+                    do xi=1,x_procs
+                        u1_procs(xi,yi,zi) = tmp1(i_input,xi,yi,zi)
+                        u2_procs(xi,yi,zi) = tmp2(i_input,xi,yi,zi)
+                        u3_procs(xi,yi,zi) = tmp3(i_input,xi,yi,zi)
+                        phi_procs(xi,yi,zi) = tmp4(i_input,xi,yi,zi)
+                    enddo
+                enddo
+            enddo
+        endif
+    enddo
     call glue(phi_procs)
     call glue(u1_procs)
     call glue(u2_procs)
@@ -1280,149 +1347,149 @@ DO n = step_start, step_end, step_bin
                 close(20)
             endif
 
-            if(n == 5000) then
-                k_analysis = 11
-                open(21,file="./energy_11_20.d",status='replace')
-                write(21,"(11es16.8)") dble(n), contribution_each_scale(k_analysis), contribution_each_scale(k_analysis+1), contribution_each_scale(k_analysis+2), contribution_each_scale(k_analysis+3), contribution_each_scale(k_analysis+4), contribution_each_scale(k_analysis+5), contribution_each_scale(k_analysis+6), contribution_each_scale(k_analysis+7), contribution_each_scale(k_analysis+8), contribution_each_scale(k_analysis+9)
-                close(21)
-            else
-                k_analysis = 11
-                open(21,file="./energy_11_20.d",action="write",position="append")
-                write(21,"(11es16.8)") dble(n), contribution_each_scale(k_analysis), contribution_each_scale(k_analysis+1), contribution_each_scale(k_analysis+2), contribution_each_scale(k_analysis+3), contribution_each_scale(k_analysis+4), contribution_each_scale(k_analysis+5), contribution_each_scale(k_analysis+6), contribution_each_scale(k_analysis+7), contribution_each_scale(k_analysis+8), contribution_each_scale(k_analysis+9)
-                close(21)
-            endif
+            ! if(n == 5000) then
+            !     k_analysis = 11
+            !     open(21,file="./energy_11_20.d",status='replace')
+            !     write(21,"(11es16.8)") dble(n), contribution_each_scale(k_analysis), contribution_each_scale(k_analysis+1), contribution_each_scale(k_analysis+2), contribution_each_scale(k_analysis+3), contribution_each_scale(k_analysis+4), contribution_each_scale(k_analysis+5), contribution_each_scale(k_analysis+6), contribution_each_scale(k_analysis+7), contribution_each_scale(k_analysis+8), contribution_each_scale(k_analysis+9)
+            !     close(21)
+            ! else
+            !     k_analysis = 11
+            !     open(21,file="./energy_11_20.d",action="write",position="append")
+            !     write(21,"(11es16.8)") dble(n), contribution_each_scale(k_analysis), contribution_each_scale(k_analysis+1), contribution_each_scale(k_analysis+2), contribution_each_scale(k_analysis+3), contribution_each_scale(k_analysis+4), contribution_each_scale(k_analysis+5), contribution_each_scale(k_analysis+6), contribution_each_scale(k_analysis+7), contribution_each_scale(k_analysis+8), contribution_each_scale(k_analysis+9)
+            !     close(21)
+            ! endif
 
-            if(n == 5000) then
-                k_analysis = 21
-                open(22,file="./energy_21_30.d",status='replace')
-                write(22,"(11es16.8)") dble(n), contribution_each_scale(k_analysis), contribution_each_scale(k_analysis+1), contribution_each_scale(k_analysis+2), contribution_each_scale(k_analysis+3), contribution_each_scale(k_analysis+4), contribution_each_scale(k_analysis+5), contribution_each_scale(k_analysis+6), contribution_each_scale(k_analysis+7), contribution_each_scale(k_analysis+8), contribution_each_scale(k_analysis+9)
-                close(22)
-            else
-                k_analysis = 21
-                open(22,file="./energy_21_30.d",action="write",position="append")
-                write(22,"(11es16.8)") dble(n), contribution_each_scale(k_analysis), contribution_each_scale(k_analysis+1), contribution_each_scale(k_analysis+2), contribution_each_scale(k_analysis+3), contribution_each_scale(k_analysis+4), contribution_each_scale(k_analysis+5), contribution_each_scale(k_analysis+6), contribution_each_scale(k_analysis+7), contribution_each_scale(k_analysis+8), contribution_each_scale(k_analysis+9)
-                close(22)
-            endif
+            ! if(n == 5000) then
+            !     k_analysis = 21
+            !     open(22,file="./energy_21_30.d",status='replace')
+            !     write(22,"(11es16.8)") dble(n), contribution_each_scale(k_analysis), contribution_each_scale(k_analysis+1), contribution_each_scale(k_analysis+2), contribution_each_scale(k_analysis+3), contribution_each_scale(k_analysis+4), contribution_each_scale(k_analysis+5), contribution_each_scale(k_analysis+6), contribution_each_scale(k_analysis+7), contribution_each_scale(k_analysis+8), contribution_each_scale(k_analysis+9)
+            !     close(22)
+            ! else
+            !     k_analysis = 21
+            !     open(22,file="./energy_21_30.d",action="write",position="append")
+            !     write(22,"(11es16.8)") dble(n), contribution_each_scale(k_analysis), contribution_each_scale(k_analysis+1), contribution_each_scale(k_analysis+2), contribution_each_scale(k_analysis+3), contribution_each_scale(k_analysis+4), contribution_each_scale(k_analysis+5), contribution_each_scale(k_analysis+6), contribution_each_scale(k_analysis+7), contribution_each_scale(k_analysis+8), contribution_each_scale(k_analysis+9)
+            !     close(22)
+            ! endif
 
-            if(n == 5000) then
-                k_analysis = 31
-                open(23,file="./energy_31_40.d",status='replace')
-                write(23,"(11es16.8)") dble(n), contribution_each_scale(k_analysis), contribution_each_scale(k_analysis+1), contribution_each_scale(k_analysis+2), contribution_each_scale(k_analysis+3), contribution_each_scale(k_analysis+4), contribution_each_scale(k_analysis+5), contribution_each_scale(k_analysis+6), contribution_each_scale(k_analysis+7), contribution_each_scale(k_analysis+8), contribution_each_scale(k_analysis+9)
-                close(23)
-            else
-                k_analysis = 31
-                open(23,file="./energy_31_40.d",action="write",position="append")
-                write(23,"(11es16.8)") dble(n), contribution_each_scale(k_analysis), contribution_each_scale(k_analysis+1), contribution_each_scale(k_analysis+2), contribution_each_scale(k_analysis+3), contribution_each_scale(k_analysis+4), contribution_each_scale(k_analysis+5), contribution_each_scale(k_analysis+6), contribution_each_scale(k_analysis+7), contribution_each_scale(k_analysis+8), contribution_each_scale(k_analysis+9)
-                close(23)
-            endif
+            ! if(n == 5000) then
+            !     k_analysis = 31
+            !     open(23,file="./energy_31_40.d",status='replace')
+            !     write(23,"(11es16.8)") dble(n), contribution_each_scale(k_analysis), contribution_each_scale(k_analysis+1), contribution_each_scale(k_analysis+2), contribution_each_scale(k_analysis+3), contribution_each_scale(k_analysis+4), contribution_each_scale(k_analysis+5), contribution_each_scale(k_analysis+6), contribution_each_scale(k_analysis+7), contribution_each_scale(k_analysis+8), contribution_each_scale(k_analysis+9)
+            !     close(23)
+            ! else
+            !     k_analysis = 31
+            !     open(23,file="./energy_31_40.d",action="write",position="append")
+            !     write(23,"(11es16.8)") dble(n), contribution_each_scale(k_analysis), contribution_each_scale(k_analysis+1), contribution_each_scale(k_analysis+2), contribution_each_scale(k_analysis+3), contribution_each_scale(k_analysis+4), contribution_each_scale(k_analysis+5), contribution_each_scale(k_analysis+6), contribution_each_scale(k_analysis+7), contribution_each_scale(k_analysis+8), contribution_each_scale(k_analysis+9)
+            !     close(23)
+            ! endif
 
-            if(n == 5000) then
-                k_analysis = 41
-                open(24,file="./energy_41_50.d",status='replace')
-                write(24,"(11es16.8)") dble(n), contribution_each_scale(k_analysis), contribution_each_scale(k_analysis+1), contribution_each_scale(k_analysis+2), contribution_each_scale(k_analysis+3), contribution_each_scale(k_analysis+4), contribution_each_scale(k_analysis+5), contribution_each_scale(k_analysis+6), contribution_each_scale(k_analysis+7), contribution_each_scale(k_analysis+8), contribution_each_scale(k_analysis+9)
-                close(24)
-            else
-                k_analysis = 41
-                open(24,file="./energy_41_50.d",action="write",position="append")
-                write(24,"(11es16.8)") dble(n), contribution_each_scale(k_analysis), contribution_each_scale(k_analysis+1), contribution_each_scale(k_analysis+2), contribution_each_scale(k_analysis+3), contribution_each_scale(k_analysis+4), contribution_each_scale(k_analysis+5), contribution_each_scale(k_analysis+6), contribution_each_scale(k_analysis+7), contribution_each_scale(k_analysis+8), contribution_each_scale(k_analysis+9)
-                close(24)
-            endif
+            ! if(n == 5000) then
+            !     k_analysis = 41
+            !     open(24,file="./energy_41_50.d",status='replace')
+            !     write(24,"(11es16.8)") dble(n), contribution_each_scale(k_analysis), contribution_each_scale(k_analysis+1), contribution_each_scale(k_analysis+2), contribution_each_scale(k_analysis+3), contribution_each_scale(k_analysis+4), contribution_each_scale(k_analysis+5), contribution_each_scale(k_analysis+6), contribution_each_scale(k_analysis+7), contribution_each_scale(k_analysis+8), contribution_each_scale(k_analysis+9)
+            !     close(24)
+            ! else
+            !     k_analysis = 41
+            !     open(24,file="./energy_41_50.d",action="write",position="append")
+            !     write(24,"(11es16.8)") dble(n), contribution_each_scale(k_analysis), contribution_each_scale(k_analysis+1), contribution_each_scale(k_analysis+2), contribution_each_scale(k_analysis+3), contribution_each_scale(k_analysis+4), contribution_each_scale(k_analysis+5), contribution_each_scale(k_analysis+6), contribution_each_scale(k_analysis+7), contribution_each_scale(k_analysis+8), contribution_each_scale(k_analysis+9)
+            !     close(24)
+            ! endif
 
-            if(n == 5000) then
-                k_analysis = 51
-                open(25,file="./energy_51_60.d",status='replace')
-                write(25,"(11es16.8)") dble(n), contribution_each_scale(k_analysis), contribution_each_scale(k_analysis+1), contribution_each_scale(k_analysis+2), contribution_each_scale(k_analysis+3), contribution_each_scale(k_analysis+4), contribution_each_scale(k_analysis+5), contribution_each_scale(k_analysis+6), contribution_each_scale(k_analysis+7), contribution_each_scale(k_analysis+8), contribution_each_scale(k_analysis+9)
-                close(25)
-            else
-                k_analysis = 51
-                open(25,file="./energy_51_60.d",action="write",position="append")
-                write(25,"(11es16.8)") dble(n), contribution_each_scale(k_analysis), contribution_each_scale(k_analysis+1), contribution_each_scale(k_analysis+2), contribution_each_scale(k_analysis+3), contribution_each_scale(k_analysis+4), contribution_each_scale(k_analysis+5), contribution_each_scale(k_analysis+6), contribution_each_scale(k_analysis+7), contribution_each_scale(k_analysis+8), contribution_each_scale(k_analysis+9)
-                close(25)
-            endif
+            ! if(n == 5000) then
+            !     k_analysis = 51
+            !     open(25,file="./energy_51_60.d",status='replace')
+            !     write(25,"(11es16.8)") dble(n), contribution_each_scale(k_analysis), contribution_each_scale(k_analysis+1), contribution_each_scale(k_analysis+2), contribution_each_scale(k_analysis+3), contribution_each_scale(k_analysis+4), contribution_each_scale(k_analysis+5), contribution_each_scale(k_analysis+6), contribution_each_scale(k_analysis+7), contribution_each_scale(k_analysis+8), contribution_each_scale(k_analysis+9)
+            !     close(25)
+            ! else
+            !     k_analysis = 51
+            !     open(25,file="./energy_51_60.d",action="write",position="append")
+            !     write(25,"(11es16.8)") dble(n), contribution_each_scale(k_analysis), contribution_each_scale(k_analysis+1), contribution_each_scale(k_analysis+2), contribution_each_scale(k_analysis+3), contribution_each_scale(k_analysis+4), contribution_each_scale(k_analysis+5), contribution_each_scale(k_analysis+6), contribution_each_scale(k_analysis+7), contribution_each_scale(k_analysis+8), contribution_each_scale(k_analysis+9)
+            !     close(25)
+            ! endif
 
-            if(n == 5000) then
-                k_analysis = 61
-                open(26,file="./energy_61_70.d",status='replace')
-                write(26,"(11es16.8)") dble(n), contribution_each_scale(k_analysis), contribution_each_scale(k_analysis+1), contribution_each_scale(k_analysis+2), contribution_each_scale(k_analysis+3), contribution_each_scale(k_analysis+4), contribution_each_scale(k_analysis+5), contribution_each_scale(k_analysis+6), contribution_each_scale(k_analysis+7), contribution_each_scale(k_analysis+8), contribution_each_scale(k_analysis+9)
-                close(26)
-            else
-                k_analysis = 61
-                open(26,file="./energy_61_70.d",action="write",position="append")
-                write(26,"(11es16.8)") dble(n), contribution_each_scale(k_analysis), contribution_each_scale(k_analysis+1), contribution_each_scale(k_analysis+2), contribution_each_scale(k_analysis+3), contribution_each_scale(k_analysis+4), contribution_each_scale(k_analysis+5), contribution_each_scale(k_analysis+6), contribution_each_scale(k_analysis+7), contribution_each_scale(k_analysis+8), contribution_each_scale(k_analysis+9)
-                close(26)
-            endif
+            ! if(n == 5000) then
+            !     k_analysis = 61
+            !     open(26,file="./energy_61_70.d",status='replace')
+            !     write(26,"(11es16.8)") dble(n), contribution_each_scale(k_analysis), contribution_each_scale(k_analysis+1), contribution_each_scale(k_analysis+2), contribution_each_scale(k_analysis+3), contribution_each_scale(k_analysis+4), contribution_each_scale(k_analysis+5), contribution_each_scale(k_analysis+6), contribution_each_scale(k_analysis+7), contribution_each_scale(k_analysis+8), contribution_each_scale(k_analysis+9)
+            !     close(26)
+            ! else
+            !     k_analysis = 61
+            !     open(26,file="./energy_61_70.d",action="write",position="append")
+            !     write(26,"(11es16.8)") dble(n), contribution_each_scale(k_analysis), contribution_each_scale(k_analysis+1), contribution_each_scale(k_analysis+2), contribution_each_scale(k_analysis+3), contribution_each_scale(k_analysis+4), contribution_each_scale(k_analysis+5), contribution_each_scale(k_analysis+6), contribution_each_scale(k_analysis+7), contribution_each_scale(k_analysis+8), contribution_each_scale(k_analysis+9)
+            !     close(26)
+            ! endif
 
-            if(n == 5000) then
-                k_analysis = 71
-                open(27,file="./energy_71_80.d",status='replace')
-                write(27,"(11es16.8)") dble(n), contribution_each_scale(k_analysis), contribution_each_scale(k_analysis+1), contribution_each_scale(k_analysis+2), contribution_each_scale(k_analysis+3), contribution_each_scale(k_analysis+4), contribution_each_scale(k_analysis+5), contribution_each_scale(k_analysis+6), contribution_each_scale(k_analysis+7), contribution_each_scale(k_analysis+8), contribution_each_scale(k_analysis+9)
-                close(27)
-            else
-                k_analysis = 71
-                open(27,file="./energy_71_80.d",action="write",position="append")
-                write(27,"(11es16.8)") dble(n), contribution_each_scale(k_analysis), contribution_each_scale(k_analysis+1), contribution_each_scale(k_analysis+2), contribution_each_scale(k_analysis+3), contribution_each_scale(k_analysis+4), contribution_each_scale(k_analysis+5), contribution_each_scale(k_analysis+6), contribution_each_scale(k_analysis+7), contribution_each_scale(k_analysis+8), contribution_each_scale(k_analysis+9)
-                close(27)
-            endif
+            ! if(n == 5000) then
+            !     k_analysis = 71
+            !     open(27,file="./energy_71_80.d",status='replace')
+            !     write(27,"(11es16.8)") dble(n), contribution_each_scale(k_analysis), contribution_each_scale(k_analysis+1), contribution_each_scale(k_analysis+2), contribution_each_scale(k_analysis+3), contribution_each_scale(k_analysis+4), contribution_each_scale(k_analysis+5), contribution_each_scale(k_analysis+6), contribution_each_scale(k_analysis+7), contribution_each_scale(k_analysis+8), contribution_each_scale(k_analysis+9)
+            !     close(27)
+            ! else
+            !     k_analysis = 71
+            !     open(27,file="./energy_71_80.d",action="write",position="append")
+            !     write(27,"(11es16.8)") dble(n), contribution_each_scale(k_analysis), contribution_each_scale(k_analysis+1), contribution_each_scale(k_analysis+2), contribution_each_scale(k_analysis+3), contribution_each_scale(k_analysis+4), contribution_each_scale(k_analysis+5), contribution_each_scale(k_analysis+6), contribution_each_scale(k_analysis+7), contribution_each_scale(k_analysis+8), contribution_each_scale(k_analysis+9)
+            !     close(27)
+            ! endif
 
-            if(n == 5000) then
-                k_analysis = 81
-                open(28,file="./energy_81_90.d",status='replace')
-                write(28,"(11es16.8)") dble(n), contribution_each_scale(k_analysis), contribution_each_scale(k_analysis+1), contribution_each_scale(k_analysis+2), contribution_each_scale(k_analysis+3), contribution_each_scale(k_analysis+4), contribution_each_scale(k_analysis+5), contribution_each_scale(k_analysis+6), contribution_each_scale(k_analysis+7), contribution_each_scale(k_analysis+8), contribution_each_scale(k_analysis+9)
-                close(28)
-            else
-                k_analysis = 81
-                open(28,file="./energy_81_90.d",action="write",position="append")
-                write(28,"(11es16.8)") dble(n), contribution_each_scale(k_analysis), contribution_each_scale(k_analysis+1), contribution_each_scale(k_analysis+2), contribution_each_scale(k_analysis+3), contribution_each_scale(k_analysis+4), contribution_each_scale(k_analysis+5), contribution_each_scale(k_analysis+6), contribution_each_scale(k_analysis+7), contribution_each_scale(k_analysis+8), contribution_each_scale(k_analysis+9)
-                close(28)
-            endif
+            ! if(n == 5000) then
+            !     k_analysis = 81
+            !     open(28,file="./energy_81_90.d",status='replace')
+            !     write(28,"(11es16.8)") dble(n), contribution_each_scale(k_analysis), contribution_each_scale(k_analysis+1), contribution_each_scale(k_analysis+2), contribution_each_scale(k_analysis+3), contribution_each_scale(k_analysis+4), contribution_each_scale(k_analysis+5), contribution_each_scale(k_analysis+6), contribution_each_scale(k_analysis+7), contribution_each_scale(k_analysis+8), contribution_each_scale(k_analysis+9)
+            !     close(28)
+            ! else
+            !     k_analysis = 81
+            !     open(28,file="./energy_81_90.d",action="write",position="append")
+            !     write(28,"(11es16.8)") dble(n), contribution_each_scale(k_analysis), contribution_each_scale(k_analysis+1), contribution_each_scale(k_analysis+2), contribution_each_scale(k_analysis+3), contribution_each_scale(k_analysis+4), contribution_each_scale(k_analysis+5), contribution_each_scale(k_analysis+6), contribution_each_scale(k_analysis+7), contribution_each_scale(k_analysis+8), contribution_each_scale(k_analysis+9)
+            !     close(28)
+            ! endif
 
-            if(n == 5000) then
-                k_analysis = 91
-                open(29,file="./energy_91_100.d",status='replace')
-                write(29,"(11es16.8)") dble(n), contribution_each_scale(k_analysis), contribution_each_scale(k_analysis+1), contribution_each_scale(k_analysis+2), contribution_each_scale(k_analysis+3), contribution_each_scale(k_analysis+4), contribution_each_scale(k_analysis+5), contribution_each_scale(k_analysis+6), contribution_each_scale(k_analysis+7), contribution_each_scale(k_analysis+8), contribution_each_scale(k_analysis+9)
-                close(29)
-            else
-                k_analysis = 91
-                open(29,file="./energy_91_100.d",action="write",position="append")
-                write(29,"(11es16.8)") dble(n), contribution_each_scale(k_analysis), contribution_each_scale(k_analysis+1), contribution_each_scale(k_analysis+2), contribution_each_scale(k_analysis+3), contribution_each_scale(k_analysis+4), contribution_each_scale(k_analysis+5), contribution_each_scale(k_analysis+6), contribution_each_scale(k_analysis+7), contribution_each_scale(k_analysis+8), contribution_each_scale(k_analysis+9)
-                close(29)
-            endif
+            ! if(n == 5000) then
+            !     k_analysis = 91
+            !     open(29,file="./energy_91_100.d",status='replace')
+            !     write(29,"(11es16.8)") dble(n), contribution_each_scale(k_analysis), contribution_each_scale(k_analysis+1), contribution_each_scale(k_analysis+2), contribution_each_scale(k_analysis+3), contribution_each_scale(k_analysis+4), contribution_each_scale(k_analysis+5), contribution_each_scale(k_analysis+6), contribution_each_scale(k_analysis+7), contribution_each_scale(k_analysis+8), contribution_each_scale(k_analysis+9)
+            !     close(29)
+            ! else
+            !     k_analysis = 91
+            !     open(29,file="./energy_91_100.d",action="write",position="append")
+            !     write(29,"(11es16.8)") dble(n), contribution_each_scale(k_analysis), contribution_each_scale(k_analysis+1), contribution_each_scale(k_analysis+2), contribution_each_scale(k_analysis+3), contribution_each_scale(k_analysis+4), contribution_each_scale(k_analysis+5), contribution_each_scale(k_analysis+6), contribution_each_scale(k_analysis+7), contribution_each_scale(k_analysis+8), contribution_each_scale(k_analysis+9)
+            !     close(29)
+            ! endif
 
-            if(n == 5000) then
-                k_analysis = 101
-                open(30,file="./energy_101_110.d",status='replace')
-                write(30,"(11es16.8)") dble(n), contribution_each_scale(k_analysis), contribution_each_scale(k_analysis+1), contribution_each_scale(k_analysis+2), contribution_each_scale(k_analysis+3), contribution_each_scale(k_analysis+4), contribution_each_scale(k_analysis+5), contribution_each_scale(k_analysis+6), contribution_each_scale(k_analysis+7), contribution_each_scale(k_analysis+8), contribution_each_scale(k_analysis+9)
-                close(30)
-            else
-                k_analysis = 101
-                open(30,file="./energy_101_110.d",action="write",position="append")
-                write(30,"(11es16.8)") dble(n), contribution_each_scale(k_analysis), contribution_each_scale(k_analysis+1), contribution_each_scale(k_analysis+2), contribution_each_scale(k_analysis+3), contribution_each_scale(k_analysis+4), contribution_each_scale(k_analysis+5), contribution_each_scale(k_analysis+6), contribution_each_scale(k_analysis+7), contribution_each_scale(k_analysis+8), contribution_each_scale(k_analysis+9)
-                close(30)
-            endif
+            ! if(n == 5000) then
+            !     k_analysis = 101
+            !     open(30,file="./energy_101_110.d",status='replace')
+            !     write(30,"(11es16.8)") dble(n), contribution_each_scale(k_analysis), contribution_each_scale(k_analysis+1), contribution_each_scale(k_analysis+2), contribution_each_scale(k_analysis+3), contribution_each_scale(k_analysis+4), contribution_each_scale(k_analysis+5), contribution_each_scale(k_analysis+6), contribution_each_scale(k_analysis+7), contribution_each_scale(k_analysis+8), contribution_each_scale(k_analysis+9)
+            !     close(30)
+            ! else
+            !     k_analysis = 101
+            !     open(30,file="./energy_101_110.d",action="write",position="append")
+            !     write(30,"(11es16.8)") dble(n), contribution_each_scale(k_analysis), contribution_each_scale(k_analysis+1), contribution_each_scale(k_analysis+2), contribution_each_scale(k_analysis+3), contribution_each_scale(k_analysis+4), contribution_each_scale(k_analysis+5), contribution_each_scale(k_analysis+6), contribution_each_scale(k_analysis+7), contribution_each_scale(k_analysis+8), contribution_each_scale(k_analysis+9)
+            !     close(30)
+            ! endif
 
-            if(n == 5000) then
-                k_analysis = 111
-                open(31,file="./energy_111_120.d",status='replace')
-                write(31,"(11es16.8)") dble(n), contribution_each_scale(k_analysis), contribution_each_scale(k_analysis+1), contribution_each_scale(k_analysis+2), contribution_each_scale(k_analysis+3), contribution_each_scale(k_analysis+4), contribution_each_scale(k_analysis+5), contribution_each_scale(k_analysis+6), contribution_each_scale(k_analysis+7), contribution_each_scale(k_analysis+8), contribution_each_scale(k_analysis+9)
-                close(31)
-            else
-                k_analysis = 111
-                open(31,file="./energy_111_120.d",action="write",position="append")
-                write(31,"(11es16.8)") dble(n), contribution_each_scale(k_analysis), contribution_each_scale(k_analysis+1), contribution_each_scale(k_analysis+2), contribution_each_scale(k_analysis+3), contribution_each_scale(k_analysis+4), contribution_each_scale(k_analysis+5), contribution_each_scale(k_analysis+6), contribution_each_scale(k_analysis+7), contribution_each_scale(k_analysis+8), contribution_each_scale(k_analysis+9)
-                close(31)
-            endif
+            ! if(n == 5000) then
+            !     k_analysis = 111
+            !     open(31,file="./energy_111_120.d",status='replace')
+            !     write(31,"(11es16.8)") dble(n), contribution_each_scale(k_analysis), contribution_each_scale(k_analysis+1), contribution_each_scale(k_analysis+2), contribution_each_scale(k_analysis+3), contribution_each_scale(k_analysis+4), contribution_each_scale(k_analysis+5), contribution_each_scale(k_analysis+6), contribution_each_scale(k_analysis+7), contribution_each_scale(k_analysis+8), contribution_each_scale(k_analysis+9)
+            !     close(31)
+            ! else
+            !     k_analysis = 111
+            !     open(31,file="./energy_111_120.d",action="write",position="append")
+            !     write(31,"(11es16.8)") dble(n), contribution_each_scale(k_analysis), contribution_each_scale(k_analysis+1), contribution_each_scale(k_analysis+2), contribution_each_scale(k_analysis+3), contribution_each_scale(k_analysis+4), contribution_each_scale(k_analysis+5), contribution_each_scale(k_analysis+6), contribution_each_scale(k_analysis+7), contribution_each_scale(k_analysis+8), contribution_each_scale(k_analysis+9)
+            !     close(31)
+            ! endif
 
-            if(n == 5000) then
-                k_analysis = 121
-                open(32,file="./energy_121_128.d",status='replace')
-                write(32,"(11es16.8)") dble(n), contribution_each_scale(k_analysis), contribution_each_scale(k_analysis+1), contribution_each_scale(k_analysis+2), contribution_each_scale(k_analysis+3), contribution_each_scale(k_analysis+4), contribution_each_scale(k_analysis+5), contribution_each_scale(k_analysis+6), contribution_each_scale(k_analysis+7), contribution_each_scale(k_analysis+8), contribution_each_scale(k_analysis+9)
-                close(32)
-            else
-                k_analysis = 121
-                open(32,file="./energy_121_128.d",action="write",position="append")
-                write(32,"(11es16.8)") dble(n), contribution_each_scale(k_analysis), contribution_each_scale(k_analysis+1), contribution_each_scale(k_analysis+2), contribution_each_scale(k_analysis+3), contribution_each_scale(k_analysis+4), contribution_each_scale(k_analysis+5), contribution_each_scale(k_analysis+6), contribution_each_scale(k_analysis+7), contribution_each_scale(k_analysis+8), contribution_each_scale(k_analysis+9)
-                close(32)
-            endif
+            ! if(n == 5000) then
+            !     k_analysis = 121
+            !     open(32,file="./energy_121_128.d",status='replace')
+            !     write(32,"(11es16.8)") dble(n), contribution_each_scale(k_analysis), contribution_each_scale(k_analysis+1), contribution_each_scale(k_analysis+2), contribution_each_scale(k_analysis+3), contribution_each_scale(k_analysis+4), contribution_each_scale(k_analysis+5), contribution_each_scale(k_analysis+6), contribution_each_scale(k_analysis+7), contribution_each_scale(k_analysis+8), contribution_each_scale(k_analysis+9)
+            !     close(32)
+            ! else
+            !     k_analysis = 121
+            !     open(32,file="./energy_121_128.d",action="write",position="append")
+            !     write(32,"(11es16.8)") dble(n), contribution_each_scale(k_analysis), contribution_each_scale(k_analysis+1), contribution_each_scale(k_analysis+2), contribution_each_scale(k_analysis+3), contribution_each_scale(k_analysis+4), contribution_each_scale(k_analysis+5), contribution_each_scale(k_analysis+6), contribution_each_scale(k_analysis+7), contribution_each_scale(k_analysis+8), contribution_each_scale(k_analysis+9)
+            !     close(32)
+            ! endif
 
         endif
     endif

@@ -15,8 +15,8 @@ program main
     real(8) Vlabel(1:1000), radius(1:1000)
     real(8) Vall
 
-    character(*),parameter :: datadir = "/data/sht/nakanog/DNS_turbulence_256_IHT_new/case6/collect/"
-    character(*),parameter :: datadir2 = "/data/sht/nakanog/DNS_turbulence_256_IHT_new/case6/collect/radius/"
+    character(*),parameter :: datadir = "/data/sht/nakanog/IHT_drop_d70_we5/"
+    character(*),parameter :: datadir2 = "/data/sht/nakanog/IHT_drop_d70_we5/radius/"
     integer step, dropnum
     character(8) file_num
     real(8) time1, time2
@@ -31,7 +31,7 @@ program main
     open(30,file="./process.d")
     write(30,*) "percolation start!!!!"
     close(30)
-DO step = 5000, 100000, 1000
+DO step = 5000, 75000, 1000
     ! step = 48000
     call cpu_time(time1)
     if((step > 99) .and. (step < 1000)) then
@@ -47,7 +47,7 @@ DO step = 5000, 100000, 1000
     elseif((step > 9999999) .and. (step < 100000000)) then
         write(file_num,"(i8)") step
     endif
-    open(20, file=datadir//trim(file_num)//".bin", form="unformatted")
+    open(20, file=datadir//'1_'//trim(file_num)//".bin", form="unformatted")
     do zi = 0, zmax
         do yi = 0, ymax
             do xi = 0, xmax
@@ -315,11 +315,11 @@ DO step = 5000, 100000, 1000
     close(30)
 
     if(step == 5000) then
-        open(10,file="./drop_num.d")
+        open(10,file="./drop_num_1.d")
         write(10,*) dble(step), dble(dropnum)
         close(10)
     else
-        open(10,file="./drop_num.d",action="write",position="append")
+        open(10,file="./drop_num_1.d",action="write",position="append")
         write(10,*) dble(step), dble(dropnum)
         close(10)
     endif
@@ -332,15 +332,15 @@ DO step = 5000, 100000, 1000
     ! enddo
     ! close(11)
 
-    if(step == 5000) then
-        open(12,file="./vall.d")
-        write(12,*) dble(step), Vall
-        close(12)
-    else
-        open(12,file="./vall.d",action="write",position="append")
-        write(12,*) dble(step), Vall
-        close(12)
-    endif
+    ! if(step == 5000) then
+    !     open(12,file="./vall.d")
+    !     write(12,*) dble(step), Vall
+    !     close(12)
+    ! else
+    !     open(12,file="./vall.d",action="write",position="append")
+    !     write(12,*) dble(step), Vall
+    !     close(12)
+    ! endif
     call cpu_time(time2)
     open(30,file="./process.d",action="write",position="append")
     write(30,*) "time is!!!", time2-time1
