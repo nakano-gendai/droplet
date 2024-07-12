@@ -5,6 +5,8 @@ program main
     integer,parameter:: zmax = 255 !ｚ方向格子数（０から数える）
     real(8),parameter:: phi1 = 2.638d-1 !連続相のオーダーパラメータ
     real(8),parameter:: phi2 = 4.031d-1 !分散相のオーダーパラメータ
+    integer,parameter:: case_initial_num = 1 !最初のケース番号
+    integer,parameter:: case_end_num = 25 !最後のケース番号
 
     real(8) phi(-1:xmax+1,-1:ymax+1,-1:zmax+1)
     integer label(0:xmax,0:ymax,0:zmax)
@@ -15,13 +17,15 @@ program main
     real(8) Vlabel(1:1000), radius(1:1000)
     real(8) Vall
 
-    character(*),parameter :: datadir = "/data/sht/nakanog/DNS_turbulence_256_IHT_new/case6/collect/"
-    character(*),parameter :: datadir2 = "/data/sht/nakanog/DNS_turbulence_256_IHT_new/case6/collect/radius/"
-    integer step, dropnum
-    character(8) file_num
+    character(*),parameter :: datadir = "/data/sht/nakanog/IHT_drop_d70_we5/"
+    character(*),parameter :: datadir2 = "/data/sht/nakanog/IHT_drop_d70_we5/drop_num/"
+    integer step, dropnum, case_num
+    character(8) file_num, file_num2
     real(8) time1, time2
 
-    real(8),parameter:: D = 32.0d0
+    real(8),parameter:: D = 70.0d0
+    real(8),parameter:: epsilon = 9.15d-10 !エネルギー散逸率
+    real(8),parameter:: eddytime = epsilon**(-1.0d0/3.0d0)*D**(2.0d0/3.0d0)
 
     !初期液滴中心
     real(8), parameter:: xc = 0.5d0*dble(xmax+1)	
@@ -31,7 +35,15 @@ program main
     open(30,file="./process.d")
     write(30,*) "percolation start!!!!"
     close(30)
-DO step = 5000, 100000, 1000
+DO case_num = case_initial_num, case_end_num
+    if((case_num > 0) .and. (case_num < 10)) then
+        write(file_num2,"(i1)") case_num
+    elseif((case_num > 9) .and. (case_num < 100)) then
+        write(file_num2,"(i2)") case_num
+    elseif((case_num > 99) .and. (case_num < 1000)) then
+        write(file_num2,"(i3)") case_num
+    endif
+DO step = 5000, 50000, 1000
     ! step = 48000
     call cpu_time(time1)
     if((step > 99) .and. (step < 1000)) then
@@ -47,7 +59,8 @@ DO step = 5000, 100000, 1000
     elseif((step > 9999999) .and. (step < 100000000)) then
         write(file_num,"(i8)") step
     endif
-    open(20, file=datadir//trim(file_num)//".bin", form="unformatted")
+
+    open(20, file=datadir//trim(file_num2)//"_"//trim(file_num)//".bin", form="unformatted")
     do zi = 0, zmax
         do yi = 0, ymax
             do xi = 0, xmax
@@ -57,46 +70,6 @@ DO step = 5000, 100000, 1000
     enddo
     close(20)
 
-    !phiの周期境界
-    ! do zi=0,zmax
-    !     do yi=0,ymax
-    !         do xi=0,xmax
-    !             if((dble(xi)*ds-xc)**2 + (dble(yi)*ds-yc)**2 + (dble(zi)*ds-0.0d0)**2 <= (0.5d0*D)**2) then
-    !                 phi(xi,yi,zi) = phi2
-    !             else if((dble(xi)*ds-xc)**2 + (dble(yi)*ds-yc)**2 + (dble(zi)*ds-dble(zmax))**2 <= (0.5d0*D)**2) then
-    !                 phi(xi,yi,zi) = phi2
-                ! if((dble(xi)*ds-xc)**2 + (dble(yi)*ds-0.0d0)**2 + (dble(zi)*ds-zc)**2 <= (0.5d0*D)**2) then
-                !     phi(xi,yi,zi) = phi2
-                ! else if((dble(xi)*ds-xc)**2 + (dble(yi)*ds-dble(ymax))**2 + (dble(zi)*ds-zc)**2 <= (0.5d0*D)**2) then
-                !     phi(xi,yi,zi) = phi2
-                ! if((dble(xi)*ds-0.0d0)**2 + (dble(yi)*ds-yc)**2 + (dble(zi)*ds-zc)**2 <= (0.5d0*D)**2) then
-                !     phi(xi,yi,zi) = phi2
-                ! else if((dble(xi)*ds-dble(xmax))**2 + (dble(yi)*ds-yc)**2 + (dble(zi)*ds-zc)**2 <= (0.5d0*D)**2) then
-                !     phi(xi,yi,zi) = phi2
-    !             else
-    !                 phi(xi,yi,zi) = phi1
-    !             endif
-    !         enddo
-    !     enddo
-    ! enddo
-
-    !phiの周期境界
-    ! do zi=0,zmax
-    !     do yi=-1,ymax+1
-    !         do xi=0,xmax
-    !             phi(xi,-1,zi) = phi(xi,ymax,zi)
-    !             phi(xi,ymax+1,zi) = phi(xi,0,zi)
-    !             phi(-1,yi,zi) = phi(xmax,yi,zi)
-    !             phi(xmax+1,yi,zi) = phi(0,yi,zi)
-    !         enddo
-    !     enddo
-    ! enddo
-    ! do yi=-1,ymax+1
-    !     do xi=-1,xmax+1
-    !         phi(xi,yi,-1) = phi(xi,yi,zmax)
-    !         phi(xi,yi,zmax+1) = phi(xi,yi,0)
-    !     enddo
-    ! enddo
     open(30,file="./process.d",action="write",position="append")
     write(30,*) "input is OK!!!", step
     close(30)
@@ -315,12 +288,12 @@ DO step = 5000, 100000, 1000
     close(30)
 
     if(step == 5000) then
-        open(10,file="./drop_num.d")
-        write(10,*) dble(step), dble(dropnum)
+        open(10,file=datadir2//trim(file_num2)//"_num.d")
+        write(10,*) dble(step), (dble(step)-5000.0d0)/eddytime, dble(dropnum)
         close(10)
     else
-        open(10,file="./drop_num.d",action="write",position="append")
-        write(10,*) dble(step), dble(dropnum)
+        open(10,file=datadir2//trim(file_num2)//"_num.d",action="write",position="append")
+        write(10,*) dble(step), (dble(step)-5000.0d0)/eddytime, dble(dropnum)
         close(10)
     endif
 
@@ -332,18 +305,19 @@ DO step = 5000, 100000, 1000
     ! enddo
     ! close(11)
 
-    if(step == 5000) then
-        open(12,file="./vall.d")
-        write(12,*) dble(step), Vall
-        close(12)
-    else
-        open(12,file="./vall.d",action="write",position="append")
-        write(12,*) dble(step), Vall
-        close(12)
-    endif
+    ! if(step == 5000) then
+    !     open(12,file="./vall.d")
+    !     write(12,*) dble(step), Vall
+    !     close(12)
+    ! else
+    !     open(12,file="./vall.d",action="write",position="append")
+    !     write(12,*) dble(step), Vall
+    !     close(12)
+    ! endif
     call cpu_time(time2)
     open(30,file="./process.d",action="write",position="append")
     write(30,*) "time is!!!", time2-time1
     close(30)
+ENDDO
 ENDDO
 end program main
