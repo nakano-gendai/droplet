@@ -20,7 +20,7 @@ module globals
     integer,parameter:: step_end = 50000
     integer,parameter:: step_bin = 1000
     integer,parameter:: step_num2 = (step_end - step_start) / step_bin + 1 
-    integer,parameter:: case_initial_num = 1 !最初のケース番号
+    integer,parameter:: case_initial_num = 11 !最初のケース番号
     integer,parameter:: case_end_num = 25 !最後のケース番号
 
     !読み込みディレクトリ
@@ -1025,7 +1025,8 @@ use glassman
     allocate(tmp3(0:comm_procs-1,0:x_procs+1,0:y_procs+1,0:zmax+2))
     allocate(tmp4(0:comm_procs-1,0:x_procs+1,0:y_procs+1,0:zmax+2))
 
-DO case_num = case_initial_num, case_end_num
+! DO case_num = case_initial_num, case_end_num
+case_num = case_initial_num
 DO n = step_start, step_end, step_bin
     ! call input(u1_procs,u2_procs,u3_procs,p_procs,phi_procs)
     write(filename2,*) n
@@ -1341,7 +1342,7 @@ ENDDO
         enddo
         close(110)
     endif
-ENDDO
+! ENDDO
 
     ! if(comm_rank==0) then
     !     open(37,file ="./enesupe_phi.d")

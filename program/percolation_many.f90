@@ -5,20 +5,20 @@ program main
     integer,parameter:: zmax = 255 !ｚ方向格子数（０から数える）
     real(8),parameter:: phi1 = 2.638d-1 !連続相のオーダーパラメータ
     real(8),parameter:: phi2 = 4.031d-1 !分散相のオーダーパラメータ
-    integer,parameter:: case_initial_num = 6 !最初のケース番号
+    integer,parameter:: case_initial_num = 25 !最初のケース番号
     integer,parameter:: case_end_num = 25 !最後のケース番号
 
     real(8) phi(-1:xmax+1,-1:ymax+1,-1:zmax+1)
     integer label(0:xmax,0:ymax,0:zmax)
-    integer klass(1:1000)
+    integer klass(1:500)
     integer tmp(1:7)
     integer labeltmp
     integer xi, yi, zi, i, k, a, b, x_up, y_up, z_up, x_down, y_down, z_down
-    real(8) Vlabel(1:1000), radius(1:1000)
+    real(8) Vlabel(1:500), radius(1:500)
     real(8) Vall
 
-    character(*),parameter :: datadir = "/data/sht/nakanog/IHT_drop_d70_we5/"
-    character(*),parameter :: datadir2 = "/data/sht/nakanog/IHT_drop_d70_we5/drop_num/"
+    character(*),parameter :: datadir = "/data/sht/nakanog/IHT_drop_d70_we1.4/"
+    character(*),parameter :: datadir2 = "/data/sht/nakanog/IHT_drop_d70_we1.4/drop_num/"
     integer step, dropnum, case_num
     character(8) file_num, file_num2
     real(8) time1, time2
@@ -36,6 +36,10 @@ program main
     write(30,*) "percolation start!!!!"
     close(30)
 DO case_num = case_initial_num, case_end_num
+DO step = 10000, 60000, 1000
+    ! step = 48000
+    call cpu_time(time1)
+
     if((case_num > 0) .and. (case_num < 10)) then
         write(file_num2,"(i1)") case_num
     elseif((case_num > 9) .and. (case_num < 100)) then
@@ -43,9 +47,7 @@ DO case_num = case_initial_num, case_end_num
     elseif((case_num > 99) .and. (case_num < 1000)) then
         write(file_num2,"(i3)") case_num
     endif
-DO step = 5000, 50000, 1000
-    ! step = 48000
-    call cpu_time(time1)
+
     if((step > 99) .and. (step < 1000)) then
         write(file_num, "(i3)") step
     elseif((step > 999) .and. (step < 10000)) then
@@ -258,7 +260,7 @@ DO step = 5000, 50000, 1000
 
     Vlabel(:) = 0.0d0
     dropnum = 0
-    DO i = 1, 1000
+    DO i = 1, 500
         do zi = 0, zmax
             do yi = 0, ymax
                 do xi = 0, xmax
