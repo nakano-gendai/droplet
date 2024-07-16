@@ -20,8 +20,8 @@ module globals
     integer,parameter:: step_end = 50000
     integer,parameter:: step_bin = 1000
     integer,parameter:: step_num2 = (step_end - step_start) / step_bin + 1 
-    integer,parameter:: case_initial_num = 11 !最初のケース番号
-    integer,parameter:: case_end_num = 25 !最後のケース番号
+    integer,parameter:: case_initial_num = 13 !最初のケース番号
+    integer,parameter:: case_end_num = 14 !最後のケース番号
 
     !読み込みディレクトリ
     character(*),parameter :: datadir_input = "/data/sht/nakanog/IHT_drop_d70_we5/"

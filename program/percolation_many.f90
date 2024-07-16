@@ -5,16 +5,16 @@ program main
     integer,parameter:: zmax = 255 !ｚ方向格子数（０から数える）
     real(8),parameter:: phi1 = 2.638d-1 !連続相のオーダーパラメータ
     real(8),parameter:: phi2 = 4.031d-1 !分散相のオーダーパラメータ
-    integer,parameter:: case_initial_num = 25 !最初のケース番号
-    integer,parameter:: case_end_num = 25 !最後のケース番号
+    integer,parameter:: case_initial_num = 18 !最初のケース番号
+    integer,parameter:: case_end_num = 20 !最後のケース番号
 
     real(8) phi(-1:xmax+1,-1:ymax+1,-1:zmax+1)
     integer label(0:xmax,0:ymax,0:zmax)
-    integer klass(1:500)
+    integer klass(1:2000)
     integer tmp(1:7)
     integer labeltmp
     integer xi, yi, zi, i, k, a, b, x_up, y_up, z_up, x_down, y_down, z_down
-    real(8) Vlabel(1:500), radius(1:500)
+    real(8) Vlabel(1:2000), radius(1:2000)
     real(8) Vall
 
     character(*),parameter :: datadir = "/data/sht/nakanog/IHT_drop_d70_we1.4/"
@@ -36,7 +36,7 @@ program main
     write(30,*) "percolation start!!!!"
     close(30)
 DO case_num = case_initial_num, case_end_num
-DO step = 10000, 60000, 1000
+DO step = 50000, 70000, 1000
     ! step = 48000
     call cpu_time(time1)
 
@@ -260,7 +260,7 @@ DO step = 10000, 60000, 1000
 
     Vlabel(:) = 0.0d0
     dropnum = 0
-    DO i = 1, 500
+    DO i = 1, 2000
         do zi = 0, zmax
             do yi = 0, ymax
                 do xi = 0, xmax
@@ -289,7 +289,7 @@ DO step = 10000, 60000, 1000
     write(30,*) "dropnum is cal!!!", step
     close(30)
 
-    if(step == 5000) then
+    if(step == 50000) then
         open(10,file=datadir2//trim(file_num2)//"_num.d")
         write(10,*) dble(step), (dble(step)-5000.0d0)/eddytime, dble(dropnum)
         close(10)
