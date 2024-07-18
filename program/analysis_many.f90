@@ -50,15 +50,6 @@ implicit none
         enddo
     enddo
 
-    ! filename_output = datadir_output//'ave20.bin'
-    ! open(120, file=filename_output, form="unformatted")
-    ! do k_analysis = 1, (xmax+1) / 2
-    !     do k_step = 1, step_num2
-    !         write(120) contribution_each_scale_sum(k_step, k_analysis)
-    !     enddo
-    ! enddo
-    ! close(120)
-
     k_analysis = 1
     filename_output = datadir_output//'1_10_ave13_20.d'
     open(20,file=filename_output,status='replace')

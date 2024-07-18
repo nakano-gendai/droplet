@@ -20,8 +20,8 @@ module globals
     integer,parameter:: step_end = 50000
     integer,parameter:: step_bin = 1000
     integer,parameter:: step_num2 = (step_end - step_start) / step_bin + 1 
-    integer,parameter:: case_initial_num = 13 !最初のケース番号
-    integer,parameter:: case_end_num = 14 !最後のケース番号
+    integer,parameter:: case_initial_num = 40 !最初のケース番号
+    integer,parameter:: case_end_num = 40 !最後のケース番号
 
     !読み込みディレクトリ
     character(*),parameter :: datadir_input = "/data/sht/nakanog/IHT_drop_d70_we5/"
@@ -1025,8 +1025,8 @@ use glassman
     allocate(tmp3(0:comm_procs-1,0:x_procs+1,0:y_procs+1,0:zmax+2))
     allocate(tmp4(0:comm_procs-1,0:x_procs+1,0:y_procs+1,0:zmax+2))
 
-! DO case_num = case_initial_num, case_end_num
-case_num = case_initial_num
+DO case_num = case_initial_num, case_end_num
+! case_num = case_initial_num
 DO n = step_start, step_end, step_bin
     ! call input(u1_procs,u2_procs,u3_procs,p_procs,phi_procs)
     write(filename2,*) n
@@ -1088,42 +1088,6 @@ DO n = step_start, step_end, step_bin
     call glue(u1_procs)
     call glue(u2_procs)
     call glue(u3_procs)
-    !化学ポテンシャル
-    ! call lap_cal(lap_phi_procs,phi_procs)
-    ! call chemical_potencial_cal(chemical_potencial,phi_procs,lap_phi_procs)
-    !移流項
-    ! call grad_cal(grad_phi_procs,phi_procs,cr)
-    ! call advection_cal(advection_phi,grad_phi_procs,u1_procs,u2_procs,u3_procs)
-    !各スケールの界面への寄与
-    ! call contribution(chemical_potencial,advection_phi,chemical_potencial_hat,advection_phi_hat,enesupe_phi,enesupe_phi_sum,enesupe_phi_result)
-    !自由エネルギースペクトル
-    ! if((n == step_start)) then
-        ! call free_energy_cal(free_energy,phi_procs)
-    !     call phi_supectrum(grad_phi1_hat,grad_phi2_hat,grad_phi3_hat,grad_phi_procs,grad_phi1_re,grad_phi2_re,grad_phi3_re,phisupe,phisupe_sum,free_energy,phi_procs)
-    !     if(comm_rank == 0) then
-    !         do i = 1, (xmax+1)/2 + 1
-    !             phisupe_result(i) = phisupe_result(i) + phisupe_sum(i)
-    !         enddo
-
-    !         open(37,file ="./phisupe_d70we1.4_phionly.d")
-    !         do i=1,(xmax+1)/2+1
-    !             write(37,"(2es16.8)") dble(i)-1.0d0, phisupe_result(i)
-    !         enddo
-    !         close(37)
-    !     endif
-    ! endif
-
-    !運動エネルギー
-    ! kinetic_energy_sum = 0.0d0
-    ! kinetic_energy_all = 0.0d0
-    ! do zi=1,zmax+1
-    !     do yi=1,y_procs
-    !         do xi=1,x_procs
-    !             kinetic_energy_sum = kinetic_energy_sum + 0.5d0*(u1_procs(xi,yi,zi)**2 + u2_procs(xi,yi,zi)**2 + u3_procs(xi,yi,zi)**2)
-    !         enddo
-    !     enddo
-    ! enddo
-    ! call MPI_Reduce(kinetic_energy_sum, kinetic_energy_all, 1, MPI_REAL8, MPI_SUM, 0, MPI_COMM_WORLD, ierr)
 
     !Korteweg応力テンソル
     call grad_cal(grad_phi_procs,phi_procs,cr)
@@ -1223,21 +1187,8 @@ DO n = step_start, step_end, step_bin
         enddo
     enddo
 
-    ! do zi=1,zmax+1
-    !     do yi=1,y_procs
-    !         do xi=1,x_procs
-    !             interaction_procs(xi,yi,zi) = u1_procs(xi,yi,zi)*grad_tensor11(xi,yi,zi) + u2_procs(xi,yi,zi)*grad_tensor21(xi,yi,zi) + u3_procs(xi,yi,zi)*grad_tensor31(xi,yi,zi) &
-    !                                     + u1_procs(xi,yi,zi)*grad_tensor12(xi,yi,zi) + u2_procs(xi,yi,zi)*grad_tensor22(xi,yi,zi) + u3_procs(xi,yi,zi)*grad_tensor32(xi,yi,zi) &
-    !                                     + u1_procs(xi,yi,zi)*grad_tensor13(xi,yi,zi) + u2_procs(xi,yi,zi)*grad_tensor23(xi,yi,zi) + u3_procs(xi,yi,zi)*grad_tensor33(xi,yi,zi)
-                
-    !             interaction_procs(xi,yi,zi) = interaction_procs(xi,yi,zi) * kappag
-    !         enddo
-    !     enddo
-    ! enddo
-
     !スケール分解して渦の液滴への寄与を見る
     do k_analysis = 1, (xmax+1)/2 + 1
-        ! k_analysis = 2
         call scale_cal2(u1_procs,u2_procs,u3_procs,u1_procs_re,u2_procs_re,u3_procs_re,u1_hat,u2_hat,u3_hat,k_analysis,u1_procs_scale,u2_procs_scale,u3_procs_scale)
         call glue(u1_procs)
         call glue(u2_procs)
@@ -1270,66 +1221,7 @@ DO n = step_start, step_end, step_bin
             k_step = (n - step_start) / step_bin + 1
             contribution_each_scale(k_step,k_analysis) = interaction_all / (dble(xmax+1)*dble(ymax+1)*dble(zmax+1))
         endif
-
     enddo
-
-
-    ! call grad_u_cal(grad_u_procs,u1_procs,u2_procs,u3_procs,cr)
-    ! call strain_cal(grad_u_procs,strain_procs)
-
-    ! call interaction_cal(interaction_procs,strain_procs,korteweg_procs)
-
-    ! interaction_sum = 0.0d0
-    ! interaction_all = 0.0d0
-    ! do zi=1,zmax+1
-    !     do yi=1,y_procs
-    !         do xi=1,x_procs
-    !             interaction_sum = interaction_sum + interaction_procs(xi,yi,zi)
-    !         enddo
-    !     enddo
-    ! enddo
-    ! call MPI_Reduce(interaction_sum, interaction_all, 1, MPI_REAL8, MPI_SUM, 0, MPI_COMM_WORLD, ierr)
-
-    !自由エネルギー
-    ! call free_energy_cal(free_energy,phi_procs)
-    ! free_energy_sum = 0.0d0
-    ! free_energy_all = 0.0d0
-    ! do zi=1,zmax+1
-    !     do yi=1,y_procs
-    !         do xi=1,x_procs
-    !             free_energy_sum = free_energy_sum + (free_energy(xi,yi,zi) + 0.5d0*kappag*(grad_phi_procs(1,xi,yi,zi)**2 + grad_phi_procs(2,xi,yi,zi)**2 + grad_phi_procs(3,xi,yi,zi)**2))
-    !             ! free_energy_sum = free_energy_sum + (free_energy(xi,yi,zi))
-    !             ! free_energy_sum = free_energy_sum + (0.5d0*kappag*(grad_phi_procs(1,xi,yi,zi)**2 + grad_phi_procs(2,xi,yi,zi)**2 + grad_phi_procs(3,xi,yi,zi)**2))
-    !         enddo
-    !     enddo
-    ! enddo
-    ! call MPI_Reduce(free_energy_sum, free_energy_all, 1, MPI_REAL8, MPI_SUM, 0, MPI_COMM_WORLD, ierr)
-
-    ! if(comm_rank == 0) then
-    !     if(mod(n,1000)==0) then
-    !         interaction_all = interaction_all * (-1.0d0) * kappag
-    !         if(n == 1000) then
-    !             ! open(18,file="./contribution_s.d",status='replace')
-    !             ! write(18,"(2es16.8)") dble(n), interaction_all / (dble(xmax+1)*dble(ymax+1)*dble(zmax+1))
-    !             ! close(18)
-
-    !             open(19,file="./energy_all.d",status='replace')
-    !             write(19,"(3es16.8)") dble(n), free_energy_all, kinetic_energy_all
-    !             close(19)
-    !         else
-    !             ! open(18,file="./contribution_s.d",action="write",position="append")
-    !             ! write(18,"(2es16.8)") dble(n), interaction_all / (dble(xmax+1)*dble(ymax+1)*dble(zmax+1))
-    !             ! close(18)
-
-    !             open(19,file="./energy_all.d",action="write",position="append")
-    !             write(19,"(3es16.8)") dble(n), free_energy_all, kinetic_energy_all
-    !             close(19)
-    !         endif
-    !     endif
-    ! endif
-
-    ! call output(interaction_procs)
-
 ENDDO
     if(comm_rank == 0) then
         write(filename3,*) case_num
@@ -1342,7 +1234,7 @@ ENDDO
         enddo
         close(110)
     endif
-! ENDDO
+ENDDO
 
     ! if(comm_rank==0) then
     !     open(37,file ="./enesupe_phi.d")
