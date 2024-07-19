@@ -7,12 +7,13 @@ implicit none
     real(8) dummy1, dummy2, dummy3, dummy4, dummy5, dummy6, dummy7
     integer i
     real(8) wa_f, ave_f, wa_g, ave_g, wa_ff, ave_ff, wa_gg, ave_gg
-    integer,parameter:: num = 50
+    integer,parameter:: num = 25
     integer,parameter:: start = 113
     real(8),parameter:: pi = acos(-1.0d0) !円周率
     real(8),parameter:: nu = 0.001d0
 
     real(8) integral_scale, integral_top, integral_bottom
+    integer kazu
 
     allocate(t(num))
     allocate(f(num))
@@ -105,23 +106,27 @@ implicit none
     ! enddo
     ! close(20)
 
-    open(10,file="d70we5_break_time.d")
+    open(10,file="d70we1.4_break_time.d")
     do i = 1, num
         read(10,*) dummy4, f(i)
     enddo
     close(10)
 
     wa_f = 0.0d0
+    kazu = 0
     do i = 1, num
-        wa_f = wa_f + f(i)
+        if(f(i) > 0) then
+            wa_f = wa_f + f(i)
+            kazu = kazu + 1
+        endif
     enddo
-    wa_f = wa_f / dble(num)
+    wa_f = wa_f / dble(kazu)
     write(*,*) wa_f
 
     do i = 1, num
         wa_g = wa_f + (f(i) - wa_f)**2.0d0
     enddo
-    wa_g = wa_g / dble(num)
+    wa_g = wa_g / dble(kazu)
     wa_g = sqrt(wa_g)
     write(*,*) wa_g
 
