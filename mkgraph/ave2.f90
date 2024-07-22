@@ -7,13 +7,16 @@ implicit none
     real(8) dummy1, dummy2, dummy3, dummy4, dummy5, dummy6, dummy7
     integer i
     real(8) wa_f, ave_f, wa_g, ave_g, wa_ff, ave_ff, wa_gg, ave_gg
-    integer,parameter:: num = 25
+    integer,parameter:: num = 71
     integer,parameter:: start = 113
     real(8),parameter:: pi = acos(-1.0d0) !円周率
     real(8),parameter:: nu = 0.001d0
 
     real(8) integral_scale, integral_top, integral_bottom
     integer kazu
+
+    real(8) f1(71), f2(71), f3(71), f4(71), f5(71), f6(71), f7(71), f8(71), f9(71), f10(71)
+    real(8) g1(71), g2(71), g3(71), g4(71), g5(71), g6(71), g7(71), g8(71), g9(71), g10(71)
 
     allocate(t(num))
     allocate(f(num))
@@ -106,28 +109,130 @@ implicit none
     ! enddo
     ! close(20)
 
-    open(10,file="d70we1.4_break_time.d")
-    do i = 1, num
-        read(10,*) dummy4, f(i)
+
+
+    ! open(10,file="d70we1.4_break_time.d")
+    ! do i = 1, num
+    !     read(10,*) dummy4, f(i)
+    ! enddo
+    ! close(10)
+
+    ! wa_f = 0.0d0
+    ! kazu = 0
+    ! do i = 1, num
+    !     if(f(i) > 0) then
+    !         wa_f = wa_f + f(i)
+    !         kazu = kazu + 1
+    !     endif
+    ! enddo
+    ! wa_f = wa_f / dble(kazu)
+    ! write(*,*) wa_f
+
+    ! do i = 1, num
+    !     wa_g = wa_f + (f(i) - wa_f)**2.0d0
+    ! enddo
+    ! wa_g = wa_g / dble(kazu)
+    ! wa_g = sqrt(wa_g)
+    ! write(*,*) wa_g
+
+
+    g1(:) = 0.0d0
+    g2(:) = 0.0d0
+    g3(:) = 0.0d0
+    g4(:) = 0.0d0
+    g5(:) = 0.0d0
+    g6(:) = 0.0d0
+    g7(:) = 0.0d0
+    g8(:) = 0.0d0
+    g9(:) = 0.0d0
+    g10(:) = 0.0d0
+    open(10,file="1_10_ave1_4.d")
+    do i = 1, 71
+        read(10,*) f(i), f1(i), f2(i), f3(i), f4(i), f5(i), f6(i), f7(i), f8(i), f9(i), f10(i)
     enddo
     close(10)
 
-    wa_f = 0.0d0
-    kazu = 0
-    do i = 1, num
-        if(f(i) > 0) then
-            wa_f = wa_f + f(i)
-            kazu = kazu + 1
-        endif
+    do i = 1, 71
+        g1(i) = g1(i) + f1(i)
+        g2(i) = g2(i) + f2(i)
+        g3(i) = g3(i) + f3(i)
+        g4(i) = g4(i) + f4(i)
+        g5(i) = g5(i) + f5(i)
+        g6(i) = g6(i) + f6(i)
+        g7(i) = g7(i) + f7(i)
+        g8(i) = g8(i) + f8(i)
+        g9(i) = g9(i) + f9(i)
+        g10(i) = g10(i) + f10(i)
     enddo
-    wa_f = wa_f / dble(kazu)
-    write(*,*) wa_f
 
-    do i = 1, num
-        wa_g = wa_f + (f(i) - wa_f)**2.0d0
+    open(11,file="1_10_ave6_9.d")
+    do i = 1, 71
+        read(11,"(11es16.8)") f(i), f1(i), f2(i), f3(i), f4(i), f5(i), f6(i), f7(i), f8(i), f9(i), f10(i)
     enddo
-    wa_g = wa_g / dble(kazu)
-    wa_g = sqrt(wa_g)
-    write(*,*) wa_g
+    close(11)
+
+    do i = 1, 71
+        g1(i) = g1(i) + f1(i)
+        g2(i) = g2(i) + f2(i)
+        g3(i) = g3(i) + f3(i)
+        g4(i) = g4(i) + f4(i)
+        g5(i) = g5(i) + f5(i)
+        g6(i) = g6(i) + f6(i)
+        g7(i) = g7(i) + f7(i)
+        g8(i) = g8(i) + f8(i)
+        g9(i) = g9(i) + f9(i)
+        g10(i) = g10(i) + f10(i)
+    enddo
+
+    open(12,file="1_10_ave11_24.d")
+    do i = 1, 71
+        read(12,"(11es16.8)") f(i), f1(i), f2(i), f3(i), f4(i), f5(i), f6(i), f7(i), f8(i), f9(i), f10(i)
+    enddo
+    close(12)
+
+    do i = 1, 71
+        g1(i) = g1(i) + f1(i)
+        g2(i) = g2(i) + f2(i)
+        g3(i) = g3(i) + f3(i)
+        g4(i) = g4(i) + f4(i)
+        g5(i) = g5(i) + f5(i)
+        g6(i) = g6(i) + f6(i)
+        g7(i) = g7(i) + f7(i)
+        g8(i) = g8(i) + f8(i)
+        g9(i) = g9(i) + f9(i)
+        g10(i) = g10(i) + f10(i)
+    enddo
+
+    do i = 1, 71
+        g1(i) = g1(i) / 22.0d0
+        g2(i) = g2(i) / 22.0d0
+        g3(i) = g3(i) / 22.0d0
+        g4(i) = g4(i) / 22.0d0
+        g5(i) = g5(i) / 22.0d0
+        g6(i) = g6(i) / 22.0d0
+        g7(i) = g7(i) / 22.0d0
+        g8(i) = g8(i) / 22.0d0
+        g9(i) = g9(i) / 22.0d0
+        g10(i) = g10(i) / 22.0d0
+    enddo
+
+    do i = 1, 71
+        f1(i) = g1(i)
+        f2(i) = g2(i)
+        f3(i) = g3(i)
+        f4(i) = g4(i)
+        f5(i) = g5(i)
+        f6(i) = g6(i)
+        f7(i) = g7(i)
+        f8(i) = g8(i)
+        f9(i) = g9(i)
+        f10(i) = g10(i)
+    enddo
+
+    open(13,file="1_10_ave1_24_we2.d")
+    do i = 1, 71
+        write(13,"(11es16.8)") f(i), f1(i), f2(i), f3(i), f4(i), f5(i), f6(i), f7(i), f8(i), f9(i), f10(i)
+    enddo
+    close(13)
 
 end program

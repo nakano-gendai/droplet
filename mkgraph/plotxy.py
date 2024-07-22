@@ -19,7 +19,7 @@ os.makedirs(plotdir, exist_ok = True) # ディレクトリ作成
 # datadir ='/home/nakano/anime/b4/data/data_fig6/'
 datadir ="./"
 plotdir, datadir, ext = plotdir + '/', datadir + '/', '.' + ext
-dfile1   = datadir + 'energy_1_10.d'
+dfile1   = datadir + '1_10_ave1_24_we2.d'
 # dfile2   = datadir + 'enesupe_phi_40we1.4_3.d'
 # dfile3   = datadir + 'enesupe_phi_50we1.4_3.d'
 # dfile4   = datadir + 'enesupe_phi_60we1.4_3.d'
@@ -78,7 +78,7 @@ y8 = np.loadtxt(dfile1, usecols = 8, dtype = 'float64')
 
 
 ### サイズ、ラベルなどの設定
-lx, ly = r'$t$', r'$\left<\vartheta\right>_V$' # r''でTeX文字にできる
+lx, ly = r'$t/t_\mathrm{d}$', r'$\left<\vartheta\right>$' # r''でTeX文字にできる
 if fsize == 0:
     fs1, lw1, ms1 = 1., 1., 2.8
     tck_s1, alw = 3, 0.625
@@ -107,9 +107,8 @@ def plot_y1y2(): # y1, y2プロット用
     ax1.set_xlabel(lx, labelpad = lpad[0]) # 軸ラベル
     ax1.set_ylabel(ly, labelpad = lpad[1])
     
-    xm, ym = [5000, 39000], [-0.00000000003, 0.00000000008]
-    # xm, ym = [0, 35], [0, 1.5]
-    # xm, ym = [0, 35], [0, 25]
+    # xm, ym = [0, 2.8], [-0.000000000001, 0.00000000001]
+    xm, ym = [0, 4], [-0.000000000005, 0.000000000015]
     ax1.set_xlim(xm[0], xm[1]) # 軸の範囲
     ax1.set_ylim(ym[0], ym[1])
     # ax1.set_yticks(np.arange(0.0, ym[1] + 0.0000005)) # xmaxまで0.2刻みの目盛り線
@@ -118,12 +117,12 @@ def plot_y1y2(): # y1, y2プロット用
     # plt.yscale('log')
     # plt.xscale('log')
 
-    # pos = [0, 0.00000001, 0.00000002] 
-    # ticks = [r'$0$', r'$1\times 10^{-8}$', r'$2\times 10^{-8}$']
-    # ax1.set_yticks(pos)
-    # ax1.set_yticklabels(ticks)
+    pos = [0, 1, 2, 3, 4] 
+    ticks = [r'$0$', r'$1$', r'$2$', r'$3$', r'$4$']
+    ax1.set_xticks(pos)
+    ax1.set_xticklabels(ticks)
     
-    # pos = [0, 10, 20] 
+    # pos = [-0.25, 0, 20] 
     # ticks = [r'$0$', r'$10$', r'$20$']
     # ax1.set_yticks(pos)
     # ax1.set_yticklabels(ticks)
@@ -248,7 +247,7 @@ def plot_y1y2(): # y1, y2プロット用
     framealpha = 1.0, fancybox=False, fontsize=8.0,
     edgecolor = "black").get_frame().set_linewidth(alw*0.8)
     # ### 保存
-    fig.savefig(plotdir + "energy_scale_k_1_8" + ext, bbox_inches = "tight") # bbox_inches="tight"で余白をなくす
+    fig.savefig(plotdir + "contribution_we2_1_24" + ext, bbox_inches = "tight") # bbox_inches="tight"で余白をなくす
 
 ##=================== main ===================##
 if __name__ == '__main__':
