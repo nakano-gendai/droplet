@@ -4,13 +4,15 @@ implicit none
     integer,parameter:: ymax = 255 !ｙ方向格子数（０から数える）
     integer,parameter:: zmax = 255 !ｚ方向格子数（０から数える）
     integer,parameter:: step_start = 5000
-    integer,parameter:: step_end = 75000
+    integer,parameter:: step_end = 50000
     integer,parameter:: step_bin = 1000
     integer,parameter:: step_num2 = (step_end - step_start) / step_bin + 1 
     integer,parameter:: case_initial_num = 11 !最初のケース番号
     integer,parameter:: case_end_num = 24 !最後のケース番号
-    character(*),parameter :: datadir_input = "/data/sht/nakanog/IHT_drop_d70_we2/contribution/"
-    character(*),parameter :: datadir_output = "/data/sht/nakanog/IHT_drop_d70_we2/contribution/ave/"
+    ! character(*),parameter :: datadir_input = "/data/sht/nakanog/IHT_drop_d70_we2/contribution/"
+    ! character(*),parameter :: datadir_output = "/data/sht/nakanog/IHT_drop_d70_we2/contribution/ave/"
+    character(*),parameter :: datadir_input = "./"
+    character(*),parameter :: datadir_output = "./"
 
     real(8),parameter:: D = 70.0d0
     real(8),parameter:: epsilon = 9.15d-10 !エネルギー散逸率

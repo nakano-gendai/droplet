@@ -26,8 +26,8 @@ module globals
     integer,parameter:: step_input = 5000 !速度場入力時間step
     integer,parameter:: step_input_file_num = 600000 !case1での入力する乱流場のstep
     integer,parameter:: step_input_bin = 40000 !入力する乱流場のstep間隔
-    integer,parameter:: case_initial_num = 20 !最初のケース番号
-    integer,parameter:: case_end_num = 20 !最後のケース番号
+    integer,parameter:: case_initial_num = 49 !最初のケース番号
+    integer,parameter:: case_end_num = 50 !最後のケース番号
     !入力ディレクトリ
     character(*),parameter :: datadir_input = "/data/sht/nakanog/DNS_turbulence_256_IHT_new/fg/"
     !出力ディレクトリ
