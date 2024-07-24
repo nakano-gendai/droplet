@@ -112,7 +112,8 @@ else:
 
 def plot_y1y2(i): # y1, y2プロット用
     if fsize == 0:
-        fig = plt.figure(figsize = (3.0, 3.0), dpi = 100, linewidth = 0)
+        # fig = plt.figure(figsize = (3.0, 3.0), dpi = 100, linewidth = 0)
+        fig = plt.figure(figsize = (2.0, 2.0), dpi = 100, linewidth = 0)
     else:
         fig = plt.figure(figsize = (7.2, 7.0), dpi = 100, linewidth = 0)
     ax1 = fig.add_subplot(111)
