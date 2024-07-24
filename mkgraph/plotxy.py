@@ -95,7 +95,7 @@ else:
 
 def plot_y1y2(): # y1, y2プロット用
     if fsize == 0:
-        fig = plt.figure(figsize = (3.0, 3.0), dpi = 100, linewidth = 0)
+        fig = plt.figure(figsize = (2.0, 2.0), dpi = 100, linewidth = 0)
     else:
         fig = plt.figure(figsize = (7.2, 7.0), dpi = 100, linewidth = 0)
     ax1 = fig.add_subplot(111)
@@ -108,7 +108,7 @@ def plot_y1y2(): # y1, y2プロット用
     ax1.set_ylabel(ly, labelpad = lpad[1])
     
     # xm, ym = [0, 2.8], [-0.000000000001, 0.00000000001]
-    xm, ym = [0, 4], [-0.000000000005, 0.000000000015]
+    xm, ym = [0, 4], [-0.000000000004, 0.000000000016]
     ax1.set_xlim(xm[0], xm[1]) # 軸の範囲
     ax1.set_ylim(ym[0], ym[1])
     # ax1.set_yticks(np.arange(0.0, ym[1] + 0.0000005)) # xmaxまで0.2刻みの目盛り線
@@ -209,11 +209,11 @@ def plot_y1y2(): # y1, y2プロット用
     #         clip_on = False, # プロット枠外にもプロットする
     #         zorder = 103,      # zorderが大きいほど前面に表示される
     #         label = r'$k=8$') 
-    ax1.plot(x8, y8, lw = 1, ls = 'none', marker = 'x', ms = ms1*1.0, mew = lw1*0.5, mfc = 'none', color = 'lime', 
-            alpha = 0.8,     # 透明度
-            clip_on = False, # プロット枠外にもプロットする
-            zorder = 103,      # zorderが大きいほど前面に表示される
-            label = r'$k=8$') 
+    # ax1.plot(x8, y8, lw = 1, ls = 'none', marker = 'x', ms = ms1*1.0, mew = lw1*0.5, mfc = 'none', color = 'lime', 
+    #         alpha = 0.8,     # 透明度
+    #         clip_on = False, # プロット枠外にもプロットする
+    #         zorder = 103,      # zorderが大きいほど前面に表示される
+    #         label = r'$k=8$') 
 
     
     ax1.plot(x1, y1, lw = lw1*0.5, ls = 'solid',  color = 'red', alpha = 0.8, clip_on = True, zorder = 20)
@@ -223,7 +223,7 @@ def plot_y1y2(): # y1, y2プロット用
     ax1.plot(x5, y5, lw = lw1*0.5, ls = 'solid',  color = 'deepskyblue', alpha = 0.8, clip_on = True, zorder = 16)
     ax1.plot(x6, y6, lw = lw1*0.5, ls = 'solid',  color = 'orange', alpha = 0.8, clip_on = True, zorder = 15)
     ax1.plot(x7, y7, lw = lw1*0.5, ls = 'solid',  color = 'purple', alpha = 0.8, clip_on = True, zorder = 14)
-    ax1.plot(x8, y8, lw = lw1*0.5, ls = 'solid',  color = 'lime', alpha = 0.8, clip_on = True, zorder = 13)
+    # ax1.plot(x8, y8, lw = lw1*0.5, ls = 'solid',  color = 'lime', alpha = 0.8, clip_on = True, zorder = 13)
     
     # ax1.axvline(255/30*0.93/127.5, lw = lw1*0.5, ls = 'dotted', dashes = [2, 2], color = 'black', alpha = 1.0, zorder = 10, label = r'$k_{D/L=0.118}$') # dashesで破線の間隔などを設定できる
     # ax1.axvline(255/40*0.93/127.5, lw = lw1*0.5, ls = 'dotted', color = 'black', alpha = 0.8, zorder = 10, label = r'$k_{D/L=0.157}$') # dashesで破線の間隔などを設定できる
@@ -247,7 +247,7 @@ def plot_y1y2(): # y1, y2プロット用
     framealpha = 1.0, fancybox=False, fontsize=8.0,
     edgecolor = "black").get_frame().set_linewidth(alw*0.8)
     # ### 保存
-    fig.savefig(plotdir + "contribution_we2_1_24" + ext, bbox_inches = "tight") # bbox_inches="tight"で余白をなくす
+    fig.savefig(plotdir + "contribution_we2_1_24_2" + ext, bbox_inches = "tight") # bbox_inches="tight"で余白をなくす
 
 ##=================== main ===================##
 if __name__ == '__main__':
