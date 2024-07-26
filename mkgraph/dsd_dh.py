@@ -21,7 +21,7 @@ os.makedirs(plotdir, exist_ok = True) # ディレクトリ作成
 datadir ="./"
 plotdir, datadir, ext = plotdir + '/', datadir + '/', '.' + ext
 dfile1   = datadir + 'dsd1.d'
-dfile2   = datadir + 'dsd2.d'
+# dfile2   = datadir + 'dsd2.d'
 # dfile3   = datadir + 're0.2ca0.3.d'
 # dfile4   = datadir + 're0.2ca0.4.d'
 # dfile5   = datadir + 'ini_re0.2ca0.1.d'
@@ -55,7 +55,7 @@ def sns_set(fs, tck_s, alw, ctxt):
 
 ### 読み込み
 x1 = np.loadtxt(dfile1, usecols = 0, dtype = 'float64') # usecolsは列番号　dtypeは実数float64, 整数
-x2 = np.loadtxt(dfile2, usecols = 0, dtype = 'float64') # usecolsは列番号　dtypeは実数float64, 整数
+# x2 = np.loadtxt(dfile2, usecols = 0, dtype = 'float64') # usecolsは列番号　dtypeは実数float64, 整数
 # x3 = np.loadtxt(dfile3, usecols = 0, dtype = 'float64') # usecolsは列番号　dtypeは実数float64, 整数
 # x4 = np.loadtxt(dfile4, usecols = 0, dtype = 'float64') # usecolsは列番号　dtypeは実数float64, 整数
 # x5 = np.loadtxt(dfile5, usecols = 0, dtype = 'float64') # usecolsは列番号　dtypeは実数float64, 整数
@@ -64,7 +64,7 @@ x2 = np.loadtxt(dfile2, usecols = 0, dtype = 'float64') # usecolsは列番号　
 # x8 = np.loadtxt(dfile8, usecols = 0, dtype = 'float64') # usecolsは列番号　dtypeは実数float64, 整数
 
 y1 = np.loadtxt(dfile1, usecols = 1, dtype = 'float64')
-y2 = np.loadtxt(dfile2, usecols = 1, dtype = 'float64')
+# y2 = np.loadtxt(dfile2, usecols = 1, dtype = 'float64')
 # y3 = np.loadtxt(dfile3, usecols = 3, dtype = 'float64')
 # y4 = np.loadtxt(dfile4, usecols = 3, dtype = 'float64')
 # y5 = np.loadtxt(dfile5, usecols = 3, dtype = 'float64')
@@ -75,7 +75,7 @@ y2 = np.loadtxt(dfile2, usecols = 1, dtype = 'float64')
 
 ### サイズ、ラベルなどの設定
 # lx, ly = r'$step$', r'$\frac{\sum{V_{\mathrm{d}}}}{\sum{V_{\mathrm{d0}}}}$' # r''でTeX文字にできる
-lx, ly = r'$D_{\mathrm{d}}/d_{\mathrm{H}}$', r'$P(D_{\mathrm{d}}/d_{\mathrm{H}})$' # r''でTeX文字にできる
+lx, ly = r'$D/D_{\mathrm{H}}$', r'$P(D/D_{\mathrm{H}})$' # r''でTeX文字にできる
 if fsize == 0:
     fs1, lw1, ms1 = 1., 1., 2.8
     tck_s1, alw = 3, 0.625
@@ -149,21 +149,21 @@ def plot_y1y2(): # y1, y2プロット用
             label = r'Probability density function ($\mathrm{We}=22.6$)') 
     # ax1.plot(x1, y1, lw = lw1*1.0, ls = 'solid',  color = 'gray', alpha = 0.6, clip_on = True, zorder = 13)
     
-    ax1.plot(x2, y2, lw = 1, ls = 'none', marker = '^', ms = ms1*2.5, mew = lw1*1.2, mfc = 'none', color = 'gray', 
-            alpha = 0.9,     # 透明度
-            clip_on = False, # プロット枠外にもプロットする
-            zorder = 15,      # zorderが大きいほど前面に表示される
-            label = r'Probability density function ($\mathrm{We}=5.7$)') 
+    # ax1.plot(x2, y2, lw = 1, ls = 'none', marker = '^', ms = ms1*2.5, mew = lw1*1.2, mfc = 'none', color = 'gray', 
+    #         alpha = 0.9,     # 透明度
+    #         clip_on = False, # プロット枠外にもプロットする
+    #         zorder = 15,      # zorderが大きいほど前面に表示される
+    #         label = r'Probability density function ($\mathrm{We}=5.7$)') 
     # ax1.plot(x2, y2, lw = lw1*1.0, ls = 'solid',  color = 'gray', alpha = 0.6, clip_on = True, zorder = 13)
 
     # 凡例の設定
-    h1, l1 = ax1.get_legend_handles_labels()
-    ax1.legend(h1, l1, 
-    bbox_to_anchor = (1.1, 1.0), loc = "upper left", # bbox_to_anchorは凡例のlocの座標
-    framealpha = 1.0, fancybox=False, fontsize=8.0,
-    edgecolor = "black").get_frame().set_linewidth(alw*0.8)
+    # h1, l1 = ax1.get_legend_handles_labels()
+    # ax1.legend(h1, l1, 
+    # bbox_to_anchor = (1.1, 1.0), loc = "upper left", # bbox_to_anchorは凡例のlocの座標
+    # framealpha = 1.0, fancybox=False, fontsize=8.0,
+    # edgecolor = "black").get_frame().set_linewidth(alw*0.8)
     ## 保存
-    fig.savefig(plotdir + "DSD_512_we" + ext, bbox_inches = "tight") # bbox_inches="tight"で余白をなくす
+    fig.savefig(plotdir + "DSD_512_kennkyu" + ext, bbox_inches = "tight") # bbox_inches="tight"で余白をなくす
 
 ##=================== main ===================##
 if __name__ == '__main__':
