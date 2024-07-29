@@ -26,8 +26,8 @@ module globals
     integer,parameter:: step_input = 5000 !速度場入力時間step
     integer,parameter:: step_input_file_num = 600000 !case1での入力する乱流場のstep
     integer,parameter:: step_input_bin = 40000 !入力する乱流場のstep間隔
-    integer,parameter:: case_initial_num = 25 !最初のケース番号
-    integer,parameter:: case_end_num = 25 !最後のケース番号
+    integer,parameter:: case_initial_num = 49 !最初のケース番号
+    integer,parameter:: case_end_num = 50 !最後のケース番号
     !入力ディレクトリ
     character(*),parameter :: datadir_input = "/data/sht/nakanog/DNS_turbulence_256_IHT_new/fg/"
     !出力ディレクトリ
@@ -1261,14 +1261,14 @@ DO  case_num = case_initial_num, case_end_num
     ! zc = dble(zmax)*eps
 
     !case1-25
-    xc = dble(xmax)*0.18d0*dble(21 - case_initial_num+1)
-    yc = dble(ymax)*0.9d0
-    zc = dble(zmax)*0.9d0
+    ! xc = dble(xmax)*0.18d0*dble(case_num - case_initial_num+1)
+    ! yc = dble(ymax)*0.9d0
+    ! zc = dble(zmax)*0.9d0
 
     !case26-50
-    ! yc = dble(xmax)*0.22d0*dble(case_num - case_initial_num+1)
-    ! xc = dble(ymax)*0.4d0
-    ! zc = dble(zmax)*0.4d0
+    yc = dble(xmax)*0.22d0*dble(case_num - case_initial_num+1)
+    xc = dble(ymax)*0.85d0
+    zc = dble(zmax)*0.85d0
 
     if(comm_rank == 0) then
         if(case_num == case_initial_num) then
