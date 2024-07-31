@@ -8,7 +8,7 @@ implicit none
     integer,parameter:: step_bin = 1000
     integer,parameter:: step_num2 = (step_end - step_start) / step_bin + 1 
     integer,parameter:: case_initial_num = 1 !最初のケース番号
-    integer,parameter:: case_end_num = 24 !最後のケース番号
+    integer,parameter:: case_end_num = 50 !最後のケース番号
     ! character(*),parameter :: datadir_input = "/data/sht/nakanog/IHT_drop_d70_we2/contribution/"
     ! character(*),parameter :: datadir_output = "/data/sht/nakanog/IHT_drop_d70_we2/contribution/ave/"
     character(*),parameter :: datadir_input = "./"
@@ -49,9 +49,9 @@ implicit none
 
         k_analysis = 1
         write(filename,*) case_num
-        filename_output = datadir_output//trim(adjustl(filename))//'.d'
+        filename_output = datadir_output//trim(adjustl(filename))//'_4.d'
         open(20,file=filename_output,status='replace')
-        do k_step = 1, step_num2, 1
+        do k_step = 1, step_num2, 4
             write(20,"(11es16.8)") (1000.0d0*dble(k_step)-1000.0d0)/eddytime, contribution_each_scale_sum(k_step, k_analysis), contribution_each_scale_sum(k_step, k_analysis+1), contribution_each_scale_sum(k_step, k_analysis+2), contribution_each_scale_sum(k_step, k_analysis+3), contribution_each_scale_sum(k_step, k_analysis+4), contribution_each_scale_sum(k_step, k_analysis+5), contribution_each_scale_sum(k_step, k_analysis+6), contribution_each_scale_sum(k_step, k_analysis+7), contribution_each_scale_sum(k_step, k_analysis+8), contribution_each_scale_sum(k_step, k_analysis+9)
         enddo
         close(20) 
