@@ -17,17 +17,17 @@ module globals
     integer,parameter:: ymax = 255 !ｙ方向格子数（０から数える）
     integer,parameter:: zmax = 255 !ｚ方向格子数（０から数える）
     integer,parameter:: step_start = 5000
-    integer,parameter:: step_end = 75000
+    integer,parameter:: step_end = 50000
     integer,parameter:: step_bin = 1000
     integer,parameter:: step_num2 = (step_end - step_start) / step_bin + 1 
-    integer,parameter:: case_initial_num = 20 !最初のケース番号
+    integer,parameter:: case_initial_num = 16 !最初のケース番号
     integer,parameter:: case_end_num = case_initial_num !最後のケース番号
 
     !読み込みディレクトリ
-    character(*),parameter :: datadir_input = "/data/sht/nakanog/IHT_drop_d70_we2/"
-    character(*),parameter :: datadir_input2 = "/data/sht/nakanog/IHT_drop_d70_we2/u/"
+    character(*),parameter :: datadir_input = "/data/sht/nakanog/IHT_drop_d70_we10/"
+    character(*),parameter :: datadir_input2 = "/data/sht/nakanog/IHT_drop_d70_we10/u/"
     !出力ディレクトリ
-    character(*),parameter :: datadir_output = "/data/sht/nakanog/IHT_drop_d70_we2/contribution/"
+    character(*),parameter :: datadir_output = "/data/sht/nakanog/IHT_drop_d70_we10/contribution/"
 
     !粒子速度（整数）
     integer,parameter:: cx(15) = (/0, 1, 0,  0, -1,  0,  0,  1, -1,  1,  1, -1,  1, -1, -1/)
@@ -35,7 +35,7 @@ module globals
     integer,parameter:: cz(15) = (/0, 0, 0,  1,  0,  0, -1,  1,  1,  1, -1, -1, -1, -1,  1/)
 
     !無次元数
-    real(8),parameter:: We = 2.0d0 !粒子ウエーバー数
+    real(8),parameter:: We = 10.0d0 !粒子ウエーバー数
     real(8),parameter:: eta = 1.0d0 !粘度比（nu2/nu1）
 
     real(8),parameter:: epsilon = 9.15d-10 !エネルギー散逸率

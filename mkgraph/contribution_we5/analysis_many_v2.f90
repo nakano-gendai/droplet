@@ -85,7 +85,7 @@ implicit none
         filename_output = datadir_output//trim(adjustl(filename))//'.d'
         open(120, file=filename_output, form="formatted")
         do k_analysis = 1, (xmax+1) / 2
-            write(120,*) dble(k_analysis), dble(k_analysis) / k_d, contribution_each_scale_time_sum(k_analysis) / abs(wa)
+            write(120,*) dble(k_analysis), dble(k_analysis) / k_d, contribution_each_scale_time_sum(k_analysis) / wa
             ! write(120,*) dble(k_analysis), dble(k_analysis) / k_d, contribution_each_scale_time_sum(k_analysis), wa
         enddo
         close(120)
@@ -94,7 +94,7 @@ implicit none
         filename_output = datadir_output2//trim(adjustl(filename))//'_wavesum_eachtime.d'
         open(130, file=filename_output, form="formatted")
         do k_step = 1, step_num2
-            write(130,*) 1000.0d0*dble(k_step), 1000.0d0*dble(k_step)/eddytime , contribution_each_scale_wave_sum(k_step)
+            write(130,*) 1000.0d0*dble(k_step)-1000.0d0, (1000.0d0*dble(k_step)-1000.0d0)/eddytime , contribution_each_scale_wave_sum(k_step)
         enddo
         close(130)
 
