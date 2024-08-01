@@ -19,8 +19,8 @@ os.makedirs(plotdir, exist_ok = True) # ディレクトリ作成
 # datadir ='/home/nakano/anime/b4/data/data_fig6/'
 datadir ="./"
 plotdir, datadir, ext = plotdir + '/', datadir + '/', '.' + ext
-dfile1   = datadir + '1_10_ave1_24_we2.d'
-# dfile2   = datadir + 'enesupe_phi_40we1.4_3.d'
+dfile1   = datadir + 'd70we2_ensemble.d'
+dfile2   = datadir + 'd70we5_ensemble.d'
 # dfile3   = datadir + 'enesupe_phi_50we1.4_3.d'
 # dfile4   = datadir + 'enesupe_phi_60we1.4_3.d'
 # dfile5   = datadir + 'enesupe_phi_70we1.4_3.d'
@@ -53,32 +53,33 @@ def sns_set(fs, tck_s, alw, ctxt):
     )
 
 ### 読み込み
-x1 = np.loadtxt(dfile1, usecols = 0, dtype = 'float64') # usecolsは列番号　dtypeは実数float64, 整数
-x2 = np.loadtxt(dfile1, usecols = 0, dtype = 'float64') # usecolsは列番号　dtypeは実数float64, 整数
-x3 = np.loadtxt(dfile1, usecols = 0, dtype = 'float64') # usecolsは列番号　dtypeは実数float64, 整数
-x4 = np.loadtxt(dfile1, usecols = 0, dtype = 'float64') # usecolsは列番号　dtypeは実数float64, 整数
-x5 = np.loadtxt(dfile1, usecols = 0, dtype = 'float64') # usecolsは列番号　dtypeは実数float64, 整数
-x6 = np.loadtxt(dfile1, usecols = 0, dtype = 'float64') # usecolsは列番号　dtypeは実数float64, 整数
-x7 = np.loadtxt(dfile1, usecols = 0, dtype = 'float64') # usecolsは列番号　dtypeは実数float64, 整数
-x8 = np.loadtxt(dfile1, usecols = 0, dtype = 'float64') # usecolsは列番号　dtypeは実数float64, 整数
+x1 = np.loadtxt(dfile1, usecols = 1, dtype = 'float64') # usecolsは列番号　dtypeは実数float64, 整数
+x2 = np.loadtxt(dfile2, usecols = 1, dtype = 'float64') # usecolsは列番号　dtypeは実数float64, 整数
+# x3 = np.loadtxt(dfile1, usecols = 0, dtype = 'float64') # usecolsは列番号　dtypeは実数float64, 整数
+# x4 = np.loadtxt(dfile1, usecols = 0, dtype = 'float64') # usecolsは列番号　dtypeは実数float64, 整数
+# x5 = np.loadtxt(dfile1, usecols = 0, dtype = 'float64') # usecolsは列番号　dtypeは実数float64, 整数
+# x6 = np.loadtxt(dfile1, usecols = 0, dtype = 'float64') # usecolsは列番号　dtypeは実数float64, 整数
+# x7 = np.loadtxt(dfile1, usecols = 0, dtype = 'float64') # usecolsは列番号　dtypeは実数float64, 整数
+# x8 = np.loadtxt(dfile1, usecols = 0, dtype = 'float64') # usecolsは列番号　dtypeは実数float64, 整数
 # x9 = np.loadtxt(dfile9, usecols = 0, dtype = 'float64') # usecolsは列番号　dtypeは実数float64, 整数
 # x10 = np.loadtxt(dfile10, usecols = 0, dtype = 'float64') # usecolsは列番号　dtypeは実数float64, 整数
 
-y1 = np.loadtxt(dfile1, usecols = 1, dtype = 'float64')
-y2 = np.loadtxt(dfile1, usecols = 2, dtype = 'float64')
-y3 = np.loadtxt(dfile1, usecols = 3, dtype = 'float64')
-y4 = np.loadtxt(dfile1, usecols = 4, dtype = 'float64')
-y5 = np.loadtxt(dfile1, usecols = 5, dtype = 'float64')
-y6 = np.loadtxt(dfile1, usecols = 6, dtype = 'float64')
-y7 = np.loadtxt(dfile1, usecols = 7, dtype = 'float64')
-y8 = np.loadtxt(dfile1, usecols = 8, dtype = 'float64')
+y1 = np.loadtxt(dfile1, usecols = 2, dtype = 'float64')
+y2 = np.loadtxt(dfile2, usecols = 2, dtype = 'float64')
+# y3 = np.loadtxt(dfile1, usecols = 3, dtype = 'float64')
+# y4 = np.loadtxt(dfile1, usecols = 4, dtype = 'float64')
+# y5 = np.loadtxt(dfile1, usecols = 5, dtype = 'float64')
+# y6 = np.loadtxt(dfile1, usecols = 6, dtype = 'float64')
+# y7 = np.loadtxt(dfile1, usecols = 7, dtype = 'float64')
+# y8 = np.loadtxt(dfile1, usecols = 8, dtype = 'float64')
 # y9 = np.loadtxt(dfile9, usecols = 2, dtype = 'float64')
 # y10 = np.loadtxt(dfile10, usecols = 2, dtype = 'float64')
 
 
 
 ### サイズ、ラベルなどの設定
-lx, ly = r'$t/t_\mathrm{d}$', r'$\left<\vartheta\right>$' # r''でTeX文字にできる
+lx, ly = r'$k/k_\mathrm{d}$', r'$\left<\frac{\overline{\left<\vartheta^{k}\right>}_V}{\overline{\left<\vartheta\right>}_V}\right>$' # r''でTeX文字にできる
+# lx, ly = r'$k/k_\mathrm{d}$', r'$\left<\overline{\left<\vartheta^{k}\right>}_V/\overline{\left<\vartheta\right>}_V\right>$' # r''でTeX文字にできる
 if fsize == 0:
     fs1, lw1, ms1 = 1., 1., 2.8
     tck_s1, alw = 3, 0.625
@@ -108,7 +109,7 @@ def plot_y1y2(): # y1, y2プロット用
     ax1.set_ylabel(ly, labelpad = lpad[1])
     
     # xm, ym = [0, 2.8], [-0.000000000001, 0.00000000001]
-    xm, ym = [0, 4], [-0.000000000004, 0.000000000016]
+    xm, ym = [0, 8], [-0.1, 0.8]
     ax1.set_xlim(xm[0], xm[1]) # 軸の範囲
     ax1.set_ylim(ym[0], ym[1])
     # ax1.set_yticks(np.arange(0.0, ym[1] + 0.0000005)) # xmaxまで0.2刻みの目盛り線
@@ -117,10 +118,15 @@ def plot_y1y2(): # y1, y2プロット用
     # plt.yscale('log')
     # plt.xscale('log')
 
-    pos = [0, 1, 2, 3, 4] 
-    ticks = [r'$0$', r'$1$', r'$2$', r'$3$', r'$4$']
+    pos = [0, 2, 4, 6, 8] 
+    ticks = [r'$0$', r'$2$', r'$4$', r'$6$', r'$8$']
     ax1.set_xticks(pos)
     ax1.set_xticklabels(ticks)
+    
+    pos = [0, 0.2, 0.4, 0.6, 0.8] 
+    ticks = [r'$0$', r'$0.2$', r'$0.4$', r'$0.6$', r'$0.8$']
+    ax1.set_yticks(pos)
+    ax1.set_yticklabels(ticks)
     
     # pos = [-0.25, 0, 20] 
     # ticks = [r'$0$', r'$10$', r'$20$']
@@ -169,41 +175,41 @@ def plot_y1y2(): # y1, y2プロット用
     # pp=fig.colorbar(im, ax=ax1, orientation="vertical", cax=pp_ax)
     
     ### 読み込みデータのプロット
-    ax1.plot(x1, y1, lw = 1, ls = 'none', marker = 'o', ms = ms1*1.0, mew = lw1*0.5, mfc = 'none', color = 'red', 
-            alpha = 0.8,     # 透明度
-            clip_on = False, # プロット枠外にもプロットする
+    ax1.plot(x1, y1, lw = 1, ls = 'none', marker = 'o', ms = ms1*2, mew = lw1*0.5, mfc = 'none', color = 'black', 
+            alpha = 1.0,     # 透明度
+            clip_on = True, # プロット枠外にもプロットする
             zorder = 110,
-            label = r'$k=1$') 
-    ax1.plot(x2, y2, lw = 1, ls = 'none', marker = '^', ms = ms1*1.0, mew = lw1*0.5, mfc = 'none', color = 'black', 
-            alpha = 0.8,     # 透明度
-            clip_on = False, # プロット枠外にもプロットする
-            zorder = 109,      # zorderが大きいほど前面に表示される
-            label = r'$k=2$') 
-    ax1.plot(x3, y3, lw = 1, ls = 'none', marker = 'D', ms = ms1*1.0, mew = lw1*0.5, mfc = 'none', color = 'blue', 
-            alpha = 0.8,     # 透明度
-            clip_on = False, # プロット枠外にもプロットする
-            zorder = 108,      # zorderが大きいほど前面に表示される
-            label = r'$k=3$') 
-    ax1.plot(x4, y4, lw = 1, ls = 'none', marker = '*', ms = ms1*1.0, mew = lw1*0.5, mfc = 'none', color = 'gray', 
-            alpha = 0.8,     # 透明度
-            clip_on = False, # プロット枠外にもプロットする
-            zorder = 107,      # zorderが大きいほど前面に表示される
-            label = r'$k=4$') 
-    ax1.plot(x5, y5, lw = 1, ls = 'none', marker = 'h', ms = ms1*1.0, mew = lw1*0.5, mfc = 'none', color = 'deepskyblue', 
-            alpha = 0.8,     # 透明度
-            clip_on = False, # プロット枠外にもプロットする
-            zorder = 106,      # zorderが大きいほど前面に表示される
-            label = r'$k=5$') 
-    ax1.plot(x6, y6, lw = 1, ls = 'none', marker = 's', ms = ms1*1.0, mew = lw1*0.5, mfc = 'none', color = 'orange', 
-            alpha = 0.8,     # 透明度
-            clip_on = False, # プロット枠外にもプロットする
-            zorder = 105,      # zorderが大きいほど前面に表示される
-            label = r'$k=6$') 
-    ax1.plot(x7, y7, lw = 1, ls = 'none', marker = 'p', ms = ms1*1.0, mew = lw1*0.5, mfc = 'none', color = 'purple', 
-            alpha = 0.8,     # 透明度
-            clip_on = False, # プロット枠外にもプロットする
-            zorder = 104,      # zorderが大きいほど前面に表示される
-            label = r'$k=7$') 
+            label = r'$\mathrm{We}=2$') 
+    ax1.plot(x2, y2, lw = 1, ls = 'none', marker = '^', ms = ms1*2, mew = lw1*0.5, mfc = 'none', color = 'gray', 
+            alpha = 1.0,     # 透明度
+            clip_on = True, # プロット枠外にもプロットする
+            zorder = 111,      # zorderが大きいほど前面に表示される
+            label = r'$\mathrm{We}=5$') 
+    # ax1.plot(x3, y3, lw = 1, ls = 'none', marker = 'D', ms = ms1*1.0, mew = lw1*0.5, mfc = 'none', color = 'blue', 
+    #         alpha = 0.8,     # 透明度
+    #         clip_on = False, # プロット枠外にもプロットする
+    #         zorder = 108,      # zorderが大きいほど前面に表示される
+    #         label = r'$k=3$') 
+    # ax1.plot(x4, y4, lw = 1, ls = 'none', marker = '*', ms = ms1*1.0, mew = lw1*0.5, mfc = 'none', color = 'gray', 
+    #         alpha = 0.8,     # 透明度
+    #         clip_on = False, # プロット枠外にもプロットする
+    #         zorder = 107,      # zorderが大きいほど前面に表示される
+    #         label = r'$k=4$') 
+    # ax1.plot(x5, y5, lw = 1, ls = 'none', marker = 'h', ms = ms1*1.0, mew = lw1*0.5, mfc = 'none', color = 'deepskyblue', 
+    #         alpha = 0.8,     # 透明度
+    #         clip_on = False, # プロット枠外にもプロットする
+    #         zorder = 106,      # zorderが大きいほど前面に表示される
+    #         label = r'$k=5$') 
+    # ax1.plot(x6, y6, lw = 1, ls = 'none', marker = 's', ms = ms1*1.0, mew = lw1*0.5, mfc = 'none', color = 'orange', 
+    #         alpha = 0.8,     # 透明度
+    #         clip_on = False, # プロット枠外にもプロットする
+    #         zorder = 105,      # zorderが大きいほど前面に表示される
+    #         label = r'$k=6$') 
+    # ax1.plot(x7, y7, lw = 1, ls = 'none', marker = 'p', ms = ms1*1.0, mew = lw1*0.5, mfc = 'none', color = 'purple', 
+    #         alpha = 0.8,     # 透明度
+    #         clip_on = False, # プロット枠外にもプロットする
+    #         zorder = 104,      # zorderが大きいほど前面に表示される
+    #         label = r'$k=7$') 
     # ax1.plot(x8, y8, lw = 1, ls = 'none', marker = 'x', ms = ms1*1.0, mew = lw1*0.5, mfc = 'none', color = 'lime', 
     #         alpha = 0.8,     # 透明度
     #         clip_on = False, # プロット枠外にもプロットする
@@ -216,13 +222,13 @@ def plot_y1y2(): # y1, y2プロット用
     #         label = r'$k=8$') 
 
     
-    ax1.plot(x1, y1, lw = lw1*0.5, ls = 'solid',  color = 'red', alpha = 0.8, clip_on = True, zorder = 20)
-    ax1.plot(x2, y2, lw = lw1*0.5, ls = 'solid',  color = 'black', alpha = 0.8, clip_on = True, zorder = 19)
-    ax1.plot(x3, y3,lw = lw1*0.5, ls = 'solid',  color = 'blue', alpha = 0.8, clip_on = True, zorder = 18)
-    ax1.plot(x4, y4, lw = lw1*0.5, ls = 'solid',  color = 'gray', alpha = 0.8, clip_on = True, zorder = 17)
-    ax1.plot(x5, y5, lw = lw1*0.5, ls = 'solid',  color = 'deepskyblue', alpha = 0.8, clip_on = True, zorder = 16)
-    ax1.plot(x6, y6, lw = lw1*0.5, ls = 'solid',  color = 'orange', alpha = 0.8, clip_on = True, zorder = 15)
-    ax1.plot(x7, y7, lw = lw1*0.5, ls = 'solid',  color = 'purple', alpha = 0.8, clip_on = True, zorder = 14)
+    ax1.plot(x1, y1, lw = lw1*1.0, ls = 'solid',  color = 'black', alpha = 1.0, clip_on = True, zorder = 20)
+    ax1.plot(x2, y2, lw = lw1*1.0, ls = 'solid',  color = 'gray', alpha = 1.0, clip_on = True, zorder = 21)
+    # ax1.plot(x3, y3,lw = lw1*0.5, ls = 'solid',  color = 'blue', alpha = 0.8, clip_on = True, zorder = 18)
+    # ax1.plot(x4, y4, lw = lw1*0.5, ls = 'solid',  color = 'gray', alpha = 0.8, clip_on = True, zorder = 17)
+    # ax1.plot(x5, y5, lw = lw1*0.5, ls = 'solid',  color = 'deepskyblue', alpha = 0.8, clip_on = True, zorder = 16)
+    # ax1.plot(x6, y6, lw = lw1*0.5, ls = 'solid',  color = 'orange', alpha = 0.8, clip_on = True, zorder = 15)
+    # ax1.plot(x7, y7, lw = lw1*0.5, ls = 'solid',  color = 'purple', alpha = 0.8, clip_on = True, zorder = 14)
     # ax1.plot(x8, y8, lw = lw1*0.5, ls = 'solid',  color = 'lime', alpha = 0.8, clip_on = True, zorder = 13)
     
     # ax1.axvline(255/30*0.93/127.5, lw = lw1*0.5, ls = 'dotted', dashes = [2, 2], color = 'black', alpha = 1.0, zorder = 10, label = r'$k_{D/L=0.118}$') # dashesで破線の間隔などを設定できる
@@ -247,7 +253,7 @@ def plot_y1y2(): # y1, y2プロット用
     framealpha = 1.0, fancybox=False, fontsize=8.0,
     edgecolor = "black").get_frame().set_linewidth(alw*0.8)
     # ### 保存
-    fig.savefig(plotdir + "contribution_we2_1_24_2" + ext, bbox_inches = "tight") # bbox_inches="tight"で余白をなくす
+    fig.savefig(plotdir + "ensemble" + ext, bbox_inches = "tight") # bbox_inches="tight"で余白をなくす
 
 ##=================== main ===================##
 if __name__ == '__main__':

@@ -22,23 +22,23 @@ module globals
     integer,parameter:: xall = (xmax + 1) * Nxall !全体のx方向格子数
     integer,parameter:: yall = (ymax + 1) * Nyall !全体のz方向格子数
     !時間に関するパラメータ
-    integer,parameter:: step = 75000 !計算時間step
+    integer,parameter:: step = 50000 !計算時間step
     integer,parameter:: step_input = 5000 !速度場入力時間step
     integer,parameter:: step_input_file_num = 600000 !case1での入力する乱流場のstep
     integer,parameter:: step_input_bin = 40000 !入力する乱流場のstep間隔
-    integer,parameter:: case_initial_num = 49 !最初のケース番号
+    integer,parameter:: case_initial_num = 46 !最初のケース番号
     integer,parameter:: case_end_num = 50 !最後のケース番号
     !入力ディレクトリ
     character(*),parameter :: datadir_input = "/data/sht/nakanog/DNS_turbulence_256_IHT_new/fg/"
     !出力ディレクトリ
-    character(*),parameter :: datadir_output = "/data/sht/nakanog/IHT_drop_d70_we2/"
-    character(*),parameter :: datadir_output2 = "/data/sht/nakanog/IHT_drop_d70_we2/u/"
-    character(*),parameter :: datadir_output_fg = "/data/sht/nakanog/IHT_drop_d70_we2/fg/"
+    character(*),parameter :: datadir_output = "/data/sht/nakanog/IHT_drop_d70_we10/"
+    character(*),parameter :: datadir_output2 = "/data/sht/nakanog/IHT_drop_d70_we10/u/"
+    character(*),parameter :: datadir_output_fg = "/data/sht/nakanog/IHT_drop_d70_we10/fg/"
     integer,parameter:: step_output = 1000
     integer,parameter:: step_putput_fg = 100000
 
     !無次元数
-    real(8),parameter:: We = 2.0d0 !ウェーバー数
+    real(8),parameter:: We = 10.0d0 !ウェーバー数
     real(8),parameter:: eta = 1.0d0 !粘度比（nu2/nu1）
 
     !撹乱（乱数）のオーダー
@@ -1266,9 +1266,9 @@ DO  case_num = case_initial_num, case_end_num
     ! zc = dble(zmax)*0.9d0
 
     !case26-50
-    yc = dble(xmax)*0.22d0*dble(case_num - case_initial_num+1)
-    xc = dble(ymax)*0.85d0
-    zc = dble(zmax)*0.85d0
+    yc = dble(xmax)*0.18d0*dble(case_num - case_initial_num+1)
+    xc = dble(ymax)*0.9d0
+    zc = dble(zmax)*0.9d0
 
     if(comm_rank == 0) then
         if(case_num == case_initial_num) then
