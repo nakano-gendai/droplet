@@ -19,11 +19,11 @@ os.makedirs(plotdir, exist_ok = True) # ディレクトリ作成
 # datadir ='/home/nakano/anime/b4/data/data_fig6/'
 datadir ="./"
 plotdir, datadir, ext = plotdir + '/', datadir + '/', '.' + ext
-dfile1   = datadir + 'd30.d'
-dfile2   = datadir + 'd40.d'
-dfile3   = datadir + 'd50.d'
-dfile4   = datadir + 'd60.d'
-dfile5   = datadir + 'd70.d'
+dfile1   = datadir + '30.d'
+dfile2   = datadir + '40.d'
+dfile3   = datadir + '50.d'
+dfile4   = datadir + '60.d'
+dfile5   = datadir + '70.d'
 # dfile6   = datadir + 'case1_e.d'
 # dfile7   = datadir + 'case2_e.d'
 # dfile8   = datadir + 'case20_e.d'
@@ -64,11 +64,11 @@ x5 = np.loadtxt(dfile5, usecols = 0, dtype = 'float64') # usecolsは列番号　
 # x9 = np.loadtxt(dfile9, usecols = 0, dtype = 'float64') # usecolsは列番号　dtypeは実数float64, 整数
 # x10 = np.loadtxt(dfile10, usecols = 0, dtype = 'float64') # usecolsは列番号　dtypeは実数float64, 整数
 
-y1 = np.loadtxt(dfile1, usecols = 2, dtype = 'float64')
-y2 = np.loadtxt(dfile2, usecols = 2, dtype = 'float64')
-y3 = np.loadtxt(dfile3, usecols = 2, dtype = 'float64')
-y4 = np.loadtxt(dfile4, usecols = 2, dtype = 'float64')
-y5 = np.loadtxt(dfile5, usecols = 2, dtype = 'float64')
+y1 = np.loadtxt(dfile1, usecols = 1, dtype = 'float64')
+y2 = np.loadtxt(dfile2, usecols = 1, dtype = 'float64')
+y3 = np.loadtxt(dfile3, usecols = 1, dtype = 'float64')
+y4 = np.loadtxt(dfile4, usecols = 1, dtype = 'float64')
+y5 = np.loadtxt(dfile5, usecols = 1, dtype = 'float64')
 # y6 = np.loadtxt(dfile1, usecols = 6, dtype = 'float64')
 # y7 = np.loadtxt(dfile1, usecols = 7, dtype = 'float64')
 # y8 = np.loadtxt(dfile1, usecols = 8, dtype = 'float64')
@@ -178,27 +178,27 @@ def plot_y1y2(): # y1, y2プロット用
             alpha = 0.8,     # 透明度
             clip_on = False, # プロット枠外にもプロットする
             zorder = 110,
-            label = r'$D/L=0.118$') 
+            label = r'$D/\eta_\mathrm{k}=30$') 
     ax1.plot(x2, y2, lw = 1, ls = 'none', marker = '^', ms = ms1*3.0, mew = lw1*1, mfc = 'none', color = 'black', 
             alpha = 0.8,     # 透明度
             clip_on = False, # プロット枠外にもプロットする
             zorder = 109,      # zorderが大きいほど前面に表示される
-            label = r'$D/L=0.157$') 
+            label = r'$D/\eta_\mathrm{k}=40$') 
     ax1.plot(x3, y3, lw = 1, ls = 'none', marker = 'D', ms = ms1*3.0, mew = lw1*1, mfc = 'none', color = 'blue', 
             alpha = 0.8,     # 透明度
             clip_on = False, # プロット枠外にもプロットする
             zorder = 108,      # zorderが大きいほど前面に表示される
-            label = r'$D/L=0.196$') 
+            label = r'$D/\eta_\mathrm{k}=50$') 
     ax1.plot(x4, y4, lw = 1, ls = 'none', marker = '*', ms = ms1*3.0, mew = lw1*1, mfc = 'none', color = 'gray', 
             alpha = 0.8,     # 透明度
             clip_on = False, # プロット枠外にもプロットする
             zorder = 107,      # zorderが大きいほど前面に表示される
-            label = r'$D/L=0.235$') 
+            label = r'$D/\eta_\mathrm{k}=60$') 
     ax1.plot(x5, y5, lw = 1, ls = 'none', marker = '+', ms = ms1*3.0, mew = lw1*1, mfc = 'none', color = 'deepskyblue', 
             alpha = 0.8,     # 透明度
             clip_on = False, # プロット枠外にもプロットする
             zorder = 106,      # zorderが大きいほど前面に表示される
-            label = r'$D/L=0.275$') 
+            label = r'$D/\eta_\mathrm{k}=70$') 
     # ax1.plot(x6, y6, lw = 1, ls = 'none', marker = 's', ms = ms1*1.0, mew = lw1*0.5, mfc = 'none', color = 'orange', 
     #         alpha = 0.8,     # 透明度
     #         clip_on = False, # プロット枠外にもプロットする
