@@ -21,7 +21,7 @@ datadir ="./"
 plotdir, datadir, ext = plotdir + '/', datadir + '/', '.' + ext
 dfile1   = datadir + 'd70we2_ensemble.d'
 dfile2   = datadir + 'd70we5_ensemble.d'
-# dfile3   = datadir + 'enesupe_phi_50we1.4_3.d'
+dfile3   = datadir + 'd70we10_ensemble.d'
 # dfile4   = datadir + 'enesupe_phi_60we1.4_3.d'
 # dfile5   = datadir + 'enesupe_phi_70we1.4_3.d'
 # dfile6   = datadir + 'case1_e.d'
@@ -55,7 +55,7 @@ def sns_set(fs, tck_s, alw, ctxt):
 ### 読み込み
 x1 = np.loadtxt(dfile1, usecols = 1, dtype = 'float64') # usecolsは列番号　dtypeは実数float64, 整数
 x2 = np.loadtxt(dfile2, usecols = 1, dtype = 'float64') # usecolsは列番号　dtypeは実数float64, 整数
-# x3 = np.loadtxt(dfile1, usecols = 0, dtype = 'float64') # usecolsは列番号　dtypeは実数float64, 整数
+x3 = np.loadtxt(dfile3, usecols = 1, dtype = 'float64') # usecolsは列番号　dtypeは実数float64, 整数
 # x4 = np.loadtxt(dfile1, usecols = 0, dtype = 'float64') # usecolsは列番号　dtypeは実数float64, 整数
 # x5 = np.loadtxt(dfile1, usecols = 0, dtype = 'float64') # usecolsは列番号　dtypeは実数float64, 整数
 # x6 = np.loadtxt(dfile1, usecols = 0, dtype = 'float64') # usecolsは列番号　dtypeは実数float64, 整数
@@ -66,7 +66,7 @@ x2 = np.loadtxt(dfile2, usecols = 1, dtype = 'float64') # usecolsは列番号　
 
 y1 = np.loadtxt(dfile1, usecols = 2, dtype = 'float64')
 y2 = np.loadtxt(dfile2, usecols = 2, dtype = 'float64')
-# y3 = np.loadtxt(dfile1, usecols = 3, dtype = 'float64')
+y3 = np.loadtxt(dfile3, usecols = 2, dtype = 'float64')
 # y4 = np.loadtxt(dfile1, usecols = 4, dtype = 'float64')
 # y5 = np.loadtxt(dfile1, usecols = 5, dtype = 'float64')
 # y6 = np.loadtxt(dfile1, usecols = 6, dtype = 'float64')
@@ -109,17 +109,22 @@ def plot_y1y2(): # y1, y2プロット用
     ax1.set_ylabel(ly, labelpad = lpad[1])
     
     # xm, ym = [0, 2.8], [-0.000000000001, 0.00000000001]
-    xm, ym = [0, 8], [-0.1, 0.8]
+    xm, ym = [0.4, 10], [-0.1, 0.8]
     ax1.set_xlim(xm[0], xm[1]) # 軸の範囲
     ax1.set_ylim(ym[0], ym[1])
     # ax1.set_yticks(np.arange(0.0, ym[1] + 0.0000005)) # xmaxまで0.2刻みの目盛り線
     ax1.tick_params(axis='x', pad = tpad[0])
     ax1.tick_params(axis='y', pad = tpad[1])
     # plt.yscale('log')
-    # plt.xscale('log')
+    plt.xscale('log')
 
-    pos = [0, 2, 4, 6, 8] 
-    ticks = [r'$0$', r'$2$', r'$4$', r'$6$', r'$8$']
+    # pos = [0, 2, 4, 6, 8] 
+    # ticks = [r'$0$', r'$2$', r'$4$', r'$6$', r'$8$']
+    # ax1.set_xticks(pos)
+    # ax1.set_xticklabels(ticks)
+    
+    pos = [1, 10] 
+    ticks = [r'$1$', r'$10$']
     ax1.set_xticks(pos)
     ax1.set_xticklabels(ticks)
     
@@ -180,16 +185,16 @@ def plot_y1y2(): # y1, y2プロット用
             clip_on = True, # プロット枠外にもプロットする
             zorder = 110,
             label = r'$\mathrm{We}=2$') 
-    ax1.plot(x2, y2, lw = 1, ls = 'none', marker = '^', ms = ms1*2, mew = lw1*0.5, mfc = 'none', color = 'gray', 
-            alpha = 1.0,     # 透明度
+    ax1.plot(x2, y2, lw = 1, ls = 'none', marker = '^', ms = ms1*2, mew = lw1*0.5, mfc = 'none', color = 'black', 
+            alpha = 0.7,     # 透明度
             clip_on = True, # プロット枠外にもプロットする
             zorder = 111,      # zorderが大きいほど前面に表示される
             label = r'$\mathrm{We}=5$') 
-    # ax1.plot(x3, y3, lw = 1, ls = 'none', marker = 'D', ms = ms1*1.0, mew = lw1*0.5, mfc = 'none', color = 'blue', 
-    #         alpha = 0.8,     # 透明度
-    #         clip_on = False, # プロット枠外にもプロットする
-    #         zorder = 108,      # zorderが大きいほど前面に表示される
-    #         label = r'$k=3$') 
+    ax1.plot(x3, y3, lw = 1, ls = 'none', marker = 'D', ms = ms1*2, mew = lw1*0.5, mfc = 'none', color = 'black', 
+            alpha = 0.5,     # 透明度
+            clip_on = True, # プロット枠外にもプロットする
+            zorder = 112,      # zorderが大きいほど前面に表示される
+            label = r'$\mathrm{We}=10$') 
     # ax1.plot(x4, y4, lw = 1, ls = 'none', marker = '*', ms = ms1*1.0, mew = lw1*0.5, mfc = 'none', color = 'gray', 
     #         alpha = 0.8,     # 透明度
     #         clip_on = False, # プロット枠外にもプロットする
@@ -223,8 +228,8 @@ def plot_y1y2(): # y1, y2プロット用
 
     
     ax1.plot(x1, y1, lw = lw1*1.0, ls = 'solid',  color = 'black', alpha = 1.0, clip_on = True, zorder = 20)
-    ax1.plot(x2, y2, lw = lw1*1.0, ls = 'solid',  color = 'gray', alpha = 1.0, clip_on = True, zorder = 21)
-    # ax1.plot(x3, y3,lw = lw1*0.5, ls = 'solid',  color = 'blue', alpha = 0.8, clip_on = True, zorder = 18)
+    ax1.plot(x2, y2, lw = lw1*1.0, ls = 'solid',  color = 'black', alpha = 0.7, clip_on = True, zorder = 21)
+    ax1.plot(x3, y3,lw = lw1*1.0, ls = 'solid',  color = 'black', alpha = 0.5, clip_on = True, zorder = 22)
     # ax1.plot(x4, y4, lw = lw1*0.5, ls = 'solid',  color = 'gray', alpha = 0.8, clip_on = True, zorder = 17)
     # ax1.plot(x5, y5, lw = lw1*0.5, ls = 'solid',  color = 'deepskyblue', alpha = 0.8, clip_on = True, zorder = 16)
     # ax1.plot(x6, y6, lw = lw1*0.5, ls = 'solid',  color = 'orange', alpha = 0.8, clip_on = True, zorder = 15)

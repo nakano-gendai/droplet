@@ -31,14 +31,14 @@ module globals
     !入力ディレクトリ
     character(*),parameter :: datadir_input = "/data/sht/nakanog/DNS_turbulence_256_IHT_new/fg/"
     !出力ディレクトリ
-    character(*),parameter :: datadir_output = "/data/sht/nakanog/IHT_drop_d70_we10/"
-    character(*),parameter :: datadir_output2 = "/data/sht/nakanog/IHT_drop_d70_we10/u/"
-    character(*),parameter :: datadir_output_fg = "/data/sht/nakanog/IHT_drop_d70_we10/fg/"
+    character(*),parameter :: datadir_output = "/data/sht/nakanog/IHT_drop_d70_we20/"
+    character(*),parameter :: datadir_output2 = "/data/sht/nakanog/IHT_drop_d70_we20/u/"
+    character(*),parameter :: datadir_output_fg = "/data/sht/nakanog/IHT_drop_d70_we20/fg/"
     integer,parameter:: step_output = 1000
     integer,parameter:: step_putput_fg = 100000
 
     !無次元数
-    real(8),parameter:: We = 10.0d0 !ウェーバー数
+    real(8),parameter:: We = 20.0d0 !ウェーバー数
     real(8),parameter:: eta = 1.0d0 !粘度比（nu2/nu1）
 
     !撹乱（乱数）のオーダー

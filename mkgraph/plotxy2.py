@@ -110,7 +110,7 @@ def plot_y1y2(): # y1, y2プロット用
     ax1.set_ylabel(ly, labelpad = lpad[1])
     
     # xm, ym = [0, 35], [0, 1]
-    xm, ym = [0, 7], [0, 3]
+    xm, ym = [0, 12], [0, 3]
     # xm, ym = [0, 35], [0, 25]
     ax1.set_xlim(xm[0], xm[1]) # 軸の範囲
     ax1.set_ylim(ym[0], ym[1])
@@ -125,7 +125,7 @@ def plot_y1y2(): # y1, y2プロット用
     ax1.set_yticks(pos)
     ax1.set_yticklabels(ticks)
     
-    y_err = [[0.587, 0.147], [0.587, 0.147]]
+    y_err = [[0.587, 0.147, 0.132], [0.587, 0.147, 0.132]]
     
     # pos = [0, 10, 20] 
     # ticks = [r'$0$', r'$10$', r'$20$']
@@ -169,7 +169,7 @@ def plot_y1y2(): # y1, y2プロット用
     # pp=fig.colorbar(im, ax=ax1, orientation="vertical", cax=pp_ax)
     
     ### 読み込みデータのプロット
-    plt.errorbar(x1, y1, yerr = y_err ,capsize=5, fmt='.', markersize=15, ecolor='black', markeredgecolor = "blue", color='w', alpha = 1.0,)
+    plt.errorbar(x1, y1, yerr = y_err ,capsize=5, fmt='.', markersize=15, ecolor='black', markeredgecolor = "black", color='w', alpha = 1.0,)
     # ax1.plot(x1, y1, lw = 1, ls = 'none', marker = 'o', ms = ms1*3.0, mew = lw1*1.2, mfc = 'none', color = 'black', 
     #         alpha = 1.0,     # 透明度
     #         clip_on = False, # プロット枠外にもプロットする
