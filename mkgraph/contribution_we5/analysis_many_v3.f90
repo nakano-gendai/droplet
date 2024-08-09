@@ -16,6 +16,7 @@ implicit none
     character(*),parameter :: datadir_input3 = "./"
     character(*),parameter :: datadir_output = "./ensemble_ave_to_breaktime/"
     character(*),parameter :: datadir_output2 = "./kikakuka/"
+    character(*),parameter :: datadir_output3 = "./kikakuka2/"
 
     real(8),parameter:: D = 70.0d0
     real(8),parameter:: epsilon = 9.15d-10 !エネルギー散逸率
@@ -86,12 +87,21 @@ implicit none
             enddo
         close(111)
 
+        ! k_analysis = 1
+        ! write(filename,*) case_num
+        ! filename_output = datadir_output2//trim(adjustl(filename))//'_4.d'
+        ! open(20,file=filename_output,status='replace')
+        ! do k_step = 1, step_num2, 4
+        !     write(20,"(11es16.8)") (1000.0d0*dble(k_step)-1000.0d0)/eddytime, contribution_each_scale(k_step, k_analysis)/contribution_each_scale_wave_sum(k_step), contribution_each_scale(k_step, k_analysis+1)/contribution_each_scale_wave_sum(k_step), contribution_each_scale(k_step, k_analysis+2)/contribution_each_scale_wave_sum(k_step), contribution_each_scale(k_step, k_analysis+3)/contribution_each_scale_wave_sum(k_step), contribution_each_scale(k_step, k_analysis+4)/contribution_each_scale_wave_sum(k_step), contribution_each_scale(k_step, k_analysis+5)/contribution_each_scale_wave_sum(k_step), contribution_each_scale(k_step, k_analysis+6)/contribution_each_scale_wave_sum(k_step), contribution_each_scale(k_step, k_analysis+7)/contribution_each_scale_wave_sum(k_step), contribution_each_scale(k_step, k_analysis+8)/contribution_each_scale_wave_sum(k_step)
+        ! enddo
+        ! close(20) 
+
         k_analysis = 1
         write(filename,*) case_num
-        filename_output = datadir_output2//trim(adjustl(filename))//'_4.d'
+        filename_output = datadir_output3//trim(adjustl(filename))//'_4.d'
         open(20,file=filename_output,status='replace')
         do k_step = 1, step_num2, 4
-            write(20,"(11es16.8)") (1000.0d0*dble(k_step)-1000.0d0)/eddytime, contribution_each_scale(k_step, k_analysis)/contribution_each_scale_wave_sum(k_step), contribution_each_scale(k_step, k_analysis+1)/contribution_each_scale_wave_sum(k_step), contribution_each_scale(k_step, k_analysis+2)/contribution_each_scale_wave_sum(k_step), contribution_each_scale(k_step, k_analysis+3)/contribution_each_scale_wave_sum(k_step), contribution_each_scale(k_step, k_analysis+4)/contribution_each_scale_wave_sum(k_step), contribution_each_scale(k_step, k_analysis+5)/contribution_each_scale_wave_sum(k_step), contribution_each_scale(k_step, k_analysis+6)/contribution_each_scale_wave_sum(k_step), contribution_each_scale(k_step, k_analysis+7)/contribution_each_scale_wave_sum(k_step), contribution_each_scale(k_step, k_analysis+8)/contribution_each_scale_wave_sum(k_step)
+            write(20,"(11es16.8)") (1000.0d0*dble(k_step)-1000.0d0)/eddytime, contribution_each_scale(k_step, k_analysis)/abs(contribution_each_scale_wave_sum(k_step)), contribution_each_scale(k_step, k_analysis+1)/abs(contribution_each_scale_wave_sum(k_step)), contribution_each_scale(k_step, k_analysis+2)/abs(contribution_each_scale_wave_sum(k_step)), contribution_each_scale(k_step, k_analysis+3)/abs(contribution_each_scale_wave_sum(k_step)), contribution_each_scale(k_step, k_analysis+4)/abs(contribution_each_scale_wave_sum(k_step)), contribution_each_scale(k_step, k_analysis+5)/abs(contribution_each_scale_wave_sum(k_step)), contribution_each_scale(k_step, k_analysis+6)/abs(contribution_each_scale_wave_sum(k_step)), contribution_each_scale(k_step, k_analysis+7)/abs(contribution_each_scale_wave_sum(k_step)), contribution_each_scale(k_step, k_analysis+8)/abs(contribution_each_scale_wave_sum(k_step))
         enddo
         close(20) 
 
