@@ -53,10 +53,10 @@ def sns_set(fs, tck_s, alw, ctxt):
     )
 
 ### 読み込み
-x1 = np.loadtxt(dfile1, usecols = 1, dtype = 'float64') # usecolsは列番号　dtypeは実数float64, 整数
-x2 = np.loadtxt(dfile2, usecols = 1, dtype = 'float64') # usecolsは列番号　dtypeは実数float64, 整数
-x3 = np.loadtxt(dfile3, usecols = 1, dtype = 'float64') # usecolsは列番号　dtypeは実数float64, 整数
-x4 = np.loadtxt(dfile4, usecols = 1, dtype = 'float64') # usecolsは列番号　dtypeは実数float64, 整数
+x1 = np.loadtxt(dfile1, usecols = 0, dtype = 'float64') # usecolsは列番号　dtypeは実数float64, 整数
+x2 = np.loadtxt(dfile2, usecols = 0, dtype = 'float64') # usecolsは列番号　dtypeは実数float64, 整数
+x3 = np.loadtxt(dfile3, usecols = 0, dtype = 'float64') # usecolsは列番号　dtypeは実数float64, 整数
+x4 = np.loadtxt(dfile4, usecols = 0, dtype = 'float64') # usecolsは列番号　dtypeは実数float64, 整数
 # x5 = np.loadtxt(dfile1, usecols = 0, dtype = 'float64') # usecolsは列番号　dtypeは実数float64, 整数
 # x6 = np.loadtxt(dfile1, usecols = 0, dtype = 'float64') # usecolsは列番号　dtypeは実数float64, 整数
 # x7 = np.loadtxt(dfile1, usecols = 0, dtype = 'float64') # usecolsは列番号　dtypeは実数float64, 整数
@@ -78,7 +78,7 @@ y4 = np.loadtxt(dfile4, usecols = 2, dtype = 'float64')
 
 
 ### サイズ、ラベルなどの設定
-lx, ly = r'$k/k_\mathrm{H}$', r'$\left<\frac{\overline{\left<\vartheta^{k}\right>}_V}{\overline{\left<\vartheta\right>}_V}\right>$' # r''でTeX文字にできる
+lx, ly = r'$k/k_\mathrm{d}$', r'$\left<\frac{\overline{\left<\vartheta^{k}\right>}_V}{\overline{\left<\vartheta\right>}_V}\right>$' # r''でTeX文字にできる
 # lx, ly = r'$k/k_\mathrm{d}$', r'$\left<\overline{\left<\vartheta^{k}\right>}_V/\overline{\left<\vartheta\right>}_V\right>$' # r''でTeX文字にできる
 if fsize == 0:
     fs1, lw1, ms1 = 1., 1., 2.8
@@ -109,7 +109,7 @@ def plot_y1y2(): # y1, y2プロット用
     ax1.set_ylabel(ly, labelpad = lpad[1])
     
     # xm, ym = [0, 2.8], [-0.000000000001, 0.00000000001]
-    xm, ym = [0.05, 5], [-0.1, 0.8]
+    xm, ym = [0.4, 10], [-0.1, 0.8]
     ax1.set_xlim(xm[0], xm[1]) # 軸の範囲
     ax1.set_ylim(ym[0], ym[1])
     # ax1.set_yticks(np.arange(0.0, ym[1] + 0.0000005)) # xmaxまで0.2刻みの目盛り線
@@ -123,8 +123,8 @@ def plot_y1y2(): # y1, y2プロット用
     # ax1.set_xticks(pos)
     # ax1.set_xticklabels(ticks)
     
-    pos = [0.1, 1] 
-    ticks = [r'$10^{-1}$', r'$1$']
+    pos = [1, 10] 
+    ticks = [r'$1$', r'$10$']
     ax1.set_xticks(pos)
     ax1.set_xticklabels(ticks)
     
@@ -258,7 +258,7 @@ def plot_y1y2(): # y1, y2プロット用
     framealpha = 1.0, fancybox=False, fontsize=8.0,
     edgecolor = "black").get_frame().set_linewidth(alw*0.8)
     # ### 保存
-    fig.savefig(plotdir + "ensemble" + ext, bbox_inches = "tight") # bbox_inches="tight"で余白をなくす
+    fig.savefig(plotdir + "ensemble_kd" + ext, bbox_inches = "tight") # bbox_inches="tight"で余白をなくす
 
 ##=================== main ===================##
 if __name__ == '__main__':

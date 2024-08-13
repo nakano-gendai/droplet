@@ -110,7 +110,7 @@ def plot_y1y2(): # y1, y2プロット用
     ax1.set_ylabel(ly, labelpad = lpad[1])
     
     # xm, ym = [0, 35], [0, 1]
-    xm, ym = [0, 12], [0, 3]
+    xm, ym = [0, 22], [0, 3]
     # xm, ym = [0, 35], [0, 25]
     ax1.set_xlim(xm[0], xm[1]) # 軸の範囲
     ax1.set_ylim(ym[0], ym[1])
@@ -125,7 +125,7 @@ def plot_y1y2(): # y1, y2プロット用
     ax1.set_yticks(pos)
     ax1.set_yticklabels(ticks)
     
-    y_err = [[0.587, 0.147, 0.132], [0.587, 0.147, 0.132]]
+    y_err = [[0.587, 0.147, 0.132, 0.110], [0.587, 0.147, 0.132, 0.110]]
     
     # pos = [0, 10, 20] 
     # ticks = [r'$0$', r'$10$', r'$20$']

@@ -4,7 +4,7 @@ implicit none
     integer,parameter:: ymax = 255 !ｙ方向格子数（０から数える）
     integer,parameter:: zmax = 255 !ｚ方向格子数（０から数える）
     integer,parameter:: step_start = 5000
-    integer,parameter:: step_end = 75000
+    integer,parameter:: step_end = 50000
     integer,parameter:: step_bin = 1000
     integer,parameter:: step_num2 = (step_end - step_start) / step_bin + 1 
     integer,parameter:: case_initial_num = 1 !最初のケース番号
@@ -20,7 +20,7 @@ implicit none
     real(8),parameter:: eddytime = epsilon**(-1.0d0/3.0d0)*D**(2.0d0/3.0d0)
     real(8),parameter:: k_d = 0.5d0*dble(xmax) / D
 
-    real(8),parameter:: We = 2.0d0
+    real(8),parameter:: We = 20.0d0
     real(8),parameter:: sigma = epsilon**(2.0d0/3.0d0)*D**(5.0d0/3.0d0) / We
     real(8),parameter:: Dh = 0.725*sigma**(3.0d0/5.0d0)*epsilon**(-2.0d0/5.0d0)
     real(8),parameter:: k_h = 0.5d0*dble(xmax) / Dh
@@ -59,7 +59,7 @@ implicit none
         enddo
     ENDDO 
 
-    filename_output = datadir_output//'d70we2_ensemble.d'
+    filename_output = datadir_output//'d70we20_ensemble.d'
     open(120, file=filename_output, form="formatted")
     do k_analysis = 1, (xmax+1) / 2
         write(120,*) dble(k_analysis) / k_d, dble(k_analysis) / k_h, ensemble(k_analysis) / dble(case_end_num)

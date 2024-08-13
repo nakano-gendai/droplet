@@ -20,6 +20,11 @@ implicit none
     real(8),parameter:: eddytime = epsilon**(-1.0d0/3.0d0)*D**(2.0d0/3.0d0)
     real(8),parameter:: k_d = 0.5d0*dble(xmax) / D
 
+    real(8),parameter:: We = 10.0d0
+    real(8),parameter:: sigma = epsilon**(2.0d0/3.0d0)*D**(5.0d0/3.0d0) / We
+    real(8),parameter:: Dh = 0.725*sigma**(3.0d0/5.0d0)*epsilon**(-2.0d0/5.0d0)
+    real(8),parameter:: k_h = 0.5d0*dble(xmax) / Dh
+
     real(8) contribution_each_scale(step_num2,(xmax+1)/2 + 1)
     real(8) contribution_each_scale_sum(step_num2,(xmax+1)/2 + 1)
     real(8) contribution_each_scale_time_sum((xmax+1)/2 + 1)
@@ -57,7 +62,7 @@ implicit none
     filename_output = datadir_output//'d70we10_ensemble.d'
     open(120, file=filename_output, form="formatted")
     do k_analysis = 1, (xmax+1) / 2
-        write(120,*) dble(k_analysis), dble(k_analysis) / k_d, ensemble(k_analysis) / dble(case_end_num)
+        write(120,*) dble(k_analysis) / k_d, dble(k_analysis) / k_h, ensemble(k_analysis) / dble(case_end_num)
     enddo
     close(120)
 
