@@ -6,7 +6,7 @@ program main
     real(8),parameter:: phi1 = 2.638d-1 !連続相のオーダーパラメータ
     real(8),parameter:: phi2 = 4.031d-1 !分散相のオーダーパラメータ
     integer,parameter:: case_initial_num = 49 !最初のケース番号
-    integer,parameter:: case_end_num = 50 !最後のケース番号
+    integer,parameter:: case_end_num = 50!最後のケース番号
 
     real(8) phi(-1:xmax+1,-1:ymax+1,-1:zmax+1)
     integer label(0:xmax,0:ymax,0:zmax)
@@ -17,8 +17,8 @@ program main
     real(8) Vlabel(1:2000), radius(1:2000)
     real(8) Vall
 
-    character(*),parameter :: datadir = "/data/sht/nakanog/IHT_drop_d70_we10/"
-    character(*),parameter :: datadir2 = "/data/sht/nakanog/IHT_drop_d70_we10/drop_num/"
+    character(*),parameter :: datadir = "/data/sht/nakanog/IHT_drop_d70_we20/"
+    character(*),parameter :: datadir2 = "/data/sht/nakanog/IHT_drop_d70_we20/drop_num/"
     integer step, dropnum, case_num
     character(8) file_num, file_num2
     real(8) time1, time2
