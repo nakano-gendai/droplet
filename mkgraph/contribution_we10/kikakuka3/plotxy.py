@@ -22,7 +22,7 @@ name = "17"
 plotdir, datadir, ext = plotdir + '/', datadir + '/', '.' + ext
 # dfile1   = datadir + name + '.d'
 # dfile2   = datadir + name + '_4.d'
-dfile3   = datadir + 'd70we5_break_time.d'
+dfile3   = datadir + 'd70we10_break_time.d'
 # dfile4   = datadir + 'enesupe_phi_60we1.4_3.d'
 # dfile5   = datadir + 'enesupe_phi_70we1.4_3.d'
 # dfile6   = datadir + 'case1_e.d'
@@ -95,7 +95,7 @@ def sns_set(fs, tck_s, alw, ctxt):
 
 
 ### サイズ、ラベルなどの設定
-lx, ly = r'$t/t_\mathrm{d}$', r'$\left<\vartheta\right>_V$' # r''でTeX文字にできる
+lx, ly = r'$t/t_\mathrm{d}$', r'$\left<\vartheta^{k}\right>_V / \overline{\left<\vartheta\right>}_V$' # r''でTeX文字にできる
 if fsize == 0:
     fs1, lw1, ms1 = 1., 1., 2.8
     tck_s1, alw = 3, 0.625
@@ -125,7 +125,7 @@ def plot_y1y2(i): # y1, y2プロット用
     ax1.set_xlabel(lx, labelpad = lpad[0]) # 軸ラベル
     ax1.set_ylabel(ly, labelpad = lpad[1])
     
-    xm, ym = [0, 2.6], [-0.2, 1.5]
+    xm, ym = [0, 2.6], [-0.2, 1.0]
     # xm, ym = [0, 4], [-0.000000000005, 0.000000000015]
     ax1.set_xlim(xm[0], xm[1]) # 軸の範囲
     ax1.set_ylim(ym[0], ym[1])
@@ -145,10 +145,10 @@ def plot_y1y2(i): # y1, y2プロット用
     ax1.set_xticks(pos)
     ax1.set_xticklabels(ticks)
     
-    # pos = [-0.25, 0, 20] 
-    # ticks = [r'$0$', r'$10$', r'$20$']
-    # ax1.set_yticks(pos)
-    # ax1.set_yticklabels(ticks)
+    pos = [0, 0.5, 1] 
+    ticks = [r'$0$', r'$0.5$', r'$1$']
+    ax1.set_yticks(pos)
+    ax1.set_yticklabels(ticks)
     
     # pos = [0.01, 0.1, 1] 
     # ticks = [r'$10^{-2}$', r'$10^{-1}$', r'$1$']
