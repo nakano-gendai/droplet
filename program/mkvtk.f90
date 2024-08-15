@@ -9,7 +9,7 @@ module globals
     character(*),parameter :: dir = "/data/sht/nakanog/IHT_drop_d70_we2/"
     ! character(*),parameter :: dir = "./"
     !出力ディレクトリー
-    character(*),parameter :: datadir = "/data/sht/nakanog/IHT_drop_d70_we2/vtk/"
+    character(*),parameter :: datadir = "/data/sht/nakanog/IHT_drop_d70_we2/vtk1/"
     ! character(*),parameter :: datadir = "./"
     ! !読み込みディレクトリー
     ! character(*),parameter :: dir = "/data/sht/nakanog/taylor_re12000_ran/ens2/collect/"
@@ -43,7 +43,7 @@ contains
             write(file_num,"(i7)") step
         endif
         ! open(20, file=dir//"10004000_m.bin", form='unformatted')
-        open(20, file=dir//'17_'//trim(file_num)//".bin", form='unformatted')
+        open(20, file=dir//'1_'//trim(file_num)//".bin", form='unformatted')
         do k = 1, nz
             do j = 1, ny
                 do i = 1, nx
@@ -70,7 +70,7 @@ contains
         do j=1,7
             if(write_dataname(j:j)==' ') write_dataname(j:j)='0'
         end do
-        write_dataname = datadir//trim(write_dataname)//"_17.vtk"
+        write_dataname = datadir//trim(write_dataname)//".vtk"
         print *, write_dataname
         ! write(write_dataname,"(a)") //trim(file_num)//".vtk"
         open(unit=num_vtk,file=trim(write_dataname), status="replace", form="unformatted", action="write", access="stream", convert="big_endian")  ! num_vtkは装置番号, endianの指定が必要
