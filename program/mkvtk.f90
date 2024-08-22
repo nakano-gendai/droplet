@@ -6,10 +6,10 @@ module globals
     real(8),parameter :: dy = 1.0d0
     real(8),parameter :: dz = 1.0d0
     !読み込みディレクトリー
-    character(*),parameter :: dir = "/data/sht/nakanog/IHT_drop_d70_we2/"
+    character(*),parameter :: dir = "/data/sht/nakanog/IHT_drop_d70_we20/"
     ! character(*),parameter :: dir = "./"
     !出力ディレクトリー
-    character(*),parameter :: datadir = "/data/sht/nakanog/IHT_drop_d70_we2/vtk1/"
+    character(*),parameter :: datadir = "/data/sht/nakanog/IHT_drop_d70_we20/vtk8/"
     ! character(*),parameter :: datadir = "./"
     ! !読み込みディレクトリー
     ! character(*),parameter :: dir = "/data/sht/nakanog/taylor_re12000_ran/ens2/collect/"
@@ -43,7 +43,7 @@ contains
             write(file_num,"(i7)") step
         endif
         ! open(20, file=dir//"10004000_m.bin", form='unformatted')
-        open(20, file=dir//'1_'//trim(file_num)//".bin", form='unformatted')
+        open(20, file=dir//'8_'//trim(file_num)//".bin", form='unformatted')
         do k = 1, nz
             do j = 1, ny
                 do i = 1, nx
@@ -121,7 +121,7 @@ use globals
     integer step, stepnum
     call mk_dirs(datadir)
     stepnum = 1
-    DO step = 3000, 75000, 1000
+    DO step = 3000, 50000, 1000
     ! step = 1
         call read_files(scalar, step)
         call output_scalar(scalar, stepnum)

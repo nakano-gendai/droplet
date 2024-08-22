@@ -12,15 +12,15 @@ import math
 ### 入出力の設定
 fsize = 0   # 0：小さいサイズ（論文用）　1：大きいサイズ（プレゼン用）
 ext = 'pdf' # 保存ファイルの拡張子　pdf,svg,pngなどp
-plotdir = 'HIT_nu0.001' # 保存用ディレクトリ
+plotdir = 'goto' # 保存用ディレクトリ
 os.makedirs(plotdir, exist_ok = True) # ディレクトリ作成
 
 # datadir = '/Users/nakanogendai/droplet/'
 # datadir ='/home/nakano/anime/b4/data/data_fig6/'
 datadir ="./"
 plotdir, datadir, ext = plotdir + '/', datadir + '/', '.' + ext
-dfile1   = datadir + 'enesupe_256_2.d'
-# dfile2   = datadir + 'enesupe_debug3.d'
+dfile1   = datadir + 'enesupe_512.d'
+dfile2   = datadir + 'enesupe_dsd.d'
 # dfile3   = datadir + 'enesupe_debug4.d'
 # dfile4   = datadir + 'LES_64_2.d'
 # dfile5   = datadir + 'LES_32_2.d'
@@ -54,7 +54,7 @@ def sns_set(fs, tck_s, alw, ctxt):
 
 ### 読み込み
 x1 = np.loadtxt(dfile1, usecols = 0, dtype = 'float64') # usecolsは列番号　dtypeは実数float64, 整数
-# x2 = np.loadtxt(dfile2, usecols = 0, dtype = 'float64') # usecolsは列番号　dtypeは実数float64, 整数
+x2 = np.loadtxt(dfile2, usecols = 0, dtype = 'float64') # usecolsは列番号　dtypeは実数float64, 整数
 # x3 = np.loadtxt(dfile3, usecols = 0, dtype = 'float64') # usecolsは列番号　dtypeは実数float64, 整数
 # x4 = np.loadtxt(dfile4, usecols = 0, dtype = 'float64') # usecolsは列番号　dtypeは実数float64, 整数
 # x5 = np.loadtxt(dfile5, usecols = 0, dtype = 'float64') # usecolsは列番号　dtypeは実数float64, 整数
@@ -63,7 +63,7 @@ x1 = np.loadtxt(dfile1, usecols = 0, dtype = 'float64') # usecolsは列番号　
 # x8 = np.loadtxt(dfile8, usecols = 0, dtype = 'float64') # usecolsは列番号　dtypeは実数float64, 整数
 
 y1 = np.loadtxt(dfile1, usecols = 1, dtype = 'float64')
-# y2 = np.loadtxt(dfile2, usecols = 1, dtype = 'float64')
+y2 = np.loadtxt(dfile2, usecols = 1, dtype = 'float64')
 # y3 = np.loadtxt(dfile3, usecols = 1, dtype = 'float64')
 # y4 = np.loadtxt(dfile4, usecols = 1, dtype = 'float64')
 # y5 = np.loadtxt(dfile5, usecols = 1, dtype = 'float64')
@@ -125,13 +125,13 @@ def plot_y1y2(): # y1, y2プロット用
     # ax1.text(0.7, (ytext - ym[0])/(ym[1] - ym[0]) + 0.05, r'$y=%4.1f$'%(ytext), transform = ax1.transAxes) # 図中にtextを入れる
     
 
-    za=np.arange(1, 200, 0.0001)
-    ua=2.25**(-8.5)*za**(-5/3)
-    ax1.plot(za, ua, lw = lw1*1.0, ls = 'dotted',  color = 'blue', 
-            alpha = 0.5,     # 透明度
-            clip_on = True, # プロット枠外にもプロットする
-            zorder = 20,      # zorderが大きいほど前面に表示される
-            label = r'$\propto k^{-5/3}$') 
+    # za=np.arange(1, 200, 0.0001)
+    # ua=2.25**(-8.5)*za**(-5/3)
+    # ax1.plot(za, ua, lw = lw1*1.0, ls = 'dotted',  color = 'blue', 
+    #         alpha = 0.5,     # 透明度
+    #         clip_on = True, # プロット枠外にもプロットする
+    #         zorder = 20,      # zorderが大きいほど前面に表示される
+    #         label = r'$\propto k^{-5/3}$') 
 
 
     
@@ -178,8 +178,8 @@ def plot_y1y2(): # y1, y2プロット用
     #         label = r'$\mathrm{Re}\approx 0.2$, $\mathrm{Ca}\approx 0.4$ (initial data)') 
 
     
-    ax1.plot(x1, y1, lw = lw1*1.5, ls = 'solid',  color = 'gray', alpha = 0.8, clip_on = True, zorder = 13)
-    # ax1.plot(x2, y2, lw = lw1*1.7, ls = 'dashed',  color = 'blue', alpha = 0.7, clip_on = True, zorder = 15, label = r"LES ($64^3$, $\Delta=4\Delta x$)")
+    ax1.plot(x1, y1, lw = lw1*1.5, ls = 'solid',  color = 'black', alpha = 0.8, clip_on = True, zorder = 13)
+    ax1.plot(x2, y2, lw = lw1*1.7, ls = 'solid',  color = 'gray', alpha = 1.0, clip_on = True, zorder = 15)
     # ax1.plot(x3, y3, lw = lw1*1.7, ls = 'dashdot',  color = 'green', alpha = 0.7, clip_on = True, zorder = 16, label = r"LES with Low-Pass ($64^3$, $\Delta=4\Delta x$)")
     # ax1.plot(x4, y4, lw = lw1*1.7, ls = 'dotted',  color = 'orange', alpha = 0.7, clip_on = True, zorder = 17, label = r'LES-3 ($64^3$, $\Delta=\Delta x$)')
     # ax1.plot(x5, y5, lw = lw1*1.2, ls = 'dashdot',  color = 'blue', alpha = 1, clip_on = True, zorder = 11, label = r"LES ($32^3$, $\Delta=\Delta x$)")
