@@ -9,8 +9,8 @@ implicit none
     integer,parameter:: step_num2 = (step_end - step_start) / step_bin + 1 
     integer,parameter:: case_initial_num = 1 !最初のケース番号
     integer,parameter:: case_end_num = 50 !最後のケース番号
-    character(*),parameter :: datadir_input = "./"
-    character(*),parameter :: datadir_output = "./ave_to_breaktime/"
+    character(*),parameter :: datadir_input = "/data/sht/nakanog/IHT_drop_d70_we20/contribution/"
+    character(*),parameter :: datadir_output = "/data/sht/nakanog/IHT_drop_d70_we20/contribution/ave_to_breaktime/"
     character(*),parameter :: datadir_output2 = "./sum_each_time/"
 
     real(8),parameter:: D = 70.0d0
@@ -33,7 +33,7 @@ implicit none
     real(8) wa
     integer dummy_int
 
-    open(9,file="./d70we10_break_time.d")
+    open(9,file="./d70we20_break_time.d")
     do case_num = 1, 50
         read(9,*) dummy_int, time(case_num)
     enddo

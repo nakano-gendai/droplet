@@ -21,7 +21,7 @@ os.makedirs(plotdir, exist_ok = True) # ディレクトリ作成
 # datadir ='/home/nakano/anime/b4/data/data_fig6/'
 datadir ="./"
 plotdir, datadir, ext = plotdir + '/', datadir + '/', '.' + ext
-dfile1   = datadir + 'we_break_time.d'
+dfile1   = datadir + 'th.d'
 # dfile2   = datadir + 'D70_2.d'
 # dfile3   = datadir + 'D100_2.d'
 # dfile4   = datadir + 'case21.d'
@@ -80,7 +80,7 @@ y2 = np.loadtxt(dfile1, usecols = 2, dtype = 'float64')
 
 
 ### サイズ、ラベルなどの設定
-lx, ly = r'$\mathrm{We}$', r'$\left<t_\mathrm{b}\right>/t_\mathrm{d}$' # r''でTeX文字にできる
+lx, ly = r'$\mathrm{We}$', r'$\left<t_\mathrm{b}\right>/t_\mathrm{H}$' # r''でTeX文字にできる
 if fsize == 0:
     fs1, lw1, ms1 = 1., 1., 2.8
     tck_s1, alw = 3, 0.625
@@ -110,7 +110,7 @@ def plot_y1y2(): # y1, y2プロット用
     ax1.set_ylabel(ly, labelpad = lpad[1])
     
     # xm, ym = [0, 35], [0, 1]
-    xm, ym = [0, 22], [0, 3]
+    xm, ym = [0, 22], [1, 4.0]
     # xm, ym = [0, 35], [0, 25]
     ax1.set_xlim(xm[0], xm[1]) # 軸の範囲
     ax1.set_ylim(ym[0], ym[1])
@@ -120,12 +120,12 @@ def plot_y1y2(): # y1, y2プロット用
     # plt.yscale('log')
     # plt.xscale('log')
 
-    pos = [0, 1, 2, 3] 
-    ticks = [r'$0$', r'$1$', r'$2$', r'$3$']
+    pos = [1, 2, 3, 4] 
+    ticks = [r'$1$', r'$2$', r'$3$', r'$4$']
     ax1.set_yticks(pos)
     ax1.set_yticklabels(ticks)
     
-    y_err = [[0.587, 0.147, 0.132, 0.110], [0.587, 0.147, 0.132, 0.110]]
+    y_err = [[0.32, 0.3, 0.34, 0.33], [0.32, 0.3, 0.34, 0.33]]
     
     # pos = [0, 10, 20] 
     # ticks = [r'$0$', r'$10$', r'$20$']
@@ -240,7 +240,7 @@ def plot_y1y2(): # y1, y2プロット用
     # framealpha = 1.0, fancybox=False, fontsize=8.0,
     # edgecolor = "black").get_frame().set_linewidth(alw*0.8)
     # ### 保存
-    fig.savefig(plotdir + "breaktime" + ext, bbox_inches = "tight") # bbox_inches="tight"で余白をなくす
+    fig.savefig(plotdir + "breaktime_th" + ext, bbox_inches = "tight") # bbox_inches="tight"で余白をなくす
 
 ##=================== main ===================##
 if __name__ == '__main__':

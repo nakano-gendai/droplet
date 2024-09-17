@@ -4,13 +4,13 @@ implicit none
     integer,parameter:: ymax = 255 !ｙ方向格子数（０から数える）
     integer,parameter:: zmax = 255 !ｚ方向格子数（０から数える）
     integer,parameter:: step_start = 5000
-    integer,parameter:: step_end = 50000
+    integer,parameter:: step_end = 75000
     integer,parameter:: step_bin = 1000
     integer,parameter:: step_num2 = (step_end - step_start) / step_bin + 1 
     integer,parameter:: case_initial_num = 1 !最初のケース番号
     integer,parameter:: case_end_num = 50 !最後のケース番号
-    character(*),parameter :: datadir_input = "./"
-    character(*),parameter :: datadir_output = "./kikakuka3/"
+    character(*),parameter :: datadir_input = "/data/sht/nakanog/IHT_drop_d70_we2/contribution/"
+    character(*),parameter :: datadir_output = "/data/sht/nakanog/IHT_drop_d70_we2/contribution/kikakuka3/"
     character(*),parameter :: datadir_output2 = "./sum_each_time/"
 
     real(8),parameter:: D = 70.0d0
@@ -35,7 +35,7 @@ implicit none
     real(8) wa
     integer dummy_int
 
-    open(9,file="./d70we10_break_time.d")
+    open(9,file="./d70we2_break_time.d")
     do case_num = 1, 50
         read(9,*) dummy_int, time(case_num)
     enddo
@@ -108,9 +108,9 @@ implicit none
 
         k_analysis = 1
         write(filename,*) case_num
-        filename_output = datadir_output//trim(adjustl(filename))//'_4.d'
+        filename_output = datadir_output//trim(adjustl(filename))//'.d'
         open(20,file=filename_output,status='replace')
-        do k_step = 1, step_num2, 4
+        do k_step = 1, step_num2, 1
             write(20,"(11es16.8)") (1000.0d0*dble(k_step)-1000.0d0)/eddytime, contribution_each_scale_sum(k_step, k_analysis)/wa, contribution_each_scale_sum(k_step, k_analysis+1)/wa, contribution_each_scale_sum(k_step, k_analysis+2)/wa, contribution_each_scale_sum(k_step, k_analysis+3)/wa, contribution_each_scale_sum(k_step, k_analysis+4)/wa, contribution_each_scale_sum(k_step, k_analysis+5)/wa, contribution_each_scale_sum(k_step, k_analysis+6)/wa, contribution_each_scale_sum(k_step, k_analysis+7)/wa, contribution_each_scale_sum(k_step, k_analysis+8)/wa, contribution_each_scale_sum(k_step, k_analysis+9)/wa
         enddo
         close(20) 

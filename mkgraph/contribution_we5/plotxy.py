@@ -12,7 +12,7 @@ import math
 ### 入出力の設定
 fsize = 0   # 0：小さいサイズ（論文用）　1：大きいサイズ（プレゼン用）
 ext = 'pdf' # 保存ファイルの拡張子　pdf,svg,pngなどp
-plotdir = './1-50/' # 保存用ディレクトリ
+plotdir = './sympo/' # 保存用ディレクトリ
 os.makedirs(plotdir, exist_ok = True) # ディレクトリ作成
 
 # datadir = '/Users/nakanogendai/droplet/'
@@ -95,7 +95,7 @@ def sns_set(fs, tck_s, alw, ctxt):
 
 
 ### サイズ、ラベルなどの設定
-lx, ly = r'$t/t_\mathrm{d}$', r'$\left<\vartheta\right>_V$' # r''でTeX文字にできる
+lx, ly = r'$t/t_\mathrm{d}$', r'$\left<\vartheta^{k}\right>_V / \overline{\left<\vartheta\right>}_V$' # r''でTeX文字にできる
 if fsize == 0:
     fs1, lw1, ms1 = 1., 1., 2.8
     tck_s1, alw = 3, 0.625
@@ -125,7 +125,8 @@ def plot_y1y2(i): # y1, y2プロット用
     ax1.set_xlabel(lx, labelpad = lpad[0]) # 軸ラベル
     ax1.set_ylabel(ly, labelpad = lpad[1])
     
-    xm, ym = [0, 2.6], [-0.2, 1.5]
+    # xm, ym = [0, 2.6], [-0.2, 1.5]
+    xm, ym = [0, 1.0], [-0.3, 1.2]
     # xm, ym = [0, 4], [-0.000000000005, 0.000000000015]
     ax1.set_xlim(xm[0], xm[1]) # 軸の範囲
     ax1.set_ylim(ym[0], ym[1])
@@ -140,10 +141,20 @@ def plot_y1y2(i): # y1, y2プロット用
     # ax1.set_xticks(pos)
     # ax1.set_xticklabels(ticks)
     
-    pos = [0, 1, 2] 
-    ticks = [r'$0$', r'$1$', r'$2$']
+    pos = [0, 0.5, 1] 
+    ticks = [r'$0$', r'$0.5$', r'$1$']
     ax1.set_xticks(pos)
     ax1.set_xticklabels(ticks)
+    
+    pos = [0, 0.5, 1] 
+    ticks = [r'$0$', r'$0.5$', r'$1$']
+    ax1.set_yticks(pos)
+    ax1.set_yticklabels(ticks)
+    
+    # pos = [0, 1, 2] 
+    # ticks = [r'$0$', r'$1$', r'$2$']
+    # ax1.set_xticks(pos)
+    # ax1.set_xticklabels(ticks)
     
     # pos = [-0.25, 0, 20] 
     # ticks = [r'$0$', r'$10$', r'$20$']
@@ -192,60 +203,84 @@ def plot_y1y2(i): # y1, y2プロット用
     # pp=fig.colorbar(im, ax=ax1, orientation="vertical", cax=pp_ax)
     
     ### 読み込みデータのプロット
-    ax1.plot(x11, y11, lw = 1, ls = 'none', marker = 'o', ms = ms1*1.5, mew = lw1*0.5, mfc = 'none', color = 'red', 
-            alpha = 0.8,     # 透明度
-            clip_on = False, # プロット枠外にもプロットする
-            zorder = 110,
-            label = r'$k=1$') 
-    ax1.plot(x22, y22, lw = 1, ls = 'none', marker = '^', ms = ms1*1.5, mew = lw1*0.5, mfc = 'none', color = 'black', 
-            alpha = 0.8,     # 透明度
-            clip_on = False, # プロット枠外にもプロットする
-            zorder = 109,      # zorderが大きいほど前面に表示される
-            label = r'$k=2$') 
-    ax1.plot(x33, y33, lw = 1, ls = 'none', marker = 'D', ms = ms1*1.5, mew = lw1*0.5, mfc = 'none', color = 'blue', 
-            alpha = 0.8,     # 透明度
-            clip_on = False, # プロット枠外にもプロットする
-            zorder = 108,      # zorderが大きいほど前面に表示される
-            label = r'$k=3$') 
-    ax1.plot(x44, y44, lw = 1, ls = 'none', marker = '*', ms = ms1*1.5, mew = lw1*0.5, mfc = 'none', color = 'gray', 
-            alpha = 0.8,     # 透明度
-            clip_on = False, # プロット枠外にもプロットする
-            zorder = 107,      # zorderが大きいほど前面に表示される
-            label = r'$k=4$') 
-    ax1.plot(x55, y55, lw = 1, ls = 'none', marker = 'h', ms = ms1*1.5, mew = lw1*0.5, mfc = 'none', color = 'deepskyblue', 
-            alpha = 0.8,     # 透明度
-            clip_on = False, # プロット枠外にもプロットする
-            zorder = 106,      # zorderが大きいほど前面に表示される
-            label = r'$k=5$') 
-    ax1.plot(x66, y66, lw = 1, ls = 'none', marker = 's', ms = ms1*1.5, mew = lw1*0.5, mfc = 'none', color = 'orange', 
-            alpha = 0.8,     # 透明度
-            clip_on = False, # プロット枠外にもプロットする
-            zorder = 105,      # zorderが大きいほど前面に表示される
-            label = r'$k=6$') 
-    ax1.plot(x77, y77, lw = 1, ls = 'none', marker = 'p', ms = ms1*1.5, mew = lw1*0.5, mfc = 'none', color = 'purple', 
-            alpha = 0.8,     # 透明度
-            clip_on = False, # プロット枠外にもプロットする
-            zorder = 104,      # zorderが大きいほど前面に表示される
-            label = r'$k=7$') 
-    # ax1.plot(x8, y8, lw = 1, ls = 'none', marker = 'x', ms = ms1*1.0, mew = lw1*0.5, mfc = 'none', color = 'lime', 
+    # ax1.plot(x11, y11, lw = 1, ls = 'none', marker = 'o', ms = ms1*2, mew = lw1*1, mfc = 'none', color = 'blue', 
+    #         alpha = 1,     # 透明度
+    #         clip_on = True, # プロット枠外にもプロットする
+    #         zorder = 110,
+    #         label = r'$k/k_{\mathrm{d}}=0.55$') 
+    # ax1.plot(x22, y22, lw = 1, ls = 'none', marker = '^', ms = ms1*2, mew = lw1*1, mfc = 'none', color = 'blue', 
+    #         alpha = 0.9,     # 透明度
+    #         clip_on = True, # プロット枠外にもプロットする
+    #         zorder = 109,      # zorderが大きいほど前面に表示される
+    #         label = r'$k/k_{\mathrm{d}}=1.1$') 
+    # ax1.plot(x33, y33, lw = 1, ls = 'none', marker = 'D', ms = ms1*2, mew = lw1*1, mfc = 'none', color = 'blue', 
     #         alpha = 0.8,     # 透明度
-    #         clip_on = False, # プロット枠外にもプロットする
-    #         zorder = 103,      # zorderが大きいほど前面に表示される
-    #         label = r'$k=8$') 
-    # ax1.plot(x88, y88, lw = 1, ls = 'none', marker = 'x', ms = ms1*1.5, mew = lw1*0.5, mfc = 'none', color = 'lime', 
-    #         alpha = 0.8,     # 透明度
-    #         clip_on = False, # プロット枠外にもプロットする
-    #         zorder = 103,      # zorderが大きいほど前面に表示される
-    #         label = r'$k=8$') 
-
+    #         clip_on = True, # プロット枠外にもプロットする
+    #         zorder = 108,      # zorderが大きいほど前面に表示される
+    #         label = r'$k/k_{\mathrm{d}}=1.6$') 
+    # ax1.plot(x44, y44, lw = 1, ls = 'none', marker = '*', ms = ms1*2, mew = lw1*1, mfc = 'none', color = 'blue', 
+    #         alpha = 0.7,     # 透明度
+    #         clip_on = True, # プロット枠外にもプロットする
+    #         zorder = 107,      # zorderが大きいほど前面に表示される
+    #         label = r'$k/k_{\mathrm{d}}=2.2$') 
+    # ax1.plot(x55, y55, lw = 1, ls = 'none', marker = 'h', ms = ms1*2, mew = lw1*1, mfc = 'none', color = 'blue', 
+    #         alpha = 0.6,     # 透明度
+    #         clip_on = True, # プロット枠外にもプロットする
+    #         zorder = 106,      # zorderが大きいほど前面に表示される
+    #         label = r'$k/k_{\mathrm{d}}=2.7$') 
+    # ax1.plot(x66, y66, lw = 1, ls = 'none', marker = 's', ms = ms1*2, mew = lw1*1, mfc = 'none', color = 'blue', 
+    #         alpha = 0.5,     # 透明度
+    #         clip_on = True, # プロット枠外にもプロットする
+    #         zorder = 105,      # zorderが大きいほど前面に表示される
+    #         label = r'$k/k_{\mathrm{d}}=3.3$') 
     
-    ax1.plot(x1, y1, lw = lw1*0.5, ls = 'solid',  color = 'red', alpha = 0.8, clip_on = True, zorder = 20)
-    ax1.plot(x2, y2, lw = lw1*0.5, ls = 'solid',  color = 'black', alpha = 0.8, clip_on = True, zorder = 19)
-    ax1.plot(x3, y3,lw = lw1*0.5, ls = 'solid',  color = 'blue', alpha = 0.8, clip_on = True, zorder = 18)
-    ax1.plot(x4, y4, lw = lw1*0.5, ls = 'solid',  color = 'gray', alpha = 0.8, clip_on = True, zorder = 17)
-    ax1.plot(x5, y5, lw = lw1*0.5, ls = 'solid',  color = 'deepskyblue', alpha = 0.8, clip_on = True, zorder = 16)
-    ax1.plot(x6, y6, lw = lw1*0.5, ls = 'solid',  color = 'orange', alpha = 0.8, clip_on = True, zorder = 15)
-    ax1.plot(x7, y7, lw = lw1*0.5, ls = 'solid',  color = 'purple', alpha = 0.8, clip_on = True, zorder = 14)
+    
+    ax1.plot(x11, y11, lw = 1, ls = 'none', marker = 'o', ms = ms1*2, mew = lw1*1, mfc = 'none', color = 'red', 
+            alpha = 0.8,     # 透明度
+            clip_on = True, # プロット枠外にもプロットする
+            zorder = 110,
+            label = r'$k/k_{\mathrm{d}}=0.55$') 
+    ax1.plot(x22, y22, lw = 1, ls = 'none', marker = '^', ms = ms1*2, mew = lw1*1, mfc = 'none', color = 'black', 
+            alpha = 0.8,     # 透明度
+            clip_on = True, # プロット枠外にもプロットする
+            zorder = 109,      # zorderが大きいほど前面に表示される
+            label = r'$k/k_{\mathrm{d}}=1.1$') 
+    ax1.plot(x33, y33, lw = 1, ls = 'none', marker = 'D', ms = ms1*2, mew = lw1*1, mfc = 'none', color = 'blue', 
+            alpha = 0.8,     # 透明度
+            clip_on = True, # プロット枠外にもプロットする
+            zorder = 108,      # zorderが大きいほど前面に表示される
+            label = r'$k/k_{\mathrm{d}}=1.6$') 
+    ax1.plot(x44, y44, lw = 1, ls = 'none', marker = '*', ms = ms1*2, mew = lw1*1, mfc = 'none', color = 'gray', 
+            alpha = 0.8,     # 透明度
+            clip_on = True, # プロット枠外にもプロットする
+            zorder = 107,      # zorderが大きいほど前面に表示される
+            label = r'$k/k_{\mathrm{d}}=2.2$') 
+    ax1.plot(x55, y55, lw = 1, ls = 'none', marker = 'h', ms = ms1*2, mew = lw1*1, mfc = 'none', color = 'deepskyblue', 
+            alpha = 0.8,     # 透明度
+            clip_on = True, # プロット枠外にもプロットする
+            zorder = 106,      # zorderが大きいほど前面に表示される
+            label = r'$k/k_{\mathrm{d}}=2.7$') 
+    ax1.plot(x66, y66, lw = 1, ls = 'none', marker = 's', ms = ms1*2, mew = lw1*1, mfc = 'none', color = 'orange', 
+            alpha = 0.8,     # 透明度
+            clip_on = True, # プロット枠外にもプロットする
+            zorder = 105,      # zorderが大きいほど前面に表示される
+            label = r'$k/k_{\mathrm{d}}=3.3$') 
+
+    # ax1.plot(x1, y1, lw = lw1*1, ls = 'solid',  color = 'blue', alpha = 1, clip_on = True, zorder = 20)
+    # ax1.plot(x2, y2, lw = lw1*1, ls = 'solid',  color = 'blue', alpha = 0.9, clip_on = True, zorder = 19)
+    # ax1.plot(x3, y3,lw = lw1*1, ls = 'solid',  color = 'blue', alpha = 0.8, clip_on = True, zorder = 18)
+    # ax1.plot(x4, y4, lw = lw1*1, ls = 'solid',  color = 'blue', alpha = 0.7, clip_on = True, zorder = 17)
+    # ax1.plot(x5, y5, lw = lw1*1, ls = 'solid',  color = 'blue', alpha = 0.6, clip_on = True, zorder = 16)
+    # ax1.plot(x6, y6, lw = lw1*1, ls = 'solid',  color = 'blue', alpha = 0.5, clip_on = True, zorder = 15)
+    
+    ax1.plot(x1, y1, lw = lw1*1, ls = 'solid',  color = 'red', alpha = 0.8, clip_on = True, zorder = 20)
+    ax1.plot(x2, y2, lw = lw1*1, ls = 'solid',  color = 'black', alpha = 0.8, clip_on = True, zorder = 19)
+    ax1.plot(x3, y3,lw = lw1*1, ls = 'solid',  color = 'blue', alpha = 0.8, clip_on = True, zorder = 18)
+    ax1.plot(x4, y4, lw = lw1*1, ls = 'solid',  color = 'gray', alpha = 0.8, clip_on = True, zorder = 17)
+    ax1.plot(x5, y5, lw = lw1*1, ls = 'solid',  color = 'deepskyblue', alpha = 0.8, clip_on = True, zorder = 16)
+    ax1.plot(x6, y6, lw = lw1*1, ls = 'solid',  color = 'orange', alpha = 0.8, clip_on = True, zorder = 15)
+    
+    
     # ax1.plot(x8, y8, lw = lw1*0.5, ls = 'solid',  color = 'lime', alpha = 0.8, clip_on = True, zorder = 13)
     
     # ax1.axvline(255/30*0.93/127.5, lw = lw1*0.5, ls = 'dotted', dashes = [2, 2], color = 'black', alpha = 1.0, zorder = 10, label = r'$k_{D/L=0.118}$') # dashesで破線の間隔などを設定できる

@@ -11,7 +11,7 @@ implicit none
     integer,parameter:: case_end_num = 50 !最後のケース番号
     ! character(*),parameter :: datadir_input = "/data/sht/nakanog/IHT_drop_d70_we2/contribution/"
     ! character(*),parameter :: datadir_output = "/data/sht/nakanog/IHT_drop_d70_we2/contribution/ave/"
-    character(*),parameter :: datadir_input = "./ave_to_breaktime/"
+    character(*),parameter :: datadir_input = "/data/sht/nakanog/IHT_drop_d70_we20/contribution/ave_to_breaktime/"
     character(*),parameter :: datadir_input2 = "./sum_each_time/"
     character(*),parameter :: datadir_output = "./ensemble_ave_to_breaktime/"
 
@@ -20,7 +20,7 @@ implicit none
     real(8),parameter:: eddytime = epsilon**(-1.0d0/3.0d0)*D**(2.0d0/3.0d0)
     real(8),parameter:: k_d = 0.5d0*dble(xmax) / D
 
-    real(8),parameter:: We = 10.0d0
+    real(8),parameter:: We = 20.0d0
     real(8),parameter:: sigma = epsilon**(2.0d0/3.0d0)*D**(5.0d0/3.0d0) / We
     real(8),parameter:: Dh = 0.725*sigma**(3.0d0/5.0d0)*epsilon**(-2.0d0/5.0d0)
     real(8),parameter:: k_h = 0.5d0*dble(xmax) / Dh
@@ -59,7 +59,8 @@ implicit none
         enddo
     ENDDO 
 
-    filename_output = datadir_output//'d70we10_ensemble.d'
+    ! filename_output = datadir_output//'d70we10_ensemble.d'
+    filename_output = './d70we20_ensemble.d'
     open(120, file=filename_output, form="formatted")
     do k_analysis = 1, (xmax+1) / 2
         write(120,*) dble(k_analysis) / k_d, dble(k_analysis) / k_h, ensemble(k_analysis) / dble(case_end_num)

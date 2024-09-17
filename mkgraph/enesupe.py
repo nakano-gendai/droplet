@@ -19,8 +19,8 @@ os.makedirs(plotdir, exist_ok = True) # ディレクトリ作成
 # datadir ='/home/nakano/anime/b4/data/data_fig6/'
 datadir ="./"
 plotdir, datadir, ext = plotdir + '/', datadir + '/', '.' + ext
-dfile1   = datadir + 'enesupe_512.d'
-dfile2   = datadir + 'enesupe_dsd.d'
+dfile1   = datadir + 'enesupe_single_2.d'
+dfile2   = datadir + 'enesupe_phase_2.d'
 # dfile3   = datadir + 'enesupe_debug4.d'
 # dfile4   = datadir + 'LES_64_2.d'
 # dfile5   = datadir + 'LES_32_2.d'
@@ -104,7 +104,7 @@ def plot_y1y2(): # y1, y2プロット用
     ax1.set_xlabel(lx, labelpad = lpad[0]) # 軸ラベル
     ax1.set_ylabel(ly, labelpad = lpad[1])
     # xm, ym = [0.02, 1], [0.000000001, 0.0009]
-    xm, ym = [1, 130], [0.00000000000001, 0.001]
+    xm, ym = [1, 260], [0.00000000000001, 0.001]
     ax1.set_xlim(xm[0], xm[1]) # 軸の範囲
     ax1.set_ylim(ym[0], ym[1])
     # ax1.set_yticks(np.arange(0.0, ym[1] + 0.0000005)) # xmaxまで0.2刻みの目盛り線
@@ -178,8 +178,8 @@ def plot_y1y2(): # y1, y2プロット用
     #         label = r'$\mathrm{Re}\approx 0.2$, $\mathrm{Ca}\approx 0.4$ (initial data)') 
 
     
-    ax1.plot(x1, y1, lw = lw1*1.5, ls = 'solid',  color = 'black', alpha = 0.8, clip_on = True, zorder = 13)
-    ax1.plot(x2, y2, lw = lw1*1.7, ls = 'solid',  color = 'gray', alpha = 1.0, clip_on = True, zorder = 15)
+    ax1.plot(x1, y1, lw = lw1*1.5, ls = 'solid',  color = 'black', alpha = 0.8, clip_on = True, zorder = 13, label="single phase")
+    ax1.plot(x2, y2, lw = lw1*1.7, ls = 'solid',  color = 'gray', alpha = 1.0, clip_on = True, zorder = 15, label="two phase")
     # ax1.plot(x3, y3, lw = lw1*1.7, ls = 'dashdot',  color = 'green', alpha = 0.7, clip_on = True, zorder = 16, label = r"LES with Low-Pass ($64^3$, $\Delta=4\Delta x$)")
     # ax1.plot(x4, y4, lw = lw1*1.7, ls = 'dotted',  color = 'orange', alpha = 0.7, clip_on = True, zorder = 17, label = r'LES-3 ($64^3$, $\Delta=\Delta x$)')
     # ax1.plot(x5, y5, lw = lw1*1.2, ls = 'dashdot',  color = 'blue', alpha = 1, clip_on = True, zorder = 11, label = r"LES ($32^3$, $\Delta=\Delta x$)")
@@ -199,13 +199,13 @@ def plot_y1y2(): # y1, y2プロット用
     #         label = r'$\propto k^{-5/3}$') 
     
     # 凡例の設定
-    # h1, l1 = ax1.get_legend_handles_labels()
-    # ax1.legend(h1, l1, 
-    # bbox_to_anchor = (1.0, 1.0), loc = "upper left", # bbox_to_anchorは凡例のlocの座標
-    # framealpha = 1.0, fancybox=False, fontsize=8.0,
-    # edgecolor = "black").get_frame().set_linewidth(alw*0.8)
+    h1, l1 = ax1.get_legend_handles_labels()
+    ax1.legend(h1, l1, 
+    bbox_to_anchor = (1.0, 1.0), loc = "upper left", # bbox_to_anchorは凡例のlocの座標
+    framealpha = 1.0, fancybox=False, fontsize=8.0,
+    edgecolor = "black").get_frame().set_linewidth(alw*0.8)
     ### 保存
-    fig.savefig(plotdir + "enesupe" + ext, bbox_inches = "tight") # bbox_inches="tight"で余白をなくす
+    fig.savefig(plotdir + "enesupe_single_phase_all" + ext, bbox_inches = "tight") # bbox_inches="tight"で余白をなくす
 
 ##=================== main ===================##
 if __name__ == '__main__':
